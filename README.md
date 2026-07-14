@@ -1,44 +1,137 @@
-# Trabajo Práctico: Sistema de Gestión de Inventario Just-In-Time (JIT) con Trazabilidad
+# Trabajo Práctico: Sistema de Inventario JIT con Trazabilidad
 
 ## Situación Hipotética
-Imaginemos que formamos parte del equipo de desarrollo de *AeroTech Components*, una empresa líder en la fabricación de componentes de alta precisión para la industria aeroespacial. La calidad, la eficiencia y la trazabilidad son pilares fundamentales de su operación. Para mantener su competitividad y minimizar costos operativos asociados al almacenamiento, *AeroTech Components* ha adoptado una rigurosa filosofía de inventario Just-In-Time (JIT).
 
-El desafío es gestionar un complejo flujo de materiales que ingresan, se almacenan y se despachan hacia las líneas de producción. Cada material, desde una aleación especial hasta un microchip de sensor crítico, es un tipo de artículo que debe ser gestionado con precisión. Estos artículos llegan de diversos suministradores, cada uno con sus particularidades de entrega y fiabilidad. Cada entrega constituye una remesa específica, que debe registrarse meticulosamente con su cantidad, fecha de recepción y, crucialmente, una identificación única que asegure una trazabilidad completa a lo largo de toda la cadena de suministro.
+**AeroTech Components** abastece líneas de producción con materiales recibidos en remesas identificables. Hoy registra ingresos y retiros en planillas separadas: no puede reconstruir con certeza qué remesas se consumieron, suele detectar tarde los faltantes y, en ocasiones, considera disponible material vencido.
 
-Todas estas remesas se almacenan en un espacio central de depósito, diseñado para optimizar el espacio y la logística. La esencia del JIT radica en mantener las existencias al mínimo indispensable. Para lograr esto, cada tipo de material tiene asociado un umbral de reabastecimiento que, al ser alcanzado por las existencias disponibles, dispara la necesidad de generar un nuevo pedido a un suministrador. Estos pedidos especifican qué tipos de materiales, en qué cantidad, y a qué suministrador se deben solicitar para reponer el inventario antes de que se produzcan quiebres de existencias que detengan la producción.
+La empresa solicita el núcleo de un inventario *Just-In-Time* (JIT). El sistema deberá conocer las existencias utilizables en una fecha, retirar material según una política explícita, conservar la trazabilidad de cada movimiento y advertir cuándo corresponde reponer. No deberá emitir pedidos automáticamente ni decidir cuánto comprar.
 
-Cada cambio en las existencias –ya sea la recepción de una nueva remesa de un suministrador o el despacho de componentes a una línea de montaje– es una operación de movimiento. Estas operaciones deben ser registradas de forma inmutable, conteniendo la fecha, el tipo de movimiento y las cantidades involucradas, permitiendo reconstruir el historial completo de cualquier remesa o tipo de artículo. La gerencia exige una visión clara y en tiempo real de las existencias disponibles, la capacidad de identificar el origen de cualquier componente y una gestión proactiva para evitar desabastecimientos, sin acumular excesos.
+### Objetivo del sistema
 
-Su tarea es diseñar e implementar un sistema que modele y gestione esta compleja operación de inventario JIT, garantizando la eficiencia, la precisión y, sobre todo, la trazabilidad que la industria aeroespacial exige. El sistema debe ser lo suficientemente robusto para manejar las operaciones diarias y, al mismo tiempo, flexible para permitir futuras extensiones, como la gestión de múltiples depósitos o la integración con sistemas de planificación de la producción.
+El prototipo deberá permitir:
+
+- registrar materiales, proveedores y remesas;
+- consultar existencias físicas y disponibles en una fecha;
+- retirar material aplicando FEFO sin dejar consumos parciales ante un error;
+- reconstruir los movimientos de un material y de una remesa;
+- detectar materiales por debajo de su punto de reposición;
+- confeccionar pedidos y calcular su valor total.
+
+### Alcance y vocabulario del dominio
+
+| Concepto | Representa | Es responsable de | No es responsable de |
+| --- | --- | --- | --- |
+| Material | Un tipo de insumo medido en una unidad | Identidad, unidad y punto de reposición | Elegir remesas durante un retiro |
+| Proveedor | Una fuente de abastecimiento | Identidad y plazo estimado de entrega | Administrar existencias |
+| Remesa | Una partida recibida de un material | Cantidad recibida, saldo, origen, recepción y vencimiento | Decidir por sí sola el orden de consumo global |
+| Depósito | El inventario central del prototipo | Registrar remesas y coordinar consultas y retiros | Emitir pedidos automáticamente |
+| Movimiento | Un hecho trazable de ingreso o retiro | Fecha, tipo, material, remesa y cantidad | Cambiar luego de ser registrado |
+| Pedido | Una solicitud todavía no recibida | Proveedor, fecha, renglones y valor total | Aumentar existencias antes de la recepción |
+| Renglón de pedido | Una cantidad y precio acordado para un material | Calcular su subtotal | Elegir proveedor o modificar inventario |
+
+```mermaid
+flowchart LR
+    P[Proveedor] -->|origina| R[Remesa]
+    M[Material] -->|identifica el contenido de| R
+    D[Depósito] -->|conserva| R
+    D -->|registra| V[Movimiento]
+    V -->|refiere a| M
+    V -->|refiere a una| R
+    Q[Pedido] -->|se dirige a| P
+    Q -->|contiene| L[Renglones]
+    L -->|solicitan| M
+```
+
+El mapa expresa relaciones del negocio, no clases, colecciones ni navegabilidad obligatorias.
+
+### Flujo de retiro FEFO
+
+Para una fecha de operación, se consideran utilizables las remesas con saldo positivo que todavía no vencieron. Se ordenan primero las que tienen vencimiento, por fecha de vencimiento ascendente; en un empate, por fecha de recepción y luego por identificador. Las remesas sin vencimiento se consumen después, por fecha de recepción y luego por identificador.
+
+```mermaid
+flowchart TD
+    A[Solicitar retiro] --> B[Seleccionar remesas utilizables]
+    B --> C[Ordenar por FEFO]
+    C --> D{Alcanza el saldo total?}
+    D -->|No| E[Rechazar sin cambios]
+    D -->|Sí| F[Distribuir el retiro entre remesas]
+    F --> G[Actualizar saldos]
+    G --> H[Registrar un movimiento por remesa consumida]
+    H --> I[Informar necesidad de reposición]
+```
+
+### Ejemplo de aceptación
+
+El material `AL-7`, medido en kilogramos, tiene punto de reposición `10`. Al 10/08/2026 existen tres remesas: `R1`, recibida el 01/08, saldo `5` y vencimiento 20/08; `R2`, recibida el 03/08, saldo `8` y vencimiento 15/08; y `R3`, recibida el 02/08, saldo `4` y sin vencimiento.
+
+Un retiro de `10 kg` debe consumir primero los `8 kg` de `R2` y luego `2 kg` de `R1`. Los saldos quedan `R1 = 3`, `R2 = 0` y `R3 = 4`; se registran dos movimientos de salida y la existencia disponible queda en `7 kg`. Como `7 < 10`, la consulta de reposición incluye `AL-7`. Un retiro posterior de `8 kg` se rechaza sin alterar esos saldos ni agregar movimientos.
+
+### Fuera de alcance
+
+No se requiere interfaz gráfica, persistencia, múltiples depósitos, monedas o impuestos, reservas de stock, devoluciones, cuarentena de calidad, integración con proveedores ni pronóstico de demanda. El sistema no genera pedidos ni define cantidades de compra automáticamente.
 
 ## Requerimientos Técnicos Obligatorios
-Su solución deberá reflejar la estructura del mundo real, donde cada concepto (como un tipo de material, una remesa, o un suministrador) se modele de forma independiente, conteniendo sus propias características y comportamientos específicos.
 
-Cuando identifiquen conceptos que comparten características generales pero tienen particularidades específicas, deberán aprovechar las herramientas de la POO para establecer relaciones de especialización, evitando la duplicación de lógica y promoviendo la reutilización.
-
-Deberán ser capaces de interactuar con diferentes tipos de elementos de manera uniforme, incluso si sus implementaciones internas varían. Esto significa que una misma operación podría ejecutarse de forma distinta según el elemento al que se aplique, sin necesidad de conocer su tipo específico de antemano.
-
-El sistema debe ser robusto y prever situaciones excepcionales que, aunque no sean el flujo normal, pueden ocurrir en el negocio (por ejemplo, intentar retirar más existencias de las disponibles). Estas situaciones deben ser gestionadas de forma explícita y clara, informando adecuadamente sobre la naturaleza del problema.
-
-Finalmente, la robustez del sistema se validará a través de la verificación de su comportamiento. Su diseño debe facilitar la comprobación independiente de cada fragmento de lógica de negocio, asegurando que las reglas críticas se cumplen como se espera bajo diversas condiciones.
+- Implementar la solución con Programación Orientada a Objetos y separar el punto de entrada de la lógica del dominio.
+- Identificar y justificar una jerarquía de herencia que represente una especialización real dentro del dominio y una variación polimórfica de comportamiento, por ejemplo entre políticas de consumo. No alcanza con crear subtipos sin comportamiento diferente.
+- Mantener encapsulados los saldos y el historial: no podrán corregirse mediante modificación directa de atributos.
+- Implementar el ordenamiento y la distribución FEFO con estructuras nativas, sin delegarlos a una librería de inventario.
+- Definir excepciones propias para datos inválidos, duplicados, remesas no utilizables y existencias insuficientes. No se aceptan `Exception` genéricas ni `print` como único manejo.
+- Utilizar `date` o `datetime` de la biblioteca estándar y una representación numérica consistente para cantidades y precios.
+- Escribir pruebas unitarias con `pytest` para cálculos, prioridades, límites, atomicidad y trazabilidad.
 
 ## Reglas de Negocio
-El sistema de gestión de inventario de *AeroTech Components* debe adherirse estrictamente a las siguientes normas:
-1. Cada tipo de material en el inventario debe tener una identificación única, un nombre claro y una unidad en la que se mide. Ni la identificación ni el nombre pueden estar vacíos.
-2. Cuando se recibe una remesa, debe registrarse la cantidad de elementos que contiene, cuándo llegó y una forma única de identificar esa partida. Si tiene una fecha de caducidad, esta debe ser posterior a la fecha de recepción. La cantidad recibida debe ser siempre mayor a cero.
-3. Cada suministrador debe contar con una identificación única, un nombre y un tiempo estimado que tarda en realizar sus entregas. Ni la identificación ni el nombre pueden estar vacíos.
-4. Las existencias de cualquier tipo de material en el depósito nunca pueden descender por debajo de cero.
-5. La cantidad total disponible de un material se determina sumando las cantidades actuales de todas sus remesas activas y no caducadas en el depósito.
-6. Al retirar materiales del inventario, se debe priorizar el consumo de aquellas remesas que caducan antes. Si no hay fecha de caducidad, se priorizarán las remesas más antiguas (las primeras en llegar).
-7. Cuando las existencias disponibles de un tipo de material (solo las no caducadas) caen por debajo de su umbral de reabastecimiento preestablecido, el sistema debe indicar la necesidad de generar un nuevo pedido a un suministrador.
-8. Un pedido a un suministrador debe detallar a qué suministrador se le hace, la fecha en que se emite, y qué tipos de materiales se solicitan, incluyendo la cantidad y el precio acordado para cada uno. También debe ser capaz de mostrar el valor total de la solicitud.
-9. Si se intenta retirar una cantidad de un material mayor a la que realmente está disponible (considerando solo las remesas no caducadas), el sistema debe reportar claramente esta situación como un error de 'existencias insuficientes'.
-10. Si se intenta registrar una nueva remesa con una fecha de caducidad que ya pasó o que es anterior a su fecha de recepción, el sistema debe reportar claramente esta situación como un error de 'remesa caducada o inválida'.
-11. Intentar añadir un nuevo tipo de material con una identificación que ya está en uso debe reportarse como un error de 'material duplicado'.
-12. Deberá demostrarse, a través de una verificación específica, que la política de consumo de remesas (FEFO) funciona correctamente. Esto implica simular múltiples llegadas del mismo material con diferentes fechas de caducidad (o de recepción) y comprobar que, al realizar un retiro, se consumen primero las remesas que deben salir antes, dejando el resto con la cantidad esperada.
+
+1. **Identidad y datos obligatorios:** Los identificadores de materiales, proveedores y remesas son únicos dentro de su categoría y no pueden estar vacíos. Cada material tiene nombre y unidad no vacíos; cada remesa refiere a un material y a un proveedor ya registrados.
+2. **Cantidades y valores:** La cantidad recibida, las cantidades retiradas, los renglones de pedido y los precios unitarios son positivos. El saldo de una remesa nunca puede ser negativo. El punto de reposición es mayor o igual que cero y el plazo estimado de un proveedor es una cantidad entera no negativa de días.
+3. **Fechas de una remesa:** La recepción no puede ocurrir después de la fecha de operación en la que se registra. Si existe vencimiento, debe ser estrictamente posterior a la recepción. Una remesa está vencida en una fecha cuando `fecha_consultada >= fecha_vencimiento`.
+4. **Ingreso trazable:** Registrar una remesa crea exactamente un movimiento de ingreso por su cantidad total. Ni la remesa ni ese movimiento pueden duplicarse si falla alguna validación.
+5. **Existencias consultables:** La existencia física de un material es la suma de los saldos de todas sus remesas. La existencia disponible en una fecha suma solo remesas recibidas, con saldo positivo y no vencidas en esa fecha. Consultar existencias no modifica saldos ni historial.
+6. **Prioridad FEFO:** Para retirar se consumen primero las remesas con vencimiento más próximo; los empates se resuelven por recepción más antigua y luego por identificador ascendente. Las remesas sin vencimiento se consumen después, también por recepción e identificador.
+7. **Retiro distribuido:** Un retiro puede consumir una o varias remesas y registra un movimiento de salida por cada remesa afectada, con la cantidad efectivamente descontada. La suma de esos movimientos debe coincidir con la cantidad solicitada.
+8. **Atomicidad ante faltantes:** Si la existencia disponible es menor que la solicitada, el retiro completo se rechaza con una excepción de existencias insuficientes. Ningún saldo ni movimiento cambia, aunque alguna remesa por sí sola tuviera saldo.
+9. **Reposición:** Un material requiere reposición cuando su existencia disponible en la fecha consultada es estrictamente menor que su punto de reposición. Alcanzar exactamente el punto no dispara la advertencia. La consulta no crea pedidos.
+10. **Pedidos:** Un pedido pertenece a un único proveedor, tiene fecha de emisión y al menos un renglón. Un material aparece una sola vez por pedido. Su total es la suma de `cantidad * precio_unitario` de todos los renglones y su creación no altera existencias.
+11. **Historial inmutable:** Todo movimiento conserva identificador único, tipo `INGRESO` o `RETIRO`, fecha de operación, material, remesa y cantidad positiva. Una vez registrado no puede modificarse ni eliminarse mediante operaciones normales del dominio.
+12. **Trazabilidad:** El historial de una remesa devuelve su ingreso y sus retiros en orden cronológico, desempata por identificador y permite calcular `cantidad_ingresada - retiros = saldo_actual`. El historial de un material reúne los movimientos de todas sus remesas sin alterar el inventario.
+
+### Pruebas mínimas esperadas
+
+- identificadores vacíos o duplicados y cantidades no positivas;
+- vencimiento igual, anterior y posterior a la fecha consultada;
+- diferencia entre existencia física y disponible;
+- FEFO con vencimientos distintos, empates y remesas sin vencimiento;
+- retiro que abarca varias remesas y movimientos resultantes;
+- faltante rechazado sin cambios parciales;
+- reposición justo en el punto y por debajo de él;
+- total de un pedido y material repetido;
+- reconstrucción del saldo desde el historial;
+- consultas sin efectos secundarios.
+
+### Decisiones de diseño que deberán resolver
+
+- ¿Qué objeto coordina un retiro que afecta varias remesas?
+- ¿Cómo se representa el criterio FEFO para poder sustituirlo sin repartir condicionales por el modelo?
+- ¿El saldo se almacena o se deriva del historial? ¿Cómo se evita que ambas fuentes se contradigan?
+- ¿Cómo se expresan cantidades y unidades sin mezclar materiales incompatibles?
+- ¿Qué información debe devolver una consulta de reposición sin convertirla en un pedido?
+- ¿Cómo se garantiza la atomicidad si el retiro se distribuye entre varias remesas?
+
+No existe una única respuesta correcta. Se evaluarán la coherencia, el encapsulamiento, el reparto de responsabilidades y la defensa del diseño mediante pruebas.
+
+### Evolución durante el semestre
+
+1. **Catálogo e ingresos:** materiales, proveedores, remesas, validaciones y movimientos de ingreso.
+2. **Inventario utilizable:** vencimientos, consultas físicas y disponibles, y alertas de reposición.
+3. **Retiros trazables:** FEFO, distribución, atomicidad e historial por remesa y material.
+4. **Variación de comportamiento:** dos políticas intercambiables de consumo, FEFO y FIFO, seleccionadas explícitamente sin duplicar el flujo de retiro.
+5. **Cambio controlado:** la cátedra elegirá una extensión —por ejemplo cuarentena de remesas, reservas o múltiples depósitos— para evaluar la adaptabilidad del modelo.
+
+Cada incremento deberá conservar las pruebas anteriores y actualizar brevemente el diagrama y las decisiones afectadas.
 
 ## Notas
-- Se prohíbe el uso de la librería pandas; el objetivo es evaluar el manejo de estructuras nativas (listas, diccionarios) y la lógica de algoritmos manuales.
-- Es requisito obligatorio presentar un diagrama de flujo previo a la codificación para organizar la arquitectura lógica y prevenir fallos de diseño.
-- Cada implementación debe estar debidamente sustentada; el alumno debe ser capaz de explicar y justificar técnicamente las decisiones tomadas en el código.
-- Se recomienda el uso de la librería estándar de Python (como datetime o math) para optimizar tareas específicas y evitar la redacción innecesaria de funciones ya existentes.
+
+- Se prohíbe `pandas` y cualquier librería que resuelva inventarios o trazabilidad; el objetivo es trabajar con listas, diccionarios y algoritmos propios.
+- Antes de codificar, presenten un diagrama de responsabilidades y relaciones. El mapa del enunciado no es un diagrama de clases para copiar.
+- Deberán justificar las decisiones tomadas y demostrar las reglas mediante pruebas automatizadas.
+- Se permite la biblioteca estándar de Python, en particular `datetime` y `decimal`, cuando la representación elegida lo justifique.
