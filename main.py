@@ -24,9 +24,7 @@ class Material:
         
     def validar_reposicion(self):
         return
-    
-    def requiere_reposicion(self):
-        return
+
     
 
 class Remesa:
