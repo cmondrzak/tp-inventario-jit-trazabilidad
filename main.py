@@ -81,3 +81,4 @@ class Proveedor:
     def entregar_material(self):
         return
 
+print(issubclass(str,str))
