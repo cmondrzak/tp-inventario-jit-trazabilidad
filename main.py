@@ -16,12 +16,11 @@ import random
 import time
 
 class Material:
-    def __init__(self, id_material, nombre, unidad, punto_reposicion, remesas):
+    def __init__(self, id_material, nombre, unidad, punto_reposicion):
         self.id_material = id_material
         self.nombre = nombre
         self.unidad = unidad
         self.punto_reposicion = punto_reposicion
-        self.remesas = remesas
         
     def validar_reposicion(self):
         return
@@ -81,4 +80,67 @@ class Proveedor:
     def entregar_material(self):
         return
 
-print(issubclass(str,str))
+class Movimiento:
+    def __init__(self,id_movimiento, fecha):
+        self.id_movimiento = id_movimiento
+        self.fecha = fecha
+
+    
+    
+class Ingreso(Movimiento):
+    def __init__(self, id_movimiento, fecha, remesa):
+        super().__init__(id_movimiento, fecha)
+        self.remesa = remesa 
+        
+
+class Retiro(Movimiento):
+    def __init__(self, id_movimiento, fecha, renglones_retiro):
+        super().__init__(id_movimiento, fecha)
+        self.renglones_retiro = renglones_retiro
+        
+    def agregar_renglon(self, renglon):
+        self.remesas.append(renglon)
+        
+class RenglonRetiro:
+    def __init__(self, material, remesa_modificada, cantidad_solicitada):
+        self.material = material
+        self.remesa_modificada = remesa_modificada
+        self.cantidad_solicitada = cantidad_solicitada
+        
+    def modificar_remesa(self, remesa):
+        return
+    
+
+class Deposito:
+    def __init__(self, remesas, retiros, politicas, materiales, proveedores, movimientos):
+        self.remesas = remesas
+        self.retiros = retiros
+        self.politicas = politicas
+        self.materiales = materiales
+        self.proveedores = proveedores
+        self.movimientos = movimientos
+        
+    def registrar_material(self, id_material, nombre, unidad_medida, punto_reposicion):
+        m = Material(id_material, nombre, unidad_medida, punto_reposicion)
+        self.materiales.append(m)
+        
+
+    def registrar_proveedor(self, id_proveedor, nombre, plazo_de_entrega):
+        p = Proveedor(id_proveedor, nombre, plazo_de_entrega)
+        self.proveedores.append(p)
+        
+    def existencia_fisica(self):
+        return
+    
+    def existencia_disponible(self):
+        return
+    
+    def generar_retiro(self):
+        return
+    
+    def generar_ingreso(self):
+        return
+    
+    def almacenar_remesa(self):
+        return
+    
