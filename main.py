@@ -24,9 +24,6 @@ class Material:
         
     def validar_reposicion(self):
         return
-    def validarid():
-
-        return
 
     
 
@@ -52,11 +49,6 @@ class Remesa:
     
     def movimientos(self):
         return
-    def validarid():
-        return
-    @staticmethod
-    def validarMayorCero(num):
-        return
 
 
 class Renglon:
@@ -67,9 +59,6 @@ class Renglon:
         
     def subtotal_renglon(self):
         return self.cantidad * self.precio_unitario
-    def validarid():
-        return
-
 
 class Pedido:
     def __init__(self, id_pedido, proveedor, renglones):
@@ -79,8 +68,6 @@ class Pedido:
         
     def agregar_renglon(self, renglon):
         self.renglones.append(renglon)
-    def validarid():
-        return
         
 class Proveedor:
     def __init__(self, id_proveedor, nombre, plazo_entrega):
@@ -90,15 +77,11 @@ class Proveedor:
         
     def entregar_material(self):
         return
-    def validarid():
-        return
 
 class Movimiento:
     def __init__(self,id_movimiento, fecha):
         self.id_movimiento = id_movimiento
         self.fecha = fecha
-    def validarid():
-        return
 
     
     
@@ -125,10 +108,8 @@ class RenglonRetiro:
     def modificar_remesa(self, remesa):
         return
     
-
 class Deposito:
-    def __init__(self,id_deposito ,remesas, retiros, politicas, materiales, proveedores, movimientos):
-        self.id_deposito=id_deposito
+    def __init__(self, remesas, retiros, politicas, materiales, proveedores, movimientos):
         self.remesas = remesas
         self.retiros = retiros
         self.politicas = politicas
@@ -138,14 +119,11 @@ class Deposito:
         
     def registrar_material(self, id_material, nombre, unidad_medida, punto_reposicion):
         m = Material(id_material, nombre, unidad_medida, punto_reposicion)
-        self.materiales.append(m)
-        
+        self.materiales.append(m)    
 
     def registrar_proveedor(self, id_proveedor, nombre, plazo_de_entrega):
         p = Proveedor(id_proveedor, nombre, plazo_de_entrega)
         self.proveedores.append(p)
-    def validarid():
-        return
         
     def existencia_fisica(self):
         return
@@ -162,3 +140,5 @@ class Deposito:
     def almacenar_remesa(self):
         return
     
+    print("Hola")
+
