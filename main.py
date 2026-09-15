@@ -15,19 +15,74 @@
 import random
 import time
 
+
+# ---------- Excepciones ----------
+class InventarioError(Exception):
+    """Base de todo el dominio."""
+    pass
+
+
+# Nivel intermedio: identidad/colección
+class IdentificadorDuplicadoError(InventarioError):
+    pass
+
+class EntidadNoEncontradaError(InventarioError):
+    pass
+
+class MaterialNoEncontradoError(EntidadNoEncontradaError):
+    pass
+
+class ProveedorNoEncontradoError(EntidadNoEncontradaError):
+    pass
+
+class RemesaNoEncontradaError(EntidadNoEncontradaError):
+    pass
+
+
+# Nivel intermedio: valores/estado inválido
+class ValorInvalidoError(InventarioError):
+    pass
+
+class NombreInvalidoError(ValorInvalidoError):
+    pass
+
+class PuntoDeReposicionInvalidoError(ValorInvalidoError):
+    pass
+
+class PlazoEntregaInvalidoError(ValorInvalidoError):
+    pass
+
+class CantidadInvalidaError(ValorInvalidoError):
+    pass
+
+class PrecioInvalidoError(ValorInvalidoError):
+    pass
+
+class SaldoInvalidoError(ValorInvalidoError):
+    pass
+
+
+# Nivel intermedio: errores de operación
+class OperacionInvalidaError(InventarioError):
+    pass
+
+class ExistenciaInsuficienteError(OperacionInvalidaError):
+    pass
+
+
 class Material:
     materiales=[]
     def __init__(self, id_material, nombre, unidad, punto_reposicion):
         self.id_material = Material.validarid(id_material)
 
         if not Validaciones.es_no_vacio(nombre):
-            raise ValueError("El nombre no puede estar vacío.")
+            raise NombreInvalidoError("El nombre no puede estar vacío.")
         self.nombre = nombre
 
         self.unidad = unidad
 
         if not Validaciones.es_positivo(punto_reposicion):
-            raise ValueError("El punto de reposición debe ser mayor que cero.")
+            raise PuntoDeReposicionInvalidoError("El punto de reposición debe ser mayor que cero.")
         self.punto_reposicion = punto_reposicion
 
         Material.materiales.append(id_material)
@@ -35,7 +90,7 @@ class Material:
     @staticmethod
     def validarid(id_material):
         if id_material in Material.materiales:
-            raise ValueError
+            raise IdentificadorDuplicadoError(f"Material {id_material} ya registrado.")
         else:
            return id_material
 
@@ -49,7 +104,7 @@ class Remesa:
         self.proveedor = proveedor
 
         if not Validaciones.es_positivo(cantidad_recibida):
-            raise ValueError("La cantidad recibida debe ser mayor que cero.")
+            raise CantidadInvalidaError("La cantidad recibida debe ser mayor que cero.")
         self.cantidad_recibida = cantidad_recibida
 
         self.saldo_disponible = saldo_disponible
@@ -57,7 +112,7 @@ class Remesa:
         self.fecha_vencimiento = fecha_vencimiento
 
         if not Validaciones.es_positivo(precio_unitario):
-            raise ValueError("El precio unitario debe ser mayor que cero.")
+            raise PrecioInvalidoError("El precio unitario debe ser mayor que cero.")
         self.precio_unitario = precio_unitario
         
     def es_utilizable(self):
@@ -77,11 +132,11 @@ class Renglon:
         self.material = material
 
         if not Validaciones.es_positivo(cantidad):
-            raise ValueError("La cantidad debe ser mayor que cero.")
+            raise CantidadInvalidaError("La cantidad debe ser mayor que cero.")
         self.cantidad = cantidad
 
         if not Validaciones.es_positivo(precio_unitario):
-            raise ValueError("El precio unitario debe ser mayor que cero.")
+            raise PrecioInvalidoError("El precio unitario debe ser mayor que cero.")
         self.precio_unitario = precio_unitario
         
     def subtotal_renglon(self):
@@ -106,11 +161,11 @@ class Proveedor:
         self.id_proveedor = id_proveedor
 
         if not Validaciones.es_no_vacio(nombre):
-            raise ValueError("El nombre no puede estar vacío.")
+            raise NombreInvalidoError("El nombre no puede estar vacío.")
         self.nombre = nombre
 
         if not Validaciones.es_positivo(plazo_entrega):
-            raise ValueError("El plazo de entrega debe ser mayor que cero.")
+            raise PlazoEntregaInvalidoError("El plazo de entrega debe ser mayor que cero.")
         self.plazo_entrega = plazo_entrega
         
     def entregar_material(self):
@@ -125,7 +180,7 @@ class Movimiento:
     def validarid():
         return
 
-
+    
     
 class Ingreso(Movimiento):
     def __init__(self, id_movimiento, fecha, remesa):
@@ -147,7 +202,7 @@ class RenglonRetiro:
         self.remesa_modificada = remesa_modificada
 
         if not Validaciones.es_positivo(cantidad_solicitada):
-            raise ValueError("La cantidad solicitada debe ser mayor que cero.")
+            raise CantidadInvalidaError("La cantidad solicitada debe ser mayor que cero.")
         self.cantidad_solicitada = cantidad_solicitada
         
     def modificar_remesa(self, remesa):
@@ -170,10 +225,11 @@ class Deposito:
         
 
     def registrar_proveedor(self, id_proveedor, nombre, plazo_de_entrega):
+        def validarid():
+            return
         p = Proveedor(id_proveedor, nombre, plazo_de_entrega)
         self.proveedores.append(p)
-    def validarid():
-        return
+   
         
     def existencia_fisica(self):
         return
@@ -183,7 +239,7 @@ class Deposito:
     
     def generar_retiro(self, cantidad_solicitada):
         if not Validaciones.es_positivo(cantidad_solicitada):
-            raise ValueError("La cantidad a retirar debe ser mayor que cero.")
+            raise CantidadInvalidaError("La cantidad a retirar debe ser mayor que cero.")
         return
     
     def generar_ingreso(self):
@@ -202,3 +258,4 @@ class Validaciones:
     @staticmethod
     def es_no_vacio(texto):
         return texto is not None and texto.strip() != ""
+    
