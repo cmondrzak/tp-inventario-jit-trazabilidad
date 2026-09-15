@@ -125,7 +125,7 @@ class Movimiento:
     def validarid():
         return
 
-    
+
     
 class Ingreso(Movimiento):
     def __init__(self, id_movimiento, fecha, remesa):
