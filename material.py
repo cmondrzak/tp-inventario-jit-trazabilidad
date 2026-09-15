@@ -1,5 +1,7 @@
 from validaciones import Validaciones
 
+from exceptions import IdentificadorDuplicadoError
+
 class Material:
     materiales=[]
     def __init__(self, id_material, nombre, unidad, punto_reposicion):
@@ -19,7 +21,8 @@ class Material:
 
     @staticmethod
     def validarid(id_material):
-        if id_material in Material.materiales:
-            raise ValueError
-        else:
-           return id_material
+            if id_material in Material.materiales:
+                raise IdentificadorDuplicadoError(f"Material {id_material} ya registrado.")
+            else:
+               return id_material
+           
