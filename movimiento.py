@@ -4,4 +4,3 @@ class Movimiento:
         self.fecha = fecha
     def validarid():
         return
-

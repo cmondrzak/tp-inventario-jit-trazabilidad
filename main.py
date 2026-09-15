@@ -123,6 +123,7 @@ class Remesa:
 
     def movimientos(self):
         return
+    
     def validarid():
         return
 
@@ -260,7 +261,6 @@ class Deposito:
         # Falta validar: material existente (MaterialNoEncontradoError)
         # Falta validar: proveedor existente (ProveedorNoEncontradoError)
         return
-
 
 #Validaciones
 class Validaciones:

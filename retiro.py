@@ -6,5 +6,6 @@ class Retiro(Movimiento):
         self.renglones_retiro = renglones_retiro
         
     def agregar_renglon(self, renglon):
-        self.remesas.append(renglon)
+        self.renglones_retiro.append(renglon)
+        
         

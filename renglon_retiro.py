@@ -1,4 +1,5 @@
 from validaciones import Validaciones
+from exceptions import CantidadInvalidaError, PrecioInvalidoError, SaldoInvalidoError
 
 class RenglonRetiro:
     def __init__(self, material, remesa_modificada, cantidad_solicitada):
@@ -6,8 +7,9 @@ class RenglonRetiro:
         self.remesa_modificada = remesa_modificada
 
         if not Validaciones.es_positivo(cantidad_solicitada):
-            raise ValueError("La cantidad solicitada debe ser mayor que cero.")
+            raise CantidadInvalidaError("La cantidad solicitada debe ser mayor que cero.")
         self.cantidad_solicitada = cantidad_solicitada
         
     def modificar_remesa(self, remesa):
         return
+    
