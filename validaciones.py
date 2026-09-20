@@ -1,3 +1,4 @@
+from exceptions import IdentificadorDuplicadoError
 class Validaciones:
     @staticmethod
     def es_positivo(valor):
@@ -8,8 +9,8 @@ class Validaciones:
         return texto is not None and texto.strip() != ""
     
     @staticmethod
-    def Validarid(lista,codigo):
+    def validarid(lista,codigo):
         if codigo in lista:
-            raise ValueError('El Id ingresado ya existe')                   #Ver que error lanzar, de momento queda value
+            raise IdentificadorDuplicadoError
         else:
-            lista.append(codigo)
+            return codigo

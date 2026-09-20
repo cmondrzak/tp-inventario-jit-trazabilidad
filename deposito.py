@@ -4,7 +4,7 @@ from material import Material
 
 from remesa import Remesa
 
-from retiro import Retiro
+from movimiento_retiro import movimiento_retiro
 
 from validaciones import Validaciones
 

@@ -1,9 +1,9 @@
 from validaciones import Validaciones
 from exceptions import IdentificadorDuplicadoError, NombreInvalidoError, PuntoDeReposicionInvalidoError
 class Material:
-    materiales=[]
+    lista_id=[]
     def __init__(self, id_material, nombre, unidad, punto_reposicion):
-        self.id_material = Material.validarid(id_material)
+        self.id_material = Validaciones.validarid(id_material,self.idmateriales)
 
         if not Validaciones.es_no_vacio(nombre):
             raise NombreInvalidoError("El nombre no puede estar vacío.")
@@ -13,12 +13,7 @@ class Material:
         if not Validaciones.es_positivo(punto_reposicion):
             raise PuntoDeReposicionInvalidoError("El punto de reposición debe ser mayor que cero.")
         self.punto_reposicion = punto_reposicion
+        Material.idmateriales.append(id_material)
 
-        Material.materiales.append(id_material)
-
-    @staticmethod
-    def validarid(id_material):
-        if id_material in Material.materiales:
-            raise IdentificadorDuplicadoError(f"Material {id_material} ya registrado.")
-        else:
-           return id_material
+    def validar_reposicion():
+        return

@@ -1,8 +1,10 @@
 from validaciones import Validaciones
 from exceptions import CantidadInvalidaError, PrecioInvalidoError, SaldoInvalidoError
 
-class Renglon:
-    def __init__(self, material, cantidad, precio_unitario):
+class Renglon_pedido:
+    lista_id=[]
+    def __init__(self,id_renglon ,material, cantidad, precio_unitario):
+        self.id_renglon=id_renglon
         self.material = material
 
         if not Validaciones.es_positivo(cantidad):
@@ -15,6 +17,4 @@ class Renglon:
         
     def subtotal_renglon(self):
         return self.cantidad * self.precio_unitario
-    def validarid():
-        return
 
