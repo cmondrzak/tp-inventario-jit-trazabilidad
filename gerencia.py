@@ -11,7 +11,7 @@ class gerencia():
     def registrar_material(self,id_material,nombre,unidad_medida,reposicion,deposito):
         m=material(id_material,nombre,unidad_medida,reposicion)
         deposito.modificar_materiales(m,id_material)
-        return
+    
     def existencia_fisica(deposito):
          return
         
