@@ -3,17 +3,23 @@ from exceptions import IdentificadorDuplicadoError, NombreInvalidoError, PuntoDe
 class Material:
     lista_id=[]
     def __init__(self, id_material, nombre, unidad, punto_reposicion):
-        self.id_material = Validaciones.validarid(id_material,self.idmateriales)
+        
+        if not Validaciones.validarid(Material.lista_id,self.id_material):
+            raise IdentificadorDuplicadoError("El identificador ya existe en la lista.")
 
         if not Validaciones.es_no_vacio(nombre):
             raise NombreInvalidoError("El nombre no puede estar vacío.")
-        self.nombre = nombre
-        self.unidad = unidad
+        
 
         if not Validaciones.es_positivo(punto_reposicion):
             raise PuntoDeReposicionInvalidoError("El punto de reposición debe ser mayor que cero.")
+        
+        self.id_material = id_material
+        self.nombre = nombre
+        self.unidad = unidad
         self.punto_reposicion = punto_reposicion
-        Material.idmateriales.append(id_material)
+        Material.lista_id.append(self.id_material)
+        
 
     def validar_reposicion():
         return

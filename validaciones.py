@@ -1,4 +1,3 @@
-from exceptions import IdentificadorDuplicadoError
 class Validaciones:
     @staticmethod
     def es_positivo(valor):
@@ -11,6 +10,6 @@ class Validaciones:
     @staticmethod
     def validarid(lista,codigo):
         if codigo in lista:
-            raise IdentificadorDuplicadoError
+            raise False
         else:
-            return codigo
+            return True
