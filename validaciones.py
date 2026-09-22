@@ -1,3 +1,5 @@
+from datetime import date
+
 class Validaciones:
     @staticmethod
     def es_positivo(valor):
@@ -13,3 +15,10 @@ class Validaciones:
             raise False
         else:
             return True
+
+    @staticmethod
+    def validar_fecha(fecha):
+        return isinstance(fecha, date)
+
+    
+    

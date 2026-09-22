@@ -23,6 +23,9 @@ class ValorInvalidoError(InventarioError):
 class NombreInvalidoError(ValorInvalidoError):
     pass
 
+class FechaInvalidaError(ValorInvalidoError):
+    pass
+
 class PuntoDeReposicionInvalidoError(ValorInvalidoError):
     pass
 
