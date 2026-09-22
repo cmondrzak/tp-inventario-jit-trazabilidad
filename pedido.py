@@ -1,5 +1,6 @@
 from validaciones import Validaciones
 from exceptions import IdentificadorDuplicadoError, FechaInvalidaError, PedidoNoEncontradoError
+from renglon_pedido import Renglon_pedido
 
 class Pedido:
     lista_id=[]
@@ -22,12 +23,19 @@ class Pedido:
         self.plazo_entrega=plazo_entrega
         self.estado=estado
 
-    def subtotal():
-        return
-    def generar_renglon(self, renglon):
+    def generar_renglon(self,id_renglon,material,cantidad,precio_unitario):
+        r=Renglon_pedido(id_renglon,material,cantidad,precio_unitario)
+        self.renglones.append(r)
 
-        self.renglones.append(renglon)
-    def cambiar_estado():
+
+    def subtotal(self):
+        sub_total=0
+        for objeto in self.renglones:
+            sub_total+=objeto.subtotal_renglon()
+        return sub_total
+
+    def cambiar_estado(self,estado): #validar que solo puedan haber 3 estados, en proceso, aceptado, rechazado
+        self.estado=estado
         return
     
         

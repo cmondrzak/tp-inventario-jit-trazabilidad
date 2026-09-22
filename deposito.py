@@ -9,6 +9,7 @@ from movimiento_retiro import movimiento_retiro
 from validaciones import Validaciones
 
 from exceptions import CantidadInvalidaError, PrecioInvalidoError, SaldoInvalidoError, IdentificadorDuplicadoError, MaterialNoEncontradoError, ProveedorNoEncontradoError, RemesaNoEncontradaError, ExistenciaInsuficienteError
+from gerencia import Gerencia
 
 
 
@@ -34,3 +35,6 @@ class Deposito:
         return
     def obtener_remesas(self,remesas): #lo veo medio inecesario a esto
         return remesas
+    
+    def validar_reposicion(self,id_material):
+        return

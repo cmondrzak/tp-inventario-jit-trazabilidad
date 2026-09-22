@@ -19,7 +19,3 @@ class Material:
         self.unidad = unidad
         self.punto_reposicion = punto_reposicion
         Material.lista_id.append(self.id_material)
-        
-
-    def validar_reposicion():
-        return
