@@ -1,7 +1,7 @@
 from movimiento import Movimiento
 from validaciones import Validaciones
 from exceptions import IdentificadorDuplicadoError, FechaInvalidaError
-class movimiento_ingreso(Movimiento):
+class Movimiento_ingreso(Movimiento):
     lista_id=[]
     def __init__(self, id_movimiento, fecha, remesa,pedido):    #tener remesa y pedido no es un poco redundante? yo pondira solo pedido, pero asi estaba en el UML
         super().__init__(id_movimiento, fecha)
