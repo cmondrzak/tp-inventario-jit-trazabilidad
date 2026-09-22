@@ -1,6 +1,6 @@
 from movimiento import Movimiento
 
-class movimiento_retiro(Movimiento):
+class Movimiento_retiro(Movimiento):
     lista_id=[]
     def __init__(self, id_movimiento, fecha, renglones_retiro):
         super().__init__(id_movimiento, fecha)
