@@ -28,7 +28,9 @@ class Deposito:
         # Falta validar: material existente (MaterialNoEncontradoError)
         # Falta validar: proveedor existente (ProveedorNoEncontradoError)
         return
-    def modificar_materiales(): #esto no iria en el gestor?
+    def modificar_materiales(self,material,id_material):
+        self.material[id_material]=material
+
         return
     def obtener_remesas(self,remesas): #lo veo medio inecesario a esto
         return remesas
