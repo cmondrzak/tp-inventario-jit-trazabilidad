@@ -14,14 +14,12 @@ class Renglon_pedido:
         
         if not Validaciones.es_positivo(cantidad):
             raise CantidadInvalidaError("La cantidad debe ser mayor que cero.")
-        self.cantidad = cantidad
 
         if not Validaciones.es_positivo(precio_unitario):
             raise PrecioInvalidoError("El precio unitario debe ser mayor que cero.")
-        self.precio_unitario = precio_unitario
-
-
         
+        self.precio_unitario = precio_unitario
+        self.cantidad = cantidad
+
     def subtotal_renglon(self):
         return self.cantidad * self.precio_unitario
-
