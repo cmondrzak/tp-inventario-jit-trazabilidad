@@ -56,3 +56,5 @@ class Remesa:
     def generar_movimiento_ingreso():
         return
     
+    def obtener_idremesa(self):
+        return self.id_remesa

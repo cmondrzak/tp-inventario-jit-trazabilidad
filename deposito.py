@@ -25,15 +25,14 @@ class Deposito:
     def retirar(retiro, metodo_descarga):
         metodo_descarga(retiro)
     
-    def almacenar_remesa(self, id_remesa, id_material, id_proveedor, cantidad_recibida,
-                          fecha_recepcion, fecha_vencimiento, precio_unitario):
+    def almacenar_remesa(self,remesa):
+        self.remesas[str(remesa.obtener_idremesa())] = remesa
         # Falta validar: id_remesa duplicado (IdentificadorDuplicadoError)
         # Falta validar: material existente (MaterialNoEncontradoError)
         # Falta validar: proveedor existente (ProveedorNoEncontradoError)
         return
     def modificar_materiales(self,material,id_material):
         self.material[id_material]=material
-
         return
     def obtener_remesas(self,remesas): #lo veo medio inecesario a esto
         return remesas
