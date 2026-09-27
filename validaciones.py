@@ -3,16 +3,25 @@ from datetime import date
 class Validaciones:
     @staticmethod
     def es_positivo(valor):
-        return valor is not None and valor > 0
+        if valor is None:
+            return False
+        if valor <= 0:
+            return False
+        return True
 
     @staticmethod
     def es_no_vacio(texto):
-        return texto is not None and texto.strip() != ""
+        if texto is None:
+            return False
+        texto_limpio = texto.strip()
+        if texto_limpio == "":
+            return False
+        return True
     
     @staticmethod
     def validarid(lista,codigo):
         if codigo in lista:
-            raise False
+            return False
         else:
             return True
 
