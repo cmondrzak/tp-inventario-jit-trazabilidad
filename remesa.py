@@ -45,10 +45,7 @@ class Remesa:
                 f"disponible {self.saldo_disponible}, solicitado {cantidad}."
             )
         self.saldo_disponible -= cantidad
-
-    def registrar_retiro(self, id_movimiento_retiro):
-        self.retiros_ids.append(id_movimiento_retiro)
-
+        
     def __repr__(self):
         return (f"Remesa({self.id_remesa!r}, saldo={self.saldo_disponible}/"
                 f"{self.cantidad_recibida}, vto={self.fecha_vencimiento})")
