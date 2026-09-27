@@ -13,13 +13,13 @@ class Remesa:
         if not Validaciones.es_no_vacio(proveedor):
             raise ProveedorNoEncontradoError("El Proveedor no puede estar vacio.")
 
+        if not Validaciones.es_positivo(cantidad_recibida):
+            raise CantidadInvalidaError("La cantidad recibida debe ser mayor que cero.")
+        
         self.id_remesa = id_remesa
         self.material = material
         self.renglon_pedido = renglon_pedido
         self.proveedor = proveedor
-
-        if not Validaciones.es_positivo(cantidad_recibida):
-            raise CantidadInvalidaError("La cantidad recibida debe ser mayor que cero.")
         self.cantidad_recibida = cantidad_recibida
         self.saldo_disponible = cantidad_recibida
 

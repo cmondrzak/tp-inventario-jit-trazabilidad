@@ -23,7 +23,6 @@ class MetodosDescarga:
     def retirar_fefo(remesas):
         return PoliticaFEFO().ordenar(remesas)
 
-
 class Metodos_descarga():
     @staticmethod
     def retirarFEFO():      #Falta hacer el metodo FEFO
