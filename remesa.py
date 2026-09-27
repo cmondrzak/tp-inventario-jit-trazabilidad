@@ -1,9 +1,18 @@
-from exceptions import CantidadInvalidaError, SaldoInvalidoError
+from exceptions import CantidadInvalidaError, SaldoInvalidoError, IdentificadorDuplicadoError, MaterialNoEncontradoError, ProveedorNoEncontradoError
 from validaciones import Validaciones
 
 class Remesa:
     lista_id=[]
     def __init__(self, id_remesa, material, proveedor, renglon_pedido, cantidad_recibida, saldo_disponible, **datos_opcionales):
+        if not Validaciones.validarid(Remesa.lista_id, id_remesa):
+            raise IdentificadorDuplicadoError("El identificador ya existe en la lista.")
+        
+        if not Validaciones.es_no_vacio(material):
+            raise MaterialNoEncontradoError("El Material no puede estar vacio.")
+
+        if not Validaciones.es_no_vacio(proveedor):
+            raise ProveedorNoEncontradoError("El Proveedor no puede estar vacio.")
+
         self.id_remesa = id_remesa
         self.material = material
         self.renglon_pedido = renglon_pedido
