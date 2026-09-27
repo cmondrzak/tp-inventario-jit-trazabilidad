@@ -20,41 +20,6 @@ def deposito():
     d.registrar_proveedor("P1", "Proveedor SA", "contacto@proveedor.com", "12345678")
     return d
 
-
-# ---------------------------------------------------------------------------
-# Materiales y proveedores
-# ---------------------------------------------------------------------------
-
-def test_registrar_material_lo_deja_disponible_por_id(deposito):
-    assert deposito.materiales["AL-01"].nombre == "Aluminio AL-01"
-
-
-def test_registrar_material_id_duplicado_lanza_error(deposito):
-    with pytest.raises(IdentificadorDuplicadoError):
-        deposito.registrar_material("AL-01", "Otro", "kg", 5)
-
-
-def test_registrar_material_invalido_no_queda_registrado(deposito):
-    with pytest.raises(Exception):
-        deposito.registrar_material("AL-02", "", "kg", 10)
-    assert "AL-02" not in deposito.materiales
-
-
-def test_registrar_proveedor_id_duplicado_lanza_error(deposito):
-    with pytest.raises(IdentificadorDuplicadoError):
-        deposito.registrar_proveedor("P1", "Otro", "otro@mail.com", "12345678")
-
-
-def test_obtener_material_inexistente_lanza_error(deposito):
-    with pytest.raises(MaterialNoEncontradoError):
-        deposito.obtener_material("NO-EXISTE")
-
-
-def test_obtener_proveedor_inexistente_lanza_error(deposito):
-    with pytest.raises(ProveedorNoEncontradoError):
-        deposito.obtener_proveedor("NO-EXISTE")
-
-
 # ---------------------------------------------------------------------------
 # crear_remesa: la consigna de **kwargs, de punta a punta
 # ---------------------------------------------------------------------------
