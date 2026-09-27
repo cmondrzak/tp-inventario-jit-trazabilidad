@@ -1,5 +1,5 @@
 from validaciones import Validaciones
-from exceptions import IdentificadorDuplicadoError, FechaInvalidaError, PedidoNoEncontradoError, PlazoEntregaInvalidoError
+from exceptions import IdentificadorDuplicadoError, PedidoNoEncontradoError, PlazoEntregaInvalidoError
 from renglon_pedido import Renglon_pedido
 
 class Pedido:
@@ -10,11 +10,10 @@ class Pedido:
             raise IdentificadorDuplicadoError("El identificador ya existe en la lista.")
 
         #Falta validar proveedor
-        if not Validaciones.es_no_vacio(self.renglones):
-            raise PedidoNoEncontradoError("El pedido debe tener al menos un renglón.")
-
-        if not Validaciones.validar_fecha(self.fecha):
-            raise FechaInvalidaError("Fecha invalida.")
+        @staticmethod
+        def es_renglonnovacio(renglones):
+            if len(renglones) == 0:
+                raise PedidoNoEncontradoError("El pedido debe tener al menos un renglón.")
 
         if not Validaciones.es_positivo(plazo_entrega):
             raise PlazoEntregaInvalidoError("El plazo de entrega debe ser mayor que cero.")
