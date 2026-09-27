@@ -3,15 +3,16 @@ from exceptions import CantidadInvalidaError, MaterialNoEncontradoError, PrecioI
 
 class RenglonRetiro:
     def __init__(self, material, remesa_modificada, cantidad_solicitada):
-        self.material = material
-        self.remesa_modificada = remesa_modificada
 
         if not Validaciones.es_no_vacio(material):
                 raise MaterialNoEncontradoError("El material no puede estar vacío.")
         
         if not Validaciones.es_positivo(cantidad_solicitada):
             raise CantidadInvalidaError("La cantidad solicitada debe ser mayor que cero.")
+        
         self.cantidad_solicitada = cantidad_solicitada
+        self.material = material
+        self.remesa_modificada = remesa_modificada
         
     def modificar_remesa(self, remesa):
         return
