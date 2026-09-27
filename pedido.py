@@ -6,7 +6,7 @@ class Pedido:
     lista_id=[]
     def __init__(self, id_pedido, proveedor, renglones,plazo_entrega,estado): #Falta validar
 
-        if not Validaciones.validarid(Pedido.lista_id,self.id_pedido):
+        if not Validaciones.validarid(Pedido.lista_id,id_pedido):
             raise IdentificadorDuplicadoError("El identificador ya existe en la lista.")
 
         #Falta validar proveedor
