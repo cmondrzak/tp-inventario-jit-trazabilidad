@@ -15,9 +15,6 @@ class movimiento_ingreso(Movimiento):
         if not Validaciones.validar_fecha(self.fecha):
             raise FechaInvalidaError("Fecha invalida.")
         
-        #Falta validar remesa
-        
-        
         self.remesa = remesa    
         self.pedido=pedido     
 
