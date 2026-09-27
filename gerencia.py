@@ -49,6 +49,7 @@ class Gerencia():
     def generar_retiro(self,id_movimiento,fecha,renglones):
         r = Movimiento_retiro(id_movimiento,fecha,renglones)
         self.movimientos[id_movimiento]=r
+        self.deposito.retirar()
 
     def obtener_pedidos(self):
         return self.pedidos

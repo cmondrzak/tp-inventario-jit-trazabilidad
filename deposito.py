@@ -20,7 +20,7 @@ class Deposito:
 
         
     
-    def generar_retiro(): #esto llama a un metodo del gestor
+    def retirar(): #esto llama a un metodo del gestor
         return 
     
     def almacenar_remesa(self, id_remesa, id_material, id_proveedor, cantidad_recibida,
