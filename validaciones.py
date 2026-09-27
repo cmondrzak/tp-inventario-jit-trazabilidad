@@ -3,6 +3,8 @@ from datetime import date
 class Validaciones:
     @staticmethod
     def es_positivo(valor):
+        if not(valor is float) and not (valor is int):
+            return False
         if valor is None:
             return False
         if valor <= 0:
@@ -11,7 +13,7 @@ class Validaciones:
 
     @staticmethod
     def es_no_vacio(texto):
-        if texto is None:
+        if len(texto)==0:
             return False
         texto_limpio = texto.strip()
         if texto_limpio == "":
