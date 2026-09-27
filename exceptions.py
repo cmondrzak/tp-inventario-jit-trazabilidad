@@ -7,6 +7,8 @@ class IdentificadorDuplicadoError(InventarioError):
 
 class EntidadNoEncontradaError(InventarioError):
     pass
+class UnidadNoEncontradaError(EntidadNoEncontradaError):
+    pass
 
 class PedidoNoEncontradoError(EntidadNoEncontradaError):
     pass
