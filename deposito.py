@@ -27,9 +27,6 @@ class Deposito:
     
     def almacenar_remesa(self,remesa):
         self.remesas[str(remesa.obtener_idremesa())] = remesa
-        # Falta validar: id_remesa duplicado (IdentificadorDuplicadoError)
-        # Falta validar: material existente (MaterialNoEncontradoError)
-        # Falta validar: proveedor existente (ProveedorNoEncontradoError)
         return
     def modificar_materiales(self,material,id_material):
         self.material[id_material]=material
