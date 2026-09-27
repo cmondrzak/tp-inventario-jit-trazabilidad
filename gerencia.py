@@ -46,10 +46,10 @@ class Gerencia():
         self.pedidos[id_pedido] = p
         return
 
-    def generar_retiro(self,id_movimiento,fecha,renglones):
+    def generar_retiro(self,id_movimiento,fecha,renglones,metodo_descarga): # metodo_retiro es la politica de descarga
         r = Movimiento_retiro(id_movimiento,fecha,renglones)
         self.movimientos[id_movimiento]=r
-        self.deposito.retirar()
+        self.deposito.retirar(r,metodo_descarga)
 
     def obtener_pedidos(self):
         return self.pedidos
