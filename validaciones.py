@@ -2,24 +2,22 @@ from datetime import date
 
 class Validaciones:
     @staticmethod
+    def es_numero(valor):
+        if isinstance(valor, (int,float)) and not isinstance(valor, bool):
+            return True
+
+    @staticmethod
     def es_positivo(valor):
-        if not(valor is float) and not (valor is int):
-            return False
-        if valor is None:
-            return False
-        if valor <= 0:
-            return False
-        return True
+        return Validaciones.es_numero(valor) and valor > 0
+
+    @staticmethod
+    def es_no_negativo(valor):
+        return Validaciones.es_numero(valor) and valor >= 0
 
     @staticmethod
     def es_no_vacio(texto):
-        if len(texto)==0:
-            return False
-        texto_limpio = texto.strip()
-        if texto_limpio == "":
-            return False
-        return True
-    
+        return isinstance(texto, str) and len(texto.strip()) > 0
+        
     @staticmethod
     def validarid(lista,codigo):
         if codigo in lista:
@@ -28,8 +26,5 @@ class Validaciones:
             return True
 
     @staticmethod
-    def validar_fecha(fecha):
+    def es_fecha(fecha):
         return isinstance(fecha, date)
-
-    
-    

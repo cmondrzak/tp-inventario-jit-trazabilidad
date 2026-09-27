@@ -6,7 +6,7 @@ class movimiento_ingreso(Movimiento):
     lista_id=[]
     def __init__(self, id_movimiento, fecha, remesa,pedido):   
         super().__init__(id_movimiento, fecha)
-        if not validaciones.es_no_vacio(remesa):
+        if not Validaciones.es_no_vacio(remesa):
             raise ValueError("La remesa no puede estar vacía.")
         
         if not Validaciones.validarid(movimiento_ingreso.lista_id,self.id_movimiento):
