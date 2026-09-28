@@ -21,6 +21,9 @@ class Deposito:
         self.materiales = materiales
 
         
+
+    def crear_remesa():
+        return 
     
     def retirar(retiro, metodo_descarga):
         metodo_descarga(retiro)
