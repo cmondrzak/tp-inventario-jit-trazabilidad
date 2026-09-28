@@ -18,10 +18,6 @@ class Material:
         if not Validaciones.es_positivo(punto_reposicion):
             raise PuntoDeReposicionInvalidoError("El punto de reposición debe ser mayor que cero.")
         
-        if  not Validaciones.es_no_vacio(punto_reposicion):
-            raise UnidadNoEncontradaError("Punto de reposicion no puede estar vacio")
-
-        
         self.id_material = id_material
         self.nombre = nombre
         self.unidad = unidad

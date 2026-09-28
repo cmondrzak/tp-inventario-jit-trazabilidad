@@ -7,6 +7,7 @@ class IdentificadorDuplicadoError(InventarioError):
 
 class EntidadNoEncontradaError(InventarioError):
     pass
+
 class UnidadNoEncontradaError(EntidadNoEncontradaError):
     pass
 
@@ -23,6 +24,9 @@ class RemesaNoEncontradaError(EntidadNoEncontradaError):
     pass
 
 class ValorInvalidoError(InventarioError):
+    pass
+
+class DatoInvalidoError(ValorInvalidoError):
     pass
 
 class NombreInvalidoError(ValorInvalidoError):
