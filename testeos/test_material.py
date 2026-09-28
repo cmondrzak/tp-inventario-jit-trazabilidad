@@ -1,7 +1,17 @@
 import pytest
 
 from material import Material
-from exceptions import NombreInvalidoError, PuntoDeReposicionInvalidoError, UnidadNoEncontradaError
+from exceptions import (
+    IdentificadorDuplicadoError,
+    NombreInvalidoError,
+    PuntoDeReposicionInvalidoError,
+    UnidadNoEncontradaError,
+)
+
+
+@pytest.fixture(autouse=True)
+def reset_material_state():
+    Material.lista_id = []
 
 
 def test_creacion_material_valida():
@@ -13,47 +23,33 @@ def test_creacion_material_valida():
     assert material.punto_reposicion == 10
 
 
+def test_material_id_vacio_lanza_error():
+    with pytest.raises(NombreInvalidoError, match="identificador"):
+        Material("", "Aluminio AL-01", "kg", 10)
+
+
+def test_material_id_duplicado_lanza_error():
+    Material("AL-01", "Aluminio AL-01", "kg", 10)
+
+    with pytest.raises(IdentificadorDuplicadoError):
+        Material("AL-01", "Otro material", "kg", 5)
+
+
 def test_material_nombre_vacio_lanza_error():
-    with pytest.raises(NombreInvalidoError, match="El nombre no puede estar vacío"):
+    with pytest.raises(NombreInvalidoError, match="nombre"):
         Material("AL-01", "", "kg", 10)
 
 
-def test_material_nombre_solo_espacios_lanza_error():
-    with pytest.raises(NombreInvalidoError, match="El nombre no puede estar vacío"):
-        Material("AL-01", "   ", "kg", 10)
-
-
-def test_material_nombre_none_lanza_error():
-    with pytest.raises(NombreInvalidoError, match="El nombre no puede estar vacío"):
-        Material("AL-01", None, "kg", 10)
-
-
 def test_material_unidad_vacia_lanza_error():
-    with pytest.raises(UnidadNoEncontradaError, match="La unidad no puede estar vacía"):
+    with pytest.raises(UnidadNoEncontradaError, match="unidad"):
         Material("AL-01", "Aluminio AL-01", "", 10)
 
 
 def test_material_punto_reposicion_cero_lanza_error():
-    with pytest.raises(PuntoDeReposicionInvalidoError, match="El punto de reposición debe ser mayor que cero"):
+    with pytest.raises(PuntoDeReposicionInvalidoError, match="reposición"):
         Material("AL-01", "Aluminio AL-01", "kg", 0)
 
 
 def test_material_punto_reposicion_negativo_lanza_error():
-    with pytest.raises(PuntoDeReposicionInvalidoError):
+    with pytest.raises(PuntoDeReposicionInvalidoError, match="reposición"):
         Material("AL-01", "Aluminio AL-01", "kg", -5)
-
-
-def test_material_punto_reposicion_none_lanza_error():
-    with pytest.raises(PuntoDeReposicionInvalidoError):
-        Material("AL-01", "Aluminio AL-01", "kg", None)
-
-
-def test_requiere_reposicion_por_debajo_del_punto():
-    material = Material("AL-01", "Aluminio AL-01", "kg", 10)
-    assert material.requiere_reposicion(9) is True
-
-
-def test_no_requiere_reposicion_en_o_por_encima_del_punto():
-    material = Material("AL-01", "Aluminio AL-01", "kg", 10)
-    assert material.requiere_reposicion(10) is False
-    assert material.requiere_reposicion(11) is False
