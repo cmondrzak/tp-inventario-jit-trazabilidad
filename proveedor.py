@@ -11,7 +11,7 @@ class Proveedor:
         if not Validaciones.es_no_vacio(nombre):
             raise NombreInvalidoError("El nombre no puede estar vacío.")
 
-        if not Validaciones.validar_plazo_entrega(plazo_entrega):
+        if not Validaciones.es_positivo(plazo_entrega):
             raise PlazoEntregaInvalidoError("El plazo de entrega debe ser mayor que cero.")
 
         if mail is not None and not Validaciones.validar_mail(mail):
