@@ -1,7 +1,7 @@
 import pytest
 
 from material import Material
-from exceptions import NombreInvalidoError, PuntoDeReposicionInvalidoError
+from exceptions import NombreInvalidoError, PuntoDeReposicionInvalidoError, UnidadNoEncontradaError
 
 
 def test_creacion_material_valida():
@@ -29,7 +29,7 @@ def test_material_nombre_none_lanza_error():
 
 
 def test_material_unidad_vacia_lanza_error():
-    with pytest.raises(NombreInvalidoError, match="unidad de medida"):
+    with pytest.raises(UnidadNoEncontradaError, match="La unidad no puede estar vacía"):
         Material("AL-01", "Aluminio AL-01", "", 10)
 
 
