@@ -9,9 +9,6 @@ class Pedido:
         if not Validaciones.validarid(Pedido.lista_id,id_pedido):
             raise IdentificadorDuplicadoError("El identificador ya existe en la lista.")
 
-        if Pedido.es_renglon_vacio(renglones):
-            raise DatoInvalidoError("El pedido debe contener al menos un renglón.")
-
         if not Validaciones.es_positivo(plazo_entrega):
             raise PlazoEntregaInvalidoError("El plazo de entrega debe ser mayor que cero.")
         

@@ -41,6 +41,8 @@ class PuntoDeReposicionInvalidoError(ValorInvalidoError):
 class PlazoEntregaInvalidoError(ValorInvalidoError):
     pass
 
+class DatoInvalidoError(ValorInvalidoError):
+    pass
 class CantidadInvalidaError(ValorInvalidoError):
     pass
 

@@ -39,6 +39,8 @@ class Deposito:
     def validar_reposicion(self,id_material):
         return
     
+    def obtener_materiales(self):
+        return self.materiales
+    
     def reitrar_fefo(retiro):
-        
         return
