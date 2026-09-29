@@ -1,10 +1,12 @@
 from validaciones import Validaciones
-from exceptions import IdentificadorDuplicadoError, NombreInvalidoError, PuntoDeReposicionInvalidoError, UnidadNoEncontradaError
+from exceptions import IdentificadorDuplicadoError, NombreInvalidoError, PuntoDeReposicionInvalidoError, UnidadNoEncontradaError, MaterialInvalidoError
+
+
 class Material:
     lista_id=[]
     def __init__(self, id_material, nombre, unidad, punto_reposicion):
         if not Validaciones.es_no_vacio(id_material):
-            raise NombreInvalidoError("El identificador no puede estar vacio")
+            raise MaterialInvalidoError("El material no puede estar vacio")
         
         if not Validaciones.validarid(Material.lista_id,id_material):
             raise IdentificadorDuplicadoError("El identificador ya existe en la lista.")
