@@ -1,10 +1,5 @@
 from gerencia import Gerencia
 
-from deposito import Deposito
-
-from proveedor import Proveedor
-
-from material import Material
 
 
 gestor = Gerencia([],{},{},{}) #no se si los movimientos son una lista o un diccionario
