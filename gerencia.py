@@ -7,8 +7,6 @@ from movimiento_retiro import Movimiento_retiro
 from validaciones import Validaciones
 class Gerencia():
     def __init__(self,deposito,pedidos,proveedores,movimientos):
-        if not Validaciones.es_no_vacio(deposito):
-             raise ValueError("El deposito no puede estar vacio")
         self.deposito=deposito
         self.pedidos=pedidos
         self.proveedores=proveedores
