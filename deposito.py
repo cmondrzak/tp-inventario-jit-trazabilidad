@@ -9,7 +9,7 @@ from movimiento_retiro import Movimiento_retiro
 from validaciones import Validaciones
 
 from exceptions import CantidadInvalidaError, PrecioInvalidoError, SaldoInvalidoError, IdentificadorDuplicadoError, MaterialNoEncontradoError, ProveedorNoEncontradoError, RemesaNoEncontradaError, ExistenciaInsuficienteError
-from gerencia import Gerencia
+
 
 
 
