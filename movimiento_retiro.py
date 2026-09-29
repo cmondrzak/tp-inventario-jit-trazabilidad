@@ -15,6 +15,7 @@ class Movimiento_retiro(Movimiento):
         self.id_movimiento = id_movimiento
         self.fecha = fecha
         self.renglones_retiro = renglones_retiro
+        Movimiento_retiro.lista_id.append(self.id_movimiento)
         
     def agregar_renglon(self, renglon):
         self.renglones_retiro.append(renglon)

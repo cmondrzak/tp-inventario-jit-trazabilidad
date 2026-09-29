@@ -14,8 +14,11 @@ class movimiento_ingreso(Movimiento):
 
         if not Validaciones.validar_fecha(self.fecha):
             raise FechaInvalidaError("Fecha invalida.")
-        
+
+        self.id_movimiento = id_movimiento
+        self.fecha = fecha
         self.remesa = remesa    
-        self.pedido=pedido     
+        self.pedido=pedido
+        movimiento_ingreso.lista_id.append(self.id_movimiento)
 
         
