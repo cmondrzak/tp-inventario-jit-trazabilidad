@@ -26,10 +26,10 @@ class RemesaNoEncontradaError(EntidadNoEncontradaError):
 class ValorInvalidoError(InventarioError):
     pass
 
-class DatoInvalidoError(ValorInvalidoError):
+class NombreInvalidoError(ValorInvalidoError):
     pass
 
-class NombreInvalidoError(ValorInvalidoError):
+class MaterialInvalidoError(ValorInvalidoError):
     pass
 
 class FechaInvalidaError(ValorInvalidoError):

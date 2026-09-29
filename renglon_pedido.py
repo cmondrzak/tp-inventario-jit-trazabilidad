@@ -1,5 +1,5 @@
 from validaciones import Validaciones
-from exceptions import CantidadInvalidaError, PrecioInvalidoError, SaldoInvalidoError, MaterialNoEncontradoError, IdentificadorDuplicadoError
+from exceptions import CantidadInvalidaError, MaterialInvalidoError, PrecioInvalidoError, SaldoInvalidoError, IdentificadorDuplicadoError
 
 class Renglon_pedido:
     lista_id=[]
@@ -8,7 +8,7 @@ class Renglon_pedido:
             raise IdentificadorDuplicadoError("El identificador ya existe en la lista.")
         
         if not Validaciones.es_no_vacio(material):
-            raise MaterialNoEncontradoError("El material no puede estar vacío.")
+            raise MaterialInvalidoError("El material no puede estar vacío.")
         
         if not Validaciones.es_positivo(cantidad):
             raise CantidadInvalidaError("La cantidad debe ser mayor que cero.")

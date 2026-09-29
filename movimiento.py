@@ -6,6 +6,7 @@ class Movimiento:
     def __init__(self,id_movimiento, fecha):
         if not Validaciones.validarid(Movimiento.lista_id,id_movimiento):
             raise IdentificadorDuplicadoError("El identificador ya existe en la lista.")
+        
         if not Validaciones.es_fecha(fecha):
             raise FechaInvalidaError("Fecha invalida.")
         
