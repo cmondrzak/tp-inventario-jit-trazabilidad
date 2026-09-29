@@ -25,6 +25,10 @@ class Material:
         self.unidad = unidad
         self.punto_reposicion = punto_reposicion
         Material.lista_id.append(self.id_material)
+    
+    def __repr__(self):
+        return f'{self.id_material},{self.nombre},{self.unidad},{self.punto_reposicion}'
+    
 
     def requiere_reposicion(self, existencia_disponible):
         return existencia_disponible < self.punto_reposicion
