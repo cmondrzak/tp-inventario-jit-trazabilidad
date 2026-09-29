@@ -13,7 +13,7 @@ gestor.crear_deposito({},{})
 
 gestor.registrar_material(1,"acero","kg",20)
 
-gestor.registrar_proveedor(1,'proveedor1',5,"proveedor1@gmail.com",'1234567')
+gestor.registrar_proveedor(1,'proveedor1',5,"proveedor1@gmail.com",12345678)
 
 gestor.generar_pedido(1,"proveedor 1",[],15)
 
