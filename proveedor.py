@@ -14,10 +14,10 @@ class Proveedor:
         if not Validaciones.es_positivo(plazo_entrega):
             raise PlazoEntregaInvalidoError("El plazo de entrega debe ser mayor que cero.")
 
-        if mail is not None and not Validaciones.validar_mail(mail):
+        if mail is not None and not Validaciones.es_mail_valido(mail):
             raise DatoInvalidoError("El correo electrónico no es válido.")
 
-        if telefono is not None and not Validaciones.validar_telefono(telefono):
+        if telefono is not None and not Validaciones.es_telefono_valido(telefono):
             raise DatoInvalidoError("El número de teléfono no es válido.")
 
         self.id_proveedor = id_proveedor

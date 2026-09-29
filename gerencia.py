@@ -28,8 +28,8 @@ class Gerencia():
                    cantidad_total+=valor.obtener_cantidad_recibida()
          return cantidad_total
         
-    def registrar_proveedor(self, id_proveedor, nombre, mail,telefono):
-            p = Proveedor(id_proveedor, nombre,mail,telefono)
+    def registrar_proveedor(self, id_proveedor, nombre, plazo_entrega , mail,telefono):
+            p = Proveedor(id_proveedor, nombre,plazo_entrega,mail = mail,telefono = telefono)
             self.provedores[id_proveedor]=p
 
     @staticmethod
