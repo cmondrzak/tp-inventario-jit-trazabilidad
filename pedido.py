@@ -26,11 +26,6 @@ class Pedido:
         r=Renglon_pedido(id_renglon,material,cantidad,precio_unitario)
         self.renglones.append(r)
 
-    @staticmethod
-    def es_renglon_vacio(renglones):
-        if len(renglones) == 0:
-            return True 
-
     def subtotal(self):
         sub_total=0
         for objeto in self.renglones:

@@ -17,8 +17,16 @@ class Validaciones:
         return Validaciones.es_numero(valor) and valor >= 0
 
     @staticmethod
-    def es_no_vacio(texto):
-        return isinstance(texto, str) and len(texto.strip()) > 0
+    def es_no_vacio(objeto):
+        if isinstance(objeto, str):
+            if len(objeto.strip()) > 0:
+                return True
+        if not (objeto is None):
+            return True
+        if isinstance(objeto, list) or isinstance(objeto, dict):
+            if len(objeto)!=0:
+                return True
+        return False
         
     @staticmethod
     def validarid(lista,codigo):
@@ -56,4 +64,5 @@ class Validaciones:
             return False
         solo_numeros = telefono.replace(" ", "").replace("-", "").replace("+", "")
         return solo_numeros.isdigit() and len(solo_numeros) >= 8
+    
     
