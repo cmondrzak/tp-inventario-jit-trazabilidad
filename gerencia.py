@@ -11,9 +11,9 @@ class Gerencia():
         self.proveedores=proveedores
         self.movimientos=movimientos
 
-    def registrar_material(self,id_material,nombre,unidad_medida,reposicion,deposito):
+    def registrar_material(self,id_material,nombre,unidad_medida,reposicion):
         m=Material(id_material,nombre,unidad_medida,reposicion)
-        self.deposito.modificar_materiales(m,id_material)
+        self.deposito[0].modificar_materiales(m,id_material)
 
     def crear_deposito(self,remesas,materiales):
          d=Deposito(remesas,materiales)
