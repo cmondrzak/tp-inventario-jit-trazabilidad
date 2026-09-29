@@ -41,8 +41,8 @@ class Gerencia():
                    cantidad_total+=valor.obtener_cantidad_recibida()
          return cantidad_total
         
-    def generar_pedido(self,id_pedido,proveedor,renglones,plazo_entrega,estado_pedido): #por ahi estaria bueno que estado pedido y renglones tengan valor por defecto al iniciar el pedido
-        p=Pedido(id_pedido,proveedor,renglones,plazo_entrega,estado_pedido)
+    def generar_pedido(self,id_pedido,proveedor,renglones,plazo_entrega): #por ahi estaria bueno que estado pedido y renglones tengan valor por defecto al iniciar el pedido
+        p=Pedido(id_pedido,proveedor,renglones,plazo_entrega,"Solicitado")
         self.pedidos[id_pedido] = p
         proveedor.agregar_pedido_pendiente(p)
         
