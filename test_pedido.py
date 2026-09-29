@@ -1,7 +1,8 @@
 import pytest
 
 from pedido import Pedido
-from exceptions import IdentificadorDuplicadoError, PedidoNoEncontradoError, PlazoEntregaInvalidoError
+from renglon_pedido import Renglon_pedido
+from exceptions import IdentificadorDuplicadoError, PedidoNoEncontradoError, PlazoEntregaInvalidoError, DatoInvalidoError
 
 
 @pytest.fixture(autouse=True)
@@ -10,10 +11,11 @@ def reset_pedido_state():
 
 
 def test_creacion_pedido_valido():
-    pedido = Pedido("PED-1", proveedor="P1", renglones=[], plazo_entrega=5, estado="pendiente")
+    renglon = Renglon_pedido(1, "AL-01", cantidad=3, precio_unitario=50)
+    pedido = Pedido("PED-1", proveedor="P1", renglones=[renglon], plazo_entrega=5, estado="pendiente")
 
     assert pedido.id_pedido == "PED-1"
-    assert pedido.renglones == []
+    assert pedido.renglones == [renglon]
     assert pedido.estado == "pendiente"
 
 
@@ -25,7 +27,7 @@ def test_pedido_id_duplicado_lanza_error():
 
 
 def test_pedido_sin_renglones_lanza_error():
-    with pytest.raises(PedidoNoEncontradoError):
+    with pytest.raises(DatoInvalidoError, match="al menos un renglón"):
         Pedido("PED-1", "P1", [], 5, "pendiente")
 
 

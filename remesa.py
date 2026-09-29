@@ -4,7 +4,7 @@ from datetime import date
 
 class Remesa:
     lista_id=[]
-    def __init__(self, id_remesa, material, proveedor, renglon_pedido, cantidad_recibida, fecha_recepcion = None, **datos_opcionales):
+    def __init__(self, id_remesa, material, proveedor, renglon_pedido, cantidad_recibida, fecha_recepcion, **datos_opcionales):
         if not Validaciones.validarid(Remesa.lista_id, id_remesa):
             raise IdentificadorDuplicadoError("El identificador ya existe en la lista.")
         
@@ -17,21 +17,16 @@ class Remesa:
         if not Validaciones.es_positivo(cantidad_recibida):
             raise CantidadInvalidaError("La cantidad recibida debe ser mayor que cero.")
 
-        if fecha_recepcion is None:
-            fecha_recepcion = date.today()
-
-        if not Validaciones.es_fecha(fecha_recepcion):
-            raise FechaInvalidaError("La fecha de recepción no es válida.")
-
         fecha_vencimiento = datos_opcionales.get("fecha_vencimiento")
-        if fecha_vencimiento is not None and not Validaciones.es_fecha(fecha_vencimiento):
+        if fecha_vencimiento is not None and not Validaciones.es_fecha(fecha_vencimiento) or fecha_vencimiento < date.today():
             raise FechaInvalidaError("La fecha de vencimiento no es válida.")
-
+            
         self.id_remesa = id_remesa
         self.material = material
         self.proveedor = proveedor
         self.cantidad_recibida = cantidad_recibida
         self.saldo_disponible = cantidad_recibida
+        self.fecha_recepcion = date.today()
         self.fecha_recepcion = fecha_recepcion
         self.fecha_vencimiento = fecha_vencimiento
         self.datos_opcionales = dict(datos_opcionales)
