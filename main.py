@@ -18,3 +18,5 @@ gestor.registrar_proveedor(1,'proveedor 1',5,"proveedor1@gmail.com",'123456789')
 gestor.generar_pedido(1,1,[],15)
 
 print(gestor.deposito[0].obtener_materiales())
+
+print(gestor.obtener_proveedores())

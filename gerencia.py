@@ -55,6 +55,9 @@ class Gerencia():
 
     def obtener_pedidos(self):
         return self.pedidos
+    
+    def obtener_proveedores(self):
+        return self.proveedores
 
     def generar_remesa():
         return

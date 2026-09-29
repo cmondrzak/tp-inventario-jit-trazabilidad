@@ -18,6 +18,9 @@ class Pedido:
         self.plazo_entrega=plazo_entrega
         self.estado=estado
         Pedido.lista_id.append(self.id_pedido)
+    
+    def __repr__(self):
+        return f'{self.id_pedido},{self.proveedor},{self.renglones},{self.plazo_entrega},{self.estado}'
 
     def generar_renglon(self,id_renglon,material,cantidad,precio_unitario):
         r=Renglon_pedido(id_renglon,material,cantidad,precio_unitario)

@@ -42,5 +42,6 @@ class Deposito:
     def obtener_materiales(self):
         return self.materiales
     
+    
     def reitrar_fefo(retiro):
         return
