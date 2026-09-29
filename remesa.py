@@ -8,10 +8,10 @@ class Remesa:
         if not Validaciones.validarid(Remesa.lista_id, id_remesa):
             raise IdentificadorDuplicadoError("El identificador ya existe en la lista.")
         
-        if material is None:
+        if not Validaciones.es_no_vacio(material):
             raise MaterialNoEncontradoError("El material no puede estar vacío.")
         
-        if proveedor is None:
+        if not Validaciones.es_no_vacio(proveedor):
             raise ProveedorNoEncontradoError("El Proveedor no puede estar vacío.")
 
         if not Validaciones.es_positivo(cantidad_recibida):

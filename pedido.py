@@ -1,5 +1,5 @@
 from validaciones import Validaciones
-from exceptions import IdentificadorDuplicadoError, PedidoNoEncontradoError, PlazoEntregaInvalidoError
+from exceptions import IdentificadorDuplicadoError, PedidoNoEncontradoError, PlazoEntregaInvalidoError, DatoInvalidoError
 from renglon_pedido import Renglon_pedido
 
 class Pedido:
@@ -9,11 +9,8 @@ class Pedido:
         if not Validaciones.validarid(Pedido.lista_id,id_pedido):
             raise IdentificadorDuplicadoError("El identificador ya existe en la lista.")
 
-        #Falta validar proveedor
-        @staticmethod
-        def es_renglonnovacio(renglones):
-            if len(renglones) == 0:
-                raise PedidoNoEncontradoError("El pedido debe tener al menos un renglón.")
+        if Pedido.es_renglon_vacio(renglones):
+            raise DatoInvalidoError("El pedido debe contener al menos un renglón.")
 
         if not Validaciones.es_positivo(plazo_entrega):
             raise PlazoEntregaInvalidoError("El plazo de entrega debe ser mayor que cero.")
@@ -29,6 +26,10 @@ class Pedido:
         r=Renglon_pedido(id_renglon,material,cantidad,precio_unitario)
         self.renglones.append(r)
 
+    @staticmethod
+    def es_renglon_vacio(renglones):
+        if len(renglones) == 0:
+            return True 
 
     def subtotal(self):
         sub_total=0
