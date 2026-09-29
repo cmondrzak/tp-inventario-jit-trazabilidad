@@ -34,8 +34,8 @@ class Remesa:
 
         self.renglon_pedido = renglon_pedido
 
-    def obtener_dato(self, clave, default=None):
-        return self.datos_opcionales.get(clave, default)
+    def obtener_dato(self, clave):
+        return self.datos_opcionales.get(clave)
 
     def obtener_fecha_vencimiento(self):
         return self.fecha_vencimiento
@@ -68,7 +68,7 @@ class Remesa:
         return (f"Remesa({self.id_remesa!r}, saldo={self.saldo_disponible}/"
                 f"{self.cantidad_recibida}, vto={self.fecha_vencimiento})")
     
-    def generar_movimiento_ingreso():
+    def generar_movimiento_ingreso(self):
         return
     
     def obtener_idremesa(self):
@@ -77,3 +77,4 @@ class Remesa:
     @classmethod
     def reiniciar_ids(cls):
         cls.lista_id = []
+
