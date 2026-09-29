@@ -23,6 +23,7 @@ class Pedido:
         self.renglones = renglones
         self.plazo_entrega=plazo_entrega
         self.estado=estado
+        Pedido.lista_id.append(self.id_pedido)
 
     def generar_renglon(self,id_renglon,material,cantidad,precio_unitario):
         r=Renglon_pedido(id_renglon,material,cantidad,precio_unitario)
