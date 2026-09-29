@@ -18,15 +18,21 @@ class Validaciones:
 
     @staticmethod
     def es_no_vacio(objeto):
-        if isinstance(objeto, str):
+        if objeto is None:
+            return False
+        
+        elif isinstance(objeto, str):
             if len(objeto.strip()) > 0:
                 return True
-        if not (objeto is None):
-            return True
-        if isinstance(objeto, list) or isinstance(objeto, dict):
-            if len(objeto)!=0:
+            else:
+                return False
+                        
+        elif isinstance(objeto, list) or isinstance(objeto, dict):
+            if len(objeto) > 0:
                 return True
-        return False
+            else: return False
+
+        return True
         
     @staticmethod
     def validarid(lista,codigo):
