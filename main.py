@@ -13,8 +13,8 @@ gestor.crear_deposito({},{})
 
 gestor.registrar_material(1,"acero","kg",20)
 
-gestor.registrar_proveedor(1,'proveedor1',5,"proveedor1@gmail.com",12345678)
+gestor.registrar_proveedor(1,'proveedor 1',5,"proveedor1@gmail.com",'123456789')
 
-gestor.generar_pedido(1,"proveedor 1",[],15)
+gestor.generar_pedido(1,1,[],15)
 
 print(gestor.deposito[0].obtener_materiales())

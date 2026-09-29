@@ -34,10 +34,13 @@ class Proveedor:
         pedido.cambiar_estado(nuevo_estado)
         
     def agregar_pedido_pendiente(self,pedido):
-        self.pedidios_pendientes.append(pedido)
+        self.pedidos_pendientes.append(pedido)
     
     def borrar_pedido_pendiente(self,pedido):
         self.pedidios_pendientes.remove(pedido)
+        
+    def obtener_idproveedor(self):
+        return self.id_proveedor
 
     @classmethod
     def reiniciar_ids(cls):

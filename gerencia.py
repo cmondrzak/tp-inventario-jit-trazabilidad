@@ -30,7 +30,7 @@ class Gerencia():
         
     def registrar_proveedor(self, id_proveedor, nombre, plazo_entrega , mail,telefono):
             p = Proveedor(id_proveedor, nombre,plazo_entrega,mail = mail,telefono = telefono)
-            self.provedores[id_proveedor]=p
+            self.proveedores[id_proveedor]=p
 
     @staticmethod
     def existencia_disponible(deposito,material):
@@ -44,7 +44,7 @@ class Gerencia():
     def generar_pedido(self,id_pedido,proveedor,renglones,plazo_entrega): #por ahi estaria bueno que estado pedido y renglones tengan valor por defecto al iniciar el pedido
         p=Pedido(id_pedido,proveedor,renglones,plazo_entrega,"Solicitado")
         self.pedidos[id_pedido] = p
-        proveedor.agregar_pedido_pendiente(p)
+        self.proveedores[proveedor].agregar_pedido_pendiente(p)
         
 
     def generar_retiro(self,id_movimiento,fecha,renglones,metodo_descarga): # metodo_retiro es la politica de descarga
