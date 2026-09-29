@@ -31,7 +31,7 @@ class Deposito:
         self.remesas[str(remesa.obtener_idremesa())] = remesa
         return
     def modificar_materiales(self,material,id_material):
-        self.material[id_material]=material
+        self.materiales[id_material]=material
         return
     def obtener_remesas(self,remesas): #lo veo medio inecesario a esto
         return remesas
