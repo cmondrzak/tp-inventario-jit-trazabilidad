@@ -2,7 +2,7 @@ from gerencia import Gerencia
 
 
 
-gestor = Gerencia([],{},{},{}) #no se si los movimientos son una lista o un diccionario
+gestor = Gerencia([],{},{},{})
 
 gestor.crear_deposito({},{})
 
