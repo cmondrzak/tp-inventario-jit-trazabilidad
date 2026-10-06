@@ -2,6 +2,10 @@ from validaciones import Validaciones
 
 from exceptions import IdentificadorDuplicadoError, NombreInvalidoError, DatoInvalidoError, PlazoEntregaInvalidoError, PuntoDeReposicionInvalidoError, UnidadNoEncontradaError
 
+from remesa import Remesa
+
+from gerencia import Gerencia
+
 class Proveedor:
     lista_id=[]
     def __init__(self, id_proveedor, nombre, plazo_entrega, mail=None, telefono=None):
@@ -43,6 +47,13 @@ class Proveedor:
         
     def obtener_idproveedor(self):
         return self.id_proveedor
+    
+    @staticmethod
+    def generar_remesa(id_remesa, material, proveedor, renglon_pedido, cantidad_recibida, fecha_recepcion, **datos_opcionales):
+        a = Remesa(id_remesa, material, proveedor, renglon_pedido, cantidad_recibida, fecha_recepcion, **datos_opcionales)
+        Gerencia.almacenar_remesa(a)
+        return
+    
     
     @classmethod
     def reiniciar_ids(cls):
