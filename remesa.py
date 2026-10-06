@@ -17,9 +17,18 @@ class Remesa:
         if not Validaciones.es_positivo(cantidad_recibida):
             raise CantidadInvalidaError("La cantidad recibida debe ser mayor que cero.")
 
+    
         fecha_vencimiento = datos_opcionales.get("fecha_vencimiento")
-        if fecha_vencimiento is not None and not Validaciones.es_fecha(fecha_vencimiento) or fecha_vencimiento < date.today():
-            raise FechaInvalidaError("La fecha de vencimiento no es válida.")
+        if not Validaciones.es_fecha(fecha_recepcion):
+            raise FechaInvalidaError("La fecha de recepción no es válida.")
+
+        if fecha_vencimiento is not None:
+            if not Validaciones.es_fecha(fecha_vencimiento):
+                raise FechaInvalidaError("La fecha de vencimiento no es válida.")
+            if fecha_vencimiento < fecha_recepcion:
+                raise FechaInvalidaError(
+                    "La fecha de vencimiento no puede ser anterior a la de recepción."
+                )
             
         self.id_remesa = id_remesa
         self.material = material
