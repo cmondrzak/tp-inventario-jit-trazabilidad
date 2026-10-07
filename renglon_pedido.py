@@ -24,3 +24,6 @@ class Renglon_pedido:
 
     def subtotal_renglon(self):
         return self.cantidad * self.precio_unitario
+    
+    def obtener_id_renglon_pedido(self):
+        return self.id_renglon

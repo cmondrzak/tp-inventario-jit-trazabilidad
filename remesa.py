@@ -41,7 +41,7 @@ class Remesa:
         self.datos_opcionales = dict(datos_opcionales)
         Remesa.lista_id.append(self.id_remesa)
 
-        self.renglon_pedido = id_renglon_pedido
+        self.id_renglon_pedido = id_renglon_pedido
 
     def obtener_dato(self, clave):
         return self.datos_opcionales.get(clave)
@@ -54,6 +54,9 @@ class Remesa:
 
     def obtener_fecha_vencimiento(self):
         return self.fecha_vencimiento
+    
+    def obtener_id_renglon_pedido(self):
+        return self.id_renglon_pedido
 
     def obtener_material(self):
         return self.material

@@ -19,6 +19,9 @@ class Pedido:
         self.estado=estado
         Pedido.lista_id.append(self.id_pedido)
     
+    def obtener_renglones(self):
+        return self.renglones
+    
     def __repr__(self):
         return f'{self.id_pedido},{self.proveedor},{self.renglones},{self.plazo_entrega},{self.estado}'
 

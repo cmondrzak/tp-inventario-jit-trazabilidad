@@ -47,7 +47,15 @@ class Proveedor:
         
     def obtener_idproveedor(self):
         return self.id_proveedor
+    
+    def obtener_pedidos_pendientes(self):
+        return self.pedidos_pendientes
 
+    @staticmethod
+    def generar_remesa(id_remesa, material, id_proveedor, renglon_pedido, cantidad_recibida, fecha_recepcion, **datos_opcionales):
+        r = Remesa(id_remesa, material, id_proveedor, renglon_pedido, cantidad_recibida, fecha_recepcion, **datos_opcionales)
+        return r
+    
     @classmethod
     def reiniciar_ids(cls):
         cls.lista_id = []
