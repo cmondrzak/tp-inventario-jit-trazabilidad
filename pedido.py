@@ -22,6 +22,9 @@ class Pedido:
     def obtener_renglones(self):
         return self.renglones
     
+    def obtener_id_pedido(self):
+        return self.id_pedido
+    
     def __repr__(self):
         return f'{self.id_pedido},{self.proveedor},{self.renglones},{self.plazo_entrega},{self.estado}'
 

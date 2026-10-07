@@ -18,17 +18,12 @@ class Deposito:
     def __init__(self,remesas, materiales):
         self.remesas = remesas
         self.materiales = materiales
-
-        
-
-    def crear_remesa():
-        return 
     
     def retirar(retiro, metodo_descarga):
         metodo_descarga(retiro)
     
     def almacenar_remesa(self,remesa):
-        self.remesas[str(remesa.obtener_idremesa())] = remesa
+        self.remesas[str(remesa.obtener_id_remesa())] = remesa
         return
     def modificar_materiales(self,material,id_material):
         self.materiales[id_material]=material

@@ -7,6 +7,7 @@ from movimiento_retiro import Movimiento_retiro
 from movimiento_ingreso import Movimiento_ingreso
 from validaciones import Validaciones
 from remesa import Remesa
+from exceptions import PedidoNoEncontradoError
 class Gerencia():
     def __init__(self,deposito,pedidos,proveedores,movimientos):
         self.deposito=deposito
@@ -66,10 +67,10 @@ class Gerencia():
         for pedido in self.proveedores[id_proveedor].obtener_pedidos_pendientes():
             for renglon in pedido.obtener_renglones():
                 if r.obtener_id_renglon_pedido() == renglon.obtener_id_renglon_pedido():
-                    
-        
-        #m = Movimiento_ingreso()
-        
-        
+                    m = Movimiento_ingreso(id_movimiento_ingreso, fecha_recepcion, id_remesa, pedido.obtener_id_pedido())
+                    self.movimientos[id_movimiento_ingreso] = m
+                    self.deposito[0].almacenar_remesa(r)
+                    return
+        raise PedidoNoEncontradoError 
         return
     
