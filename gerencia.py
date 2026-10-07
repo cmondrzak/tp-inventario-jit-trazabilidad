@@ -4,6 +4,7 @@ from pedido import Pedido
 from material import Material
 from deposito import Deposito
 from movimiento_retiro import Movimiento_retiro
+from movimiento_ingreso import Movimiento_ingreso
 from validaciones import Validaciones
 class Gerencia():
     def __init__(self,deposito,pedidos,proveedores,movimientos):
@@ -59,6 +60,9 @@ class Gerencia():
     def obtener_proveedores(self):
         return self.proveedores
 
-    def generar_remesa():
+    @staticmethod
+    def almacenar_remesa(remesa):
+        
+        
         return
     

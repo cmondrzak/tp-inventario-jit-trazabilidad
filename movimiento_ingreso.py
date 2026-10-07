@@ -2,7 +2,7 @@ from movimiento import Movimiento
 from validaciones import Validaciones
 from exceptions import IdentificadorDuplicadoError, FechaInvalidaError
 import validaciones
-class movimiento_ingreso(Movimiento):
+class Movimiento_ingreso(Movimiento):
     lista_id=[]
     def __init__(self, id_movimiento, fecha, remesa,pedido):   
         super().__init__(id_movimiento, fecha)
