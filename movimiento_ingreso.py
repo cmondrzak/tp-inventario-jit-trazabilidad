@@ -9,7 +9,7 @@ class Movimiento_ingreso(Movimiento):
         if not Validaciones.es_no_vacio(remesa):
             raise ValueError("La remesa no puede estar vacía.")
         
-        if not Validaciones.validarid(movimiento_ingreso.lista_id,self.id_movimiento):
+        if not Validaciones.validarid(Movimiento_ingreso.lista_id,self.id_movimiento):
             raise IdentificadorDuplicadoError("El identificador ya existe en la lista.")
 
         if not Validaciones.validar_fecha(self.fecha):
@@ -19,6 +19,6 @@ class Movimiento_ingreso(Movimiento):
         self.fecha = fecha
         self.remesa = remesa    
         self.pedido=pedido
-        movimiento_ingreso.lista_id.append(self.id_movimiento)
+        Movimiento_ingreso.lista_id.append(self.id_movimiento)
 
         
