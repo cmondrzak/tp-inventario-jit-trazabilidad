@@ -12,7 +12,7 @@ class Movimiento_ingreso(Movimiento):
         if not Validaciones.validarid(Movimiento_ingreso.lista_id,self.id_movimiento):
             raise IdentificadorDuplicadoError("El identificador ya existe en la lista.")
 
-        if not Validaciones.validar_fecha(self.fecha):
+        if not Validaciones.es_fecha(self.fecha):
             raise FechaInvalidaError("Fecha invalida.")
 
         self.id_movimiento = id_movimiento
@@ -20,5 +20,8 @@ class Movimiento_ingreso(Movimiento):
         self.remesa = remesa    
         self.pedido=pedido
         Movimiento_ingreso.lista_id.append(self.id_movimiento)
+    
+    def __repr__(self):
+        return f'id = {self.id_movimiento}, fecha = {self.fecha}, remesa = {self.remesa}, pedido = {self.pedido}'
 
         

@@ -4,7 +4,6 @@ from exceptions import IdentificadorDuplicadoError, NombreInvalidoError, DatoInv
 
 from remesa import Remesa
 
-from gerencia import Gerencia
 
 class Proveedor:
     lista_id=[]

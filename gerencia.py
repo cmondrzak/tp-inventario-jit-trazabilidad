@@ -62,6 +62,9 @@ class Gerencia():
     def obtener_proveedores(self):
         return self.proveedores
     
+    def obtener_movimientos(self):
+        return self.movimientos
+    
     def almacenar_remesa(self,id_movimiento_ingreso, id_remesa, material, id_proveedor, id_renglon_pedido, cantidad_recibida, fecha_recepcion, **datos_opcionales):
         r = Proveedor.generar_remesa(id_remesa, material, id_proveedor, id_renglon_pedido, cantidad_recibida, fecha_recepcion, **datos_opcionales)
         for pedido in self.proveedores[id_proveedor].obtener_pedidos_pendientes():
