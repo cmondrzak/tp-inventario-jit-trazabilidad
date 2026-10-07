@@ -75,5 +75,3 @@ class Gerencia():
                     self.deposito[0].almacenar_remesa(r)
                     return
         raise PedidoNoEncontradoError 
-        return
-    
