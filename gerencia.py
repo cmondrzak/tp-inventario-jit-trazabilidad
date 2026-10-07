@@ -6,6 +6,7 @@ from deposito import Deposito
 from movimiento_retiro import Movimiento_retiro
 from movimiento_ingreso import Movimiento_ingreso
 from validaciones import Validaciones
+from remesa import Remesa
 class Gerencia():
     def __init__(self,deposito,pedidos,proveedores,movimientos):
         self.deposito=deposito
@@ -59,9 +60,16 @@ class Gerencia():
     
     def obtener_proveedores(self):
         return self.proveedores
+    
+    def generar_remesa(id_movimiento_ingreso, id_remesa, material, proveedor, renglon_pedido, cantidad_recibida, fecha_recepcion, **datos_opcionales):
+        a = Remesa(id_remesa, material, proveedor, renglon_pedido, cantidad_recibida, fecha_recepcion, **datos_opcionales)
 
     @staticmethod
-    def almacenar_remesa(remesa):
+    def almacenar_remesa(remesa,id_movimiento_ingreso):
+        
+        
+        
+        #m = Movimiento_ingreso()
         
         
         return

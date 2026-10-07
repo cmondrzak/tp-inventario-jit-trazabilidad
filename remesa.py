@@ -4,14 +4,14 @@ from datetime import date
 
 class Remesa:
     lista_id=[]
-    def __init__(self, id_remesa, material, proveedor, renglon_pedido, cantidad_recibida, fecha_recepcion, **datos_opcionales):
+    def __init__(self, id_remesa, material, id_proveedor, id_renglon_pedido, cantidad_recibida, fecha_recepcion, **datos_opcionales):
         if not Validaciones.validarid(Remesa.lista_id, id_remesa):
             raise IdentificadorDuplicadoError("El identificador ya existe en la lista.")
         
         if not Validaciones.es_no_vacio(material):
             raise MaterialNoEncontradoError("El material no puede estar vacío.")
         
-        if not Validaciones.es_no_vacio(proveedor):
+        if not Validaciones.es_no_vacio(id_proveedor):
             raise ProveedorNoEncontradoError("El Proveedor no puede estar vacío.")
 
         if not Validaciones.es_positivo(cantidad_recibida):
@@ -32,7 +32,7 @@ class Remesa:
             
         self.id_remesa = id_remesa
         self.material = material
-        self.proveedor = proveedor
+        self.id_proveedor = id_proveedor
         self.cantidad_recibida = cantidad_recibida
         self.saldo_disponible = cantidad_recibida
         self.fecha_recepcion = date.today()
@@ -41,10 +41,16 @@ class Remesa:
         self.datos_opcionales = dict(datos_opcionales)
         Remesa.lista_id.append(self.id_remesa)
 
-        self.renglon_pedido = renglon_pedido
+        self.renglon_pedido = id_renglon_pedido
 
     def obtener_dato(self, clave):
         return self.datos_opcionales.get(clave)
+    
+    def obtener_id_remesa(self):
+        return self.id_remesa
+    
+    def obtener_id_proveedor(self):
+        return self.id_proveedor
 
     def obtener_fecha_vencimiento(self):
         return self.fecha_vencimiento
