@@ -40,3 +40,9 @@ class Deposito:
     
     def retirar_fefo(retiro):
         return
+    def remesas_por_material(self,material):
+        lista=[]
+        for val in self.remesas.values():
+            if val.material==material:
+                lista.append(val)
+        return lista
