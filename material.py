@@ -1,5 +1,5 @@
 from validaciones import Validaciones
-from exceptions import IdentificadorDuplicadoError, NombreInvalidoError, PuntoDeReposicionInvalidoError, UnidadNoEncontradaError, MaterialInvalidoError
+from exceptions import IdentificadorDuplicadoError, UnidadInvalida, PuntoDeReposicionInvalidoError, NombreInvalidoError, MaterialInvalidoError
 
 
 class Material:
@@ -15,7 +15,7 @@ class Material:
             raise NombreInvalidoError("El nombre no puede estar vacío.")
         
         if not Validaciones.es_no_vacio(unidad):
-            raise UnidadNoEncontradaError("La unidad no puede estar vacía.")
+            raise UnidadInvalidaError("La unidad no puede estar vacía.")
 
         if not Validaciones.es_positivo(punto_reposicion):
             raise PuntoDeReposicionInvalidoError("El punto de reposición debe ser mayor que cero.")

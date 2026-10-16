@@ -29,6 +29,9 @@ class ValorInvalidoError(InventarioError):
 class NombreInvalidoError(ValorInvalidoError):
     pass
 
+class UndidadInvalidaError(ValorInvalidoError):
+    pass
+
 class MaterialInvalidoError(ValorInvalidoError):
     pass
 
