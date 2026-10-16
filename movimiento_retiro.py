@@ -7,6 +7,20 @@ from exceptions import MaterialInvalidoError
 from deposito import Deposito
 from exceptions import CantidadInvalidaError
 
+class cola:
+    def __init__(self):
+        self.__elementos=[]
+    def encolar(self,dato):
+        self.__elementos.append(dato)
+    def __repr__(self):
+        return self.__elementos
+    def desencolar(self):
+        if len(self.__elementos)==0:
+            raise IndexError("La cola esta vacia")
+        else:
+            self.__elementos.pop(0)
+    
+
 class Movimiento_retiro(Movimiento):
     lista_id=[]
     def __init__(self, id_movimiento, fecha, renglones_retiro,remesas_modificadas,materiales_modificacos,deposito,metodo_descarga):
