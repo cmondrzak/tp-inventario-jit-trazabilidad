@@ -46,9 +46,15 @@ class Movimiento_retiro(Movimiento):
             r=RenglonRetiro(material,cantidad)
             self.renglones_retiro.append(r)
             self.id_materiales_modificacos.append(material)
-            count=0
+            count=cantidad
             for val in self.metodo_descarga(self.deposito.remesas_por_material(material)):
-                if val.cantidad_recibida<=
+                if val.cantidad_recibida<=count:
+                    count-=val.cantidad_recibida
+                    self.remesas_modificadas.append(val)
+                else:
+                    self.remesas_modificadas.append(val)
+            
+                    
 
 
             
