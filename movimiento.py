@@ -20,3 +20,4 @@ class Movimiento:
     @classmethod
     def reiniciar_ids(cls):
         cls.lista_id = []
+

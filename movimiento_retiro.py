@@ -1,11 +1,12 @@
 from movimiento import Movimiento
-#from gerencia import Gerencia
+from gerencia import Gerencia
 from renglon_retiro import RenglonRetiro
 from validaciones import Validaciones
 from exceptions import IdentificadorDuplicadoError
 from exceptions import MaterialInvalidoError
 from exceptions import CantidadInvalidaError
 from exceptions import EstadoInvalidoError
+
 class cola:
     def __init__(self, elementos=None):
         if elementos is None:
@@ -60,7 +61,7 @@ class Movimiento_retiro(Movimiento):
             raise EstadoInvalidoError
         if material in self.materiales_modificados:
             raise MaterialInvalidoError("Ya existe un renglon que retira este material")
-        #if cantidad>Gerencia.existencia_disponible(self.deposito,material):
+        if cantidad>Gerencia.existencia_disponible(self.deposito,material):
             raise CantidadInvalidaError("La cantidad a retirar exede la cantidad disponible en el deposito")
         else:
             r=RenglonRetiro(material,cantidad)

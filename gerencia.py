@@ -49,11 +49,11 @@ class Gerencia():
         p=Pedido(id_pedido,proveedor,renglones,plazo_entrega,"Solicitado")
         self.pedidos[id_pedido] = p
         self.proveedores[proveedor].agregar_pedido_pendiente(p)
-        
 
     def generar_retiro(self,id_movimiento,fecha,metodo_descarga,deposito): 
         r = Movimiento_retiro(id_movimiento,fecha,[],[],[],deposito,metodo_descarga)
         self.movimientos[id_movimiento]=r
+        
     def realizar_retiro(self,retiro):
          retiro.cambiar_estado()
 

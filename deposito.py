@@ -19,8 +19,8 @@ class Deposito:
         self.remesas = remesas
         self.materiales = materiales
     
-    # def retirar(retiro, metodo_descarga):
-    #     metodo_descarga(retiro)
+    def retirar(retiro, metodo_descarga):
+        metodo_descarga(retiro)
     
     def almacenar_remesa(self,remesa):
         self.remesas[str(remesa.obtener_id_remesa())] = remesa
