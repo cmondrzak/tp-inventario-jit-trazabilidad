@@ -27,3 +27,11 @@ class Renglon_pedido:
     
     def obtener_id_renglon_pedido(self):
         return self.id_renglon
+    
+    def obtener_material(self):
+        return self.material
+    
+    def obtener_cantidad(self):
+        return self.cantidad
+
+    
