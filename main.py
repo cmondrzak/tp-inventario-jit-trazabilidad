@@ -1,6 +1,6 @@
-from gerencia import Gerencia
-from datetime import date
-from renglon_pedido import Renglon_pedido
+# from gerencia import Gerencia
+# from datetime import date
+# from renglon_pedido import Renglon_pedido
 
 # r = Renglon_pedido(1,'acero',20,5)
 # gestor = Gerencia([],{},{},{})
@@ -19,7 +19,7 @@ from renglon_pedido import Renglon_pedido
 
 
 
-# gestor.almacenar_remesa(1,1,'acero',1,1,20,date.today())
+# gestor.almacenar_remesa(1,1,'acero',1,1,20,'2026:10:10')
 
 
 
@@ -32,7 +32,7 @@ from renglon_pedido import Renglon_pedido
 
 # print(gestor.obtener_proveedores())
 
-ingresar = True
+# ingresar = True
 
-#while ingresar:
-print(f'{"=":^10}')
+# #while ingresar:
+# print(f'{"=":^10}')
