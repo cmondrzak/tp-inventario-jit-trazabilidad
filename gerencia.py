@@ -69,10 +69,10 @@ class Gerencia():
     def almacenar_remesa(self,id_movimiento_ingreso, id_remesa, material, id_proveedor, id_renglon_pedido, cantidad_recibida, fecha_recepcion, **datos_opcionales):
         for pedido in self.proveedores[id_proveedor].obtener_pedidos_pendientes():
             for renglon in pedido.obtener_renglones():
-                if id_renglon_pedido == renglon.obtener_id_renglon_pedido():
+                if id_renglon_pedido == renglon.obtener_id_renglon_pedido() and material == renglon.obtener_material() and cantidad_recibida == renglon.obtener_cantidad():
                     r = Proveedor.generar_remesa(id_remesa, material, id_proveedor, id_renglon_pedido, cantidad_recibida, fecha_recepcion, **datos_opcionales)
                     m = Movimiento_ingreso(id_movimiento_ingreso, fecha_recepcion, id_remesa, pedido.obtener_id_pedido())
                     self.movimientos[id_movimiento_ingreso] = m
                     self.deposito[0].almacenar_remesa(r)
                     return
-        raise PedidoNoEncontradoError 
+            raise PedidoNoEncontradoError 
