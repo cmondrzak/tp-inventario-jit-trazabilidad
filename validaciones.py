@@ -1,4 +1,6 @@
-from datetime import date
+from datetime import date, datetime
+
+from exceptions import FechaInvalidaError
 
 class Validaciones:
     @staticmethod
@@ -26,7 +28,7 @@ class Validaciones:
                 return True
             else:
                 return False
-                        
+                   
         elif isinstance(objeto, list) or isinstance(objeto, dict):
             if len(objeto) > 0:
                 return True
@@ -47,10 +49,17 @@ class Validaciones:
             return False
         else:
             return True
-
     @staticmethod
-    def es_fecha(fecha):
-        return isinstance(fecha, date)
+
+    def es_fecha(texto):
+        if not isinstance(texto, str):
+            return False
+        try:
+            datetime.strptime(texto.strip(), "%d/%m/%Y")
+            return True
+        except ValueError:
+            return False
+
 
     @staticmethod
     def es_mail_valido(mail):
