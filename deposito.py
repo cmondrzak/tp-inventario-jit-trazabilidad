@@ -1,3 +1,5 @@
+from datetime import date
+
 from proveedor import Proveedor
 
 from material import Material
@@ -38,7 +40,7 @@ class Deposito:
     def remesas_por_material(self, material):
         lista = []
         for remesa in self.remesas.values():
-            if remesa.obtener_material() == material and remesa.datos_opcionales[]: #Falta ver que la remesa no este vencida para agregarla, no c como hacerlo, pidanle a claude.
+            if remesa.obtener_material() == material and not remesa.esta_vencida(date.today()):
                 lista.append(remesa)
         return lista
 
