@@ -29,7 +29,7 @@ class ValorInvalidoError(InventarioError):
 class NombreInvalidoError(ValorInvalidoError):
     pass
 
-class UndidadInvalidaError(ValorInvalidoError):
+class UnidadInvalidaError(ValorInvalidoError):
     pass
 
 class MaterialInvalidoError(ValorInvalidoError):
