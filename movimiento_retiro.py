@@ -1,5 +1,4 @@
 from movimiento import Movimiento
-#from gerencia import Gerencia
 from renglon_retiro import RenglonRetiro
 from validaciones import Validaciones
 from exceptions import IdentificadorDuplicadoError
