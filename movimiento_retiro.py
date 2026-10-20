@@ -6,20 +6,34 @@ from exceptions import IdentificadorDuplicadoError
 from exceptions import MaterialInvalidoError
 from exceptions import CantidadInvalidaError
 from exceptions import EstadoInvalidoError
-
 class cola:
-    def __init__(self):
-        self.__elementos=[]
-    def encolar(self,dato):
-        self.__elementos.append(dato)
-    def __repr__(self):
-        return self.__elementos
-    def desencolar(self):
-        if len(self.__elementos)==0:
-            raise IndexError("La cola esta vacia")
+    def __init__(self, elementos=None):
+        if elementos is None:
+            self.__elementos = []
         else:
-            self.__elementos.pop(0)
-    
+            self.__elementos = list(elementos)
+
+    def encolar(self, dato):
+        self.__elementos.append(dato)
+
+    def desencolar(self):
+        if self.esta_vacia():
+            raise IndexError("La cola esta vacia")
+        return self.__elementos.pop(0)
+
+    def frente(self):
+        if self.esta_vacia():
+            raise IndexError("La cola esta vacia")
+        return self.__elementos[0]
+
+    def esta_vacia(self):
+        return len(self.__elementos) == 0
+
+    def __len__(self):
+        return len(self.__elementos)
+
+    def __repr__(self):
+        return f"cola({self.__elementos})"
 
 class Movimiento_retiro(Movimiento):
     lista_id=[]
