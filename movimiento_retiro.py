@@ -5,35 +5,8 @@ from exceptions import IdentificadorDuplicadoError
 from exceptions import MaterialInvalidoError
 from exceptions import CantidadInvalidaError
 from exceptions import EstadoInvalidoError
+from deposito import Deposito
 
-class cola:
-    def __init__(self, elementos=None):
-        if elementos is None:
-            self.__elementos = []
-        else:
-            self.__elementos = list(elementos)
-
-    def encolar(self, dato):
-        self.__elementos.append(dato)
-
-    def desencolar(self):
-        if self.esta_vacia():
-            raise IndexError("La cola esta vacia")
-        return self.__elementos.pop(0)
-
-    def frente(self):
-        if self.esta_vacia():
-            raise IndexError("La cola esta vacia")
-        return self.__elementos[0]
-
-    def esta_vacia(self):
-        return len(self.__elementos) == 0
-
-    def __len__(self):
-        return len(self.__elementos)
-
-    def __repr__(self):
-        return f"cola({self.__elementos})"
 
 class Movimiento_retiro(Movimiento):
     lista_id=[]
@@ -56,12 +29,17 @@ class Movimiento_retiro(Movimiento):
 
 
     def agregar_renglon(self,material,cantidad):
+        remesas_posibles=self.deposito.remesas_por_material(material)
+        tot=0
+        for val in remesas_posibles:
+            tot+=val.cantidad_recibida
+        if tot<cantidad:
+            raise CantidadInvalidaError
+
         if self.estado!="no retirado":
             raise EstadoInvalidoError
         if material in self.materiales_modificados:
             raise MaterialInvalidoError("Ya existe un renglon que retira este material")
-        #if cantidad>Gerencia.existencia_disponible(self.deposito,material):
-            raise CantidadInvalidaError("La cantidad a retirar exede la cantidad disponible en el deposito")
         else:
             r=RenglonRetiro(material,cantidad)
             self.renglones_retiro.append(r)
