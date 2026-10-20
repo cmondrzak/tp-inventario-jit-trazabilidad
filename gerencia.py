@@ -51,9 +51,11 @@ class Gerencia():
         self.proveedores[proveedor].agregar_pedido_pendiente(p)
         
 
-    def generar_retiro(self,id_movimiento,fecha,metodo_descarga): # ver que onda lo de metodo de descarga
-        r = Movimiento_retiro(id_movimiento,fecha,[],[],self.deposito,metodo_descarga)
+    def generar_retiro(self,id_movimiento,fecha,metodo_descarga,deposito): 
+        r = Movimiento_retiro(id_movimiento,fecha,[],[],[],deposito,metodo_descarga)
         self.movimientos[id_movimiento]=r
+    def realizar_retiro(self,retiro):
+         retiro.cambiar_estado()
 
     def obtener_pedidos(self):
         return self.pedidos

@@ -4,8 +4,8 @@ from renglon_retiro import RenglonRetiro
 from validaciones import Validaciones
 from exceptions import IdentificadorDuplicadoError
 from exceptions import MaterialInvalidoError
-from deposito import Deposito
 from exceptions import CantidadInvalidaError
+from exceptions import EstadoInvalidoError
 
 class cola:
     def __init__(self):
@@ -23,7 +23,7 @@ class cola:
 
 class Movimiento_retiro(Movimiento):
     lista_id=[]
-    def __init__(self, id_movimiento, fecha, renglones_retiro,remesas_modificadas,materiales_modificacos,deposito,metodo_descarga):
+    def __init__(self, id_movimiento, fecha, renglones_retiro,remesas_modificadas,materiales_modificacos,deposito,metodo_descarga,estado="no retirado"):
         super().__init__(id_movimiento, fecha)
         if not Validaciones.validarid(Movimiento_retiro.lista_id,self.id_movimiento):
             raise IdentificadorDuplicadoError("El identificador ya existe en la lista.")
@@ -35,9 +35,15 @@ class Movimiento_retiro(Movimiento):
         self.materiales_modificacos=materiales_modificacos
         self.deposito=deposito
         self.metodo_descarga=metodo_descarga
+        self.estado=estado
         Movimiento_retiro.lista_id.append(self.id_movimiento)
+    def cambiar_estado(self): #falta hacer toda la resta de las remesas, o en gestor cuando llama a esta funcion o aca.
+        self.estado="retirado"
+
 
     def agregar_renglon(self,material,cantidad):
+        if self.estado!="no retirado":
+            raise EstadoInvalidoError
         if material in self.materiales_modificados:
             raise MaterialInvalidoError("Ya existe un renglon que retira este material")
         if cantidad>Gerencia.existencia_disponible(self.deposito,material):
@@ -48,11 +54,11 @@ class Movimiento_retiro(Movimiento):
             self.id_materiales_modificacos.append(material)
             count=cantidad
             for val in self.metodo_descarga(self.deposito.remesas_por_material(material)):
-                if val.cantidad_recibida<=count:
+                if val.cantidad_recibida<count:
                     count-=val.cantidad_recibida
-                    self.remesas_modificadas.append(val)
+                    self.remesas_modificadas.append((val,val.cantidad_recibida))
                 else:
-                    self.remesas_modificadas.append(val)
+                    self.remesas_modificadas.append(val,count)
             
                     
 

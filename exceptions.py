@@ -60,3 +60,5 @@ class OperacionInvalidaError(InventarioError):
 
 class ExistenciaInsuficienteError(OperacionInvalidaError):
     pass
+class EstadoInvalidoError(ValorInvalidoError):
+    pass
