@@ -73,7 +73,7 @@ class Movimiento_retiro(Movimiento):
                     count-=val.cantidad_recibida
                     self.remesas_modificadas.append((val,val.cantidad_recibida))
                 else:
-                    self.remesas_modificadas.append(val,count)
+                    self.remesas_modificadas.append((val,count))
             
                     
 
