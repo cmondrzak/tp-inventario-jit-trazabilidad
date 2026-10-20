@@ -2,9 +2,12 @@ from gerencia import Gerencia
 from datetime import date
 from renglon_pedido import Renglon_pedido
 import exceptions
+from archivero import Archivero
 
 gestor = Gerencia([],{},{},{})
-gestor.crear_deposito({},{})
+Archivero.desarchivar(gestor)
+if not gestor.deposito:
+    gestor.crear_deposito({},{})
 
 
 # r = Renglon_pedido(1,'acero',20,5)
@@ -219,6 +222,7 @@ while ingresar:
             
     elif opcion == '6':
         ingresar = False
+        Archivero.archivar(gestor)
         print(f'{"Muchas gracias, regrese mas tarde por mas trabajo!!!.":^30}')
         
     else:

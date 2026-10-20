@@ -1,6 +1,6 @@
 from exceptions import CantidadInvalidaError, FechaInvalidaError, SaldoInvalidoError, IdentificadorDuplicadoError, MaterialNoEncontradoError, ProveedorNoEncontradoError
 from validaciones import Validaciones
-from datetime import date
+from datetime import date, datetime
 
 class Remesa:
     lista_id=[]
@@ -25,7 +25,7 @@ class Remesa:
         if fecha_vencimiento is not None:
             if not Validaciones.es_fecha(fecha_vencimiento):
                 raise FechaInvalidaError("La fecha de vencimiento no es válida.")
-            if fecha_vencimiento < fecha_recepcion:
+            if Remesa._a_fecha(fecha_vencimiento) < Remesa._a_fecha(fecha_recepcion):
                 raise FechaInvalidaError(
                     "La fecha de vencimiento no puede ser anterior a la de recepción."
                 )
@@ -42,6 +42,14 @@ class Remesa:
         Remesa.lista_id.append(self.id_remesa)
 
         self.id_renglon_pedido = id_renglon_pedido
+
+    @staticmethod
+    def _a_fecha(valor):
+        if isinstance(valor, str):
+            return datetime.strptime(valor.strip(), "%d/%m/%Y").date()
+        if isinstance(valor, datetime):
+            return valor.date()
+        return valor
 
     def obtener_dato(self, clave):
         return self.datos_opcionales.get(clave)
@@ -67,7 +75,7 @@ class Remesa:
     def esta_vencida(self, fecha):
         if self.fecha_vencimiento is None:
             return False
-        return self.fecha_vencimiento < fecha
+        return Remesa._a_fecha(self.fecha_vencimiento) < Remesa._a_fecha(fecha)
 
     def es_utilizable(self, fecha):
         return self.saldo_disponible > 0 and not self.esta_vencida(fecha)

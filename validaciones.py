@@ -1,3 +1,4 @@
+import re
 from datetime import date, datetime
 
 from exceptions import FechaInvalidaError
@@ -54,8 +55,11 @@ class Validaciones:
     def es_fecha(texto):
         if not isinstance(texto, str):
             return False
+        texto = texto.strip()
+        if not re.fullmatch(r"\d{2}/\d{2}/\d{4}", texto):
+            return False
         try:
-            datetime.strptime(texto.strip(), "%d/%m/%Y")
+            datetime.strptime(texto, "%d/%m/%Y")
             return True
         except ValueError:
             return False
