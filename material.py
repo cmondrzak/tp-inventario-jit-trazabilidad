@@ -1,5 +1,5 @@
 from validaciones import Validaciones
-from exceptions import IdentificadorDuplicadoError, UnidadInvalida, PuntoDeReposicionInvalidoError, NombreInvalidoError, MaterialInvalidoError
+from exceptions import IdentificadorDuplicadoError, UnidadInvalidaError, PuntoDeReposicionInvalidoError, NombreInvalidoError, MaterialInvalidoError
 
 
 class Material:
