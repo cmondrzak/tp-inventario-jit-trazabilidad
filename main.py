@@ -223,7 +223,10 @@ while ingresar:
     elif opcion == '6':
         ingresar = False
         Archivero.archivar(gestor)
-        print(f'{"Muchas gracias, regrese mas tarde por mas trabajo!!!.":^30}')
+        print(f'{"Muchas gracias, regrese mas tarde por mas trabajo!!!":^30}')
         
     else:
         print('Opcion invalida, ingrese un numero del 1 al 6.')
+        
+
+
