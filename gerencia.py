@@ -65,6 +65,8 @@ class Gerencia():
     def obtener_movimientos(self):
         return self.movimientos
     
+    
+    # es correcto eliminar los pedidos pendientes de los proveedores, pero no los renglones de los pedidos. (cambiar, pensar una logica distinta para no procesar renglones que ya fueron ingresados)
     def almacenar_remesa(self,id_movimiento_ingreso, id_remesa, material, id_proveedor, id_renglon_pedido, cantidad_recibida, fecha_recepcion, **datos_opcionales):
         for pedido in self.proveedores[id_proveedor].obtener_pedidos_pendientes():
             for renglon in pedido.obtener_renglones():
