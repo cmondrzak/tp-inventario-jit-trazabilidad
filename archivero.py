@@ -9,6 +9,8 @@ from movimiento import Movimiento
 from movimiento_ingreso import Movimiento_ingreso
 from movimiento_retiro import Movimiento_retiro
 
+# rompe el encapsulamiento
+
 class Archivero:
     ARCHIVO = os.path.join(os.path.dirname(os.path.abspath(__file__)), "inventario.pickle")
     CLASES_CON_IDS = [Proveedor, Material, Pedido, Renglon_pedido, Remesa, Movimiento, Movimiento_ingreso, Movimiento_retiro]

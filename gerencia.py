@@ -73,5 +73,8 @@ class Gerencia():
                     m = Movimiento_ingreso(id_movimiento_ingreso, fecha_recepcion, id_remesa, pedido.obtener_id_pedido())
                     self.movimientos[id_movimiento_ingreso] = m
                     self.deposito[0].almacenar_remesa(r)
+                    pedido.eliminar_renglon_pedido(id_renglon_pedido)
+                    if len(pedido.obtener_pedidos_pendientes()) == 0:
+                        self.proveedores[id_proveedor].eliminar_pedido_pendiente(pedido.obtener_id_pedido())
                     return
             raise PedidoNoEncontradoError 

@@ -33,16 +33,9 @@ class Proveedor:
 
     def __repr__(self):
         return f'{self.id_proveedor},{self.nombre},{self.plazo_entrega},{self.mail},{self.telefono},{self.pedidos_pendientes}'
-
-    @staticmethod
-    def cambiar_estado_pedido(pedido, nuevo_estado):
-        pedido.cambiar_estado(nuevo_estado)
         
     def agregar_pedido_pendiente(self,pedido):
         self.pedidos_pendientes.append(pedido)
-    
-    def borrar_pedido_pendiente(self,pedido):
-        self.pedidios_pendientes.remove(pedido)
         
     def obtener_idproveedor(self):
         return self.id_proveedor
@@ -58,3 +51,8 @@ class Proveedor:
     @classmethod
     def reiniciar_ids(cls):
         cls.lista_id = []
+    
+    def eliminar_pedido_pendiente(self,id_pedido_pendiente):
+        for pedido_pendiente in self.pedidos_pendientes:    
+            if id_pedido_pendiente == pedido_pendiente.obtener_id_pedido():
+                self.pedidos_pendientes.remove(pedido_pendiente)

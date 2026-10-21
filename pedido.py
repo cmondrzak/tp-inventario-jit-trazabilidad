@@ -42,4 +42,9 @@ class Pedido:
         self.estado=estado
         return
     
+    def eliminar_renglon_pedido(self,id_renglon):
+        for renglon in self.renglones:
+            if renglon.id_renglon == id_renglon:
+                self.renglones.remove(renglon)
+    
         
