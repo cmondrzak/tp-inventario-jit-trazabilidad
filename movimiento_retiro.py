@@ -24,8 +24,12 @@ class Movimiento_retiro(Movimiento):
         self.metodo_descarga=metodo_descarga
         self.estado=estado
         Movimiento_retiro.lista_id.append(self.id_movimiento)
+        
     def cambiar_estado(self): #falta hacer toda la resta de las remesas, o en gestor cuando llama a esta funcion o aca.
         self.estado="retirado"
+        
+    def obtener_lista_id(self):
+        return self.lista_id
 
 
     def agregar_renglon(self,material,cantidad):

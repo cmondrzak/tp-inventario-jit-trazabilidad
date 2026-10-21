@@ -20,6 +20,9 @@ class Movimiento_ingreso(Movimiento):
         self.remesa = remesa    
         self.pedido=pedido
         Movimiento_ingreso.lista_id.append(self.id_movimiento)
+
+    def obtener_lista_id(self):
+        return self.lista_id
     
     def __repr__(self):
         return f'id = {self.id_movimiento}, fecha = {self.fecha}, remesa = {self.remesa}, pedido = {self.pedido}'

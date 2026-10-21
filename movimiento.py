@@ -14,6 +14,9 @@ class Movimiento:
         self.fecha = fecha
         Movimiento.lista_id.append(self.id_movimiento)
 
+    def obtener_lista_id(self):
+        return self.lista_id
+    
     def __str__(self):
         return f"ID Movimiento: {self.id_movimiento}, Fecha: {self.fecha}"
 

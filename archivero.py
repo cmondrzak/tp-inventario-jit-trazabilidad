@@ -23,12 +23,8 @@ class Archivero:
         (pedidos, depositos) sigan siendo los mismos al cargarlos.
         """
         ruta = ruta or Archivero.ARCHIVO
-        datos = {
-            "deposito": gestor.deposito,
-            "pedidos": gestor.pedidos,
-            "proveedores": gestor.proveedores,
-            "movimientos": gestor.movimientos,
-            "ids": {clase.__name__: list(clase.lista_id) for clase in Archivero.CLASES_CON_IDS},
+        datos = {"deposito": gestor.obtener_deposito(), "pedidos": gestor.obtener_pedidos(), "proveedores": gestor.obtener_proveedores(), "movimientos": gestor.obtener_movimientos(),
+            "ids": {clase.__name__: list(clase.obtener_lista_id()) for clase in Archivero.CLASES_CON_IDS},
         }
         temporal = ruta + ".tmp"
         with open(temporal, "wb") as f:

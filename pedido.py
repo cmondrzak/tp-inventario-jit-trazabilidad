@@ -18,6 +18,9 @@ class Pedido:
         self.plazo_entrega=plazo_entrega
         self.estado=estado
         Pedido.lista_id.append(self.id_pedido)
+
+    def obtener_lista_id(self):
+        return self.lista_id
     
     def obtener_renglones(self):
         return self.renglones

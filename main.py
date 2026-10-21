@@ -4,10 +4,6 @@ from renglon_pedido import Renglon_pedido
 import exceptions
 from archivero import Archivero
 
-gestor = Gerencia([],{},{},{})
-Archivero.desarchivar(gestor)
-if not gestor.deposito:
-    gestor.crear_deposito({},{})
 
 
 # r = Renglon_pedido(1,'acero',20,5)
@@ -39,6 +35,10 @@ if not gestor.deposito:
 ingresar = True
 
 while ingresar:
+    gestor = Gerencia([],{},{},{})
+    Archivero.desarchivar(gestor)
+    if not gestor.deposito:
+        gestor.crear_deposito({},{})
     print(f'{"==== MENU PRINCIPAL ====":^30}')
     print(f'{"1. Registrar proveedor.":<30}')
     print(f'{"2. Registrar material.":<30}')
