@@ -4,7 +4,7 @@ from datetime import date, datetime
 
 class Remesa:
     lista_id=[]
-    def __init__(self, id_remesa, material, id_proveedor, id_renglon_pedido, cantidad_recibida, fecha_recepcion, **datos_opcionales):
+    def __init__(self, id_remesa, material, id_proveedor, id_renglon_pedido, cantidad_recibida,fecha_recepcion, **datos_opcionales):
         if not Validaciones.validarid(Remesa.lista_id, id_remesa):
             raise IdentificadorDuplicadoError("El identificador ya existe en la lista.")
         
