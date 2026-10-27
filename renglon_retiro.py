@@ -10,6 +10,6 @@ class RenglonRetiro:
         if not Validaciones.es_positivo(cantidad_solicitada):
             raise CantidadInvalidaError("La cantidad solicitada debe ser mayor que cero.")
 
-        self.id_material = material 
+        self.material = material 
         self.cantidad_solicitada = cantidad_solicitada
     

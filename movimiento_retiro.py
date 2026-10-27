@@ -24,9 +24,26 @@ class Movimiento_retiro(Movimiento):
         self.metodo_descarga=metodo_descarga
         self.estado=estado
         Movimiento_retiro.lista_id.append(self.id_movimiento)
-    def eliminar_renglon(self,renglon):
-        if self.estado!='no retirado':
-            raise EstadoInvalidoError ("El retiro ya fue realizado")
+
+    def eliminar_renglon(self,material):
+        if self.estado!="no retirado":
+            raise EstadoInvalidoError("El retiro ya fue realizado")
+
+        for renglon in self.renglones_retiro:
+            if renglon.material==material:
+                remesas_restantes=[]
+                for tup in self.remesas_modificadas:
+                    if tup[0].obtener_material()!=material:
+                        remesas_restantes.append(tup)
+
+                if material in self.materiales_modificacos:
+                    self.materiales_modificacos.remove(material)
+
+                self.renglones_retiro.remove(renglon)
+                self.remesas_modificadas=remesas_restantes
+                return
+
+        raise MaterialInvalidoError("No existe un renglon con ese material")
         
 
 
