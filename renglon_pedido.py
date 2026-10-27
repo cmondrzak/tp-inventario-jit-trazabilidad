@@ -22,11 +22,13 @@ class Renglon_pedido:
         self.cantidad = cantidad
         Renglon_pedido.lista_id.append(self.id_renglon)
         
-    def guardar_lista_id(self,lista_id):
-        self.lista_id = lista_id
+    @classmethod
+    def guardar_lista_id(cls,lista_id):
+        cls.lista_id = lista_id
         
-    def obtener_lista_id(self):
-        return self.lista_id
+    @classmethod
+    def obtener_lista_id(cls):
+        return cls.lista_id
 
     def subtotal_renglon(self):
         return self.cantidad * self.precio_unitario

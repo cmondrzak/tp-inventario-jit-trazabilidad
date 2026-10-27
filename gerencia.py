@@ -72,7 +72,7 @@ class Gerencia():
         self.deposito = deposito
     
     def guardar_pedidos(self,pedidos):
-        self.pedidios = pedidos
+        self.pedidos = pedidos
     
     def guardar_proveedores(self,proveedores):
         self.proveedores = proveedores
@@ -91,7 +91,7 @@ class Gerencia():
                     self.movimientos[id_movimiento_ingreso] = m
                     self.deposito[0].almacenar_remesa(r)
                     pedido.eliminar_renglon_pedido(id_renglon_pedido)
-                    if len(pedido.obtener_pedidos_pendientes()) == 0:
+                    if len(pedido.obtener_renglones()) == 0:
                         self.proveedores[id_proveedor].eliminar_pedido_pendiente(pedido.obtener_id_pedido())
                     return
             raise PedidoNoEncontradoError 

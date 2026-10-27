@@ -33,11 +33,13 @@ class Movimiento_retiro(Movimiento):
             else:
                 raise CantidadInvalidaError("Se esta tratando de retirar de la remesa una cantidad que esta no posee")
 
-    def guardar_lista_id(self,lista_id):
-        self.lista_id = lista_id
+    @classmethod
+    def guardar_lista_id(cls,lista_id):
+        cls.lista_id = lista_id
         
-    def obtener_lista_id(self):
-        return self.lista_id
+    @classmethod
+    def obtener_lista_id(cls):
+        return cls.lista_id
 
 
     def agregar_renglon(self,material,cantidad):

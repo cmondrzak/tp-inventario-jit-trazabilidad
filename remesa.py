@@ -43,11 +43,13 @@ class Remesa:
 
         self.id_renglon_pedido = id_renglon_pedido
 
-    def guardar_lista_id(self,lista_id):
-        self.lista_id = lista_id
+    @classmethod
+    def guardar_lista_id(cls,lista_id):
+        cls.lista_id = lista_id
     
-    def obtener_lista_id(self):
-        return self.lista_id
+    @classmethod
+    def obtener_lista_id(cls):
+        return cls.lista_id
 
     @staticmethod
     def _a_fecha(valor):

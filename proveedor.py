@@ -30,11 +30,13 @@ class Proveedor:
         self.telefono=telefono
         self.pedidos_pendientes = []
         Proveedor.lista_id.append(self.id_proveedor)
-    def guardar_lista_id(self,lista_id):
-        self.lista_id = lista_id
+    @classmethod
+    def guardar_lista_id(cls,lista_id):
+        cls.lista_id = lista_id
     
-    def obtener_lista_id(self):
-        return self.lista_id
+    @classmethod
+    def obtener_lista_id(cls):
+        return cls.lista_id
 
     def __repr__(self):
         return f'{self.id_proveedor},{self.nombre},{self.plazo_entrega},{self.mail},{self.telefono},{self.pedidos_pendientes}'

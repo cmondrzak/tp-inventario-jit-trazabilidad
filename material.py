@@ -26,11 +26,13 @@ class Material:
         self.punto_reposicion = punto_reposicion
         Material.lista_id.append(self.id_material)
     
-    def guardar_lista_id(self,lista_id):
-        self.lista_id = lista_id
+    @classmethod
+    def guardar_lista_id(cls,lista_id):
+        cls.lista_id = lista_id
     
-    def obtener_lista_id(self):
-        return self.lista_id    
+    @classmethod
+    def obtener_lista_id(cls):
+        return cls.lista_id    
     
     def __repr__(self):
         return f'{self.id_material},{self.nombre},{self.unidad},{self.punto_reposicion}'
