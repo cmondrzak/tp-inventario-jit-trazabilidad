@@ -1,8 +1,14 @@
 from gerencia import Gerencia
-from datetime import date
+from datetime import date, datetime
 from renglon_pedido import Renglon_pedido
 import exceptions
 from archivero import Archivero
+from validaciones import Validaciones
+from movimiento_retiro import Movimiento_retiro
+from movimiento_ingreso import Movimiento_ingreso
+
+def a_fecha(texto):
+    return datetime.strptime(texto.strip(), '%d/%m/%Y').date()
 
 
 
@@ -45,7 +51,10 @@ while ingresar:
     print(f'{"3. Realizar pedido.":<30}')
     print(f'{"4. Registrar ingreso.":<30}')
     print(f'{"5. Registrar egreso.":<30}')
-    print(f'{"6. Salir del programa.":<30}')
+    print(f'{"6. Consultar existencia fisica.":<30}')
+    print(f'{"7. Consultar existencia disponible.":<30}')
+    print(f'{"8. Ver trazabilidad de un ingreso.":<30}')
+    print(f'{"9. Salir del programa.":<30}')
     opcion = input('Ingrese el numero correspondiente: ')
     if opcion == '1':
         try:
@@ -220,13 +229,85 @@ while ingresar:
         except ValueError:
             print('Error: el id y la cantidad deben ser numeros.')
             
-    elif opcion == '6':
+    elif opcion == '6' or opcion == '7':
+        try:
+            material = input('Ingrese el material a consultar: ')
+            fecha_consulta = input('Ingrese la fecha de consulta (dd/mm/aaaa): ')
+            if not Validaciones.es_no_vacio(material):
+                raise exceptions.MaterialInvalidoError
+            if not Validaciones.es_fecha(fecha_consulta):
+                raise exceptions.FechaInvalidaError
+            fecha_consulta = a_fecha(fecha_consulta)
+            total = 0
+            for remesa in gestor.deposito[0].remesas.values():
+                if remesa.obtener_material() == material and a_fecha(remesa.fecha_recepcion) <= fecha_consulta:
+                    vencimiento = remesa.obtener_fecha_vencimiento()
+                    vencida = vencimiento is not None and a_fecha(vencimiento) < fecha_consulta
+                    if opcion == '6' or not vencida:
+                        cantidad = remesa.obtener_cantidad_recibida()
+                        for movimiento in gestor.obtener_movimientos().values():
+                            if isinstance(movimiento, Movimiento_retiro) and movimiento.estado == 'retirado' and a_fecha(movimiento.fecha) <= fecha_consulta:
+                                for remesa_retirada, cantidad_retirada in movimiento.remesas_modificadas:
+                                    if remesa_retirada.obtener_id_remesa() == remesa.obtener_id_remesa():
+                                        cantidad -= cantidad_retirada
+                        total += cantidad
+            if opcion == '6':
+                print(f'Existencia fisica de {material} al {fecha_consulta.strftime("%d/%m/%Y")}: {total}')
+            else:
+                print(f'Existencia disponible de {material} al {fecha_consulta.strftime("%d/%m/%Y")}: {total}')
+
+        except exceptions.MaterialInvalidoError:
+            print('Error: el material no puede estar vacio.')
+
+        except exceptions.FechaInvalidaError:
+            print('Error: fecha invalida (formato dd/mm/aaaa).')
+
+    elif opcion == '8':
+        try:
+            id_movimiento = int(input('Ingrese el id del movimiento de ingreso: '))
+            ingreso = gestor.obtener_movimientos().get(id_movimiento)
+            if not isinstance(ingreso, Movimiento_ingreso):
+                raise exceptions.EntidadNoEncontradaError
+            remesa = gestor.deposito[0].remesas[str(ingreso.remesa)]
+            pedido = gestor.obtener_pedidos()[ingreso.pedido]
+            proveedor = gestor.obtener_proveedores()[pedido.proveedor]
+            vencimiento = remesa.obtener_fecha_vencimiento()
+            print(f'==== TRAZABILIDAD DEL INGRESO {id_movimiento} ====')
+            print(f'Fecha del ingreso: {ingreso.fecha}')
+            print(f'Proveedor: {proveedor.id_proveedor} - {proveedor.nombre} (mail: {proveedor.mail}, telefono: {proveedor.telefono})')
+            print(f'Pedido: {pedido.obtener_id_pedido()} (estado: {pedido.estado}, plazo de entrega: {pedido.plazo_entrega})')
+            print(f'Renglon del pedido: {remesa.obtener_id_renglon_pedido()}')
+            print(f'Remesa: {remesa.obtener_id_remesa()} - material: {remesa.obtener_material()}')
+            print(f'Cantidad recibida: {remesa.obtener_cantidad_recibida()}, saldo actual: {remesa.saldo_disponible}')
+            print(f'Fecha de vencimiento: {vencimiento if vencimiento is not None else "sin vencimiento"}')
+            print('Retiros que usaron esta remesa:')
+            hubo_retiros = False
+            for movimiento in gestor.obtener_movimientos().values():
+                if isinstance(movimiento, Movimiento_retiro):
+                    for remesa_retirada, cantidad_retirada in movimiento.remesas_modificadas:
+                        if remesa_retirada.obtener_id_remesa() == remesa.obtener_id_remesa():
+                            hubo_retiros = True
+                            print(f'  Retiro {movimiento.id_movimiento} - fecha: {movimiento.fecha} - cantidad: {cantidad_retirada} - estado: {movimiento.estado}')
+            if not hubo_retiros:
+                print('  Ninguno.')
+
+        except exceptions.EntidadNoEncontradaError:
+            print('Error: no existe un ingreso con ese id.')
+
+        except KeyError:
+            print('Error: faltan datos asociados a ese ingreso (remesa, pedido o proveedor).')
+
+        except ValueError:
+            print('Error: el id debe ser un numero.')
+
+    elif opcion == '9':
         ingresar = False
-        Archivero.archivar(gestor)
         print(f'{"Muchas gracias, regrese mas tarde por mas trabajo!!!":^30}')
         
     else:
-        print('Opcion invalida, ingrese un numero del 1 al 6.')
+        print('Opcion invalida, ingrese un numero del 1 al 9.')
+
+    Archivero.archivar(gestor)
         
 
 
