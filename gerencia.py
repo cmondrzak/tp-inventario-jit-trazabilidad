@@ -53,6 +53,9 @@ class Gerencia():
         r = Movimiento_retiro(id_movimiento,fecha,[],[],[],deposito,metodo_descarga)
         self.movimientos[id_movimiento] = r
         
+    def generar_renglon(self,id_material,cantidad):
+        return
+    
     def realizar_retiro(self,retiro):
          retiro.cambiar_estado()
 
@@ -94,4 +97,4 @@ class Gerencia():
                     if len(pedido.obtener_renglones()) == 0:
                         self.proveedores[id_proveedor].eliminar_pedido_pendiente(pedido.obtener_id_pedido())
                     return
-            raise PedidoNoEncontradoError 
+            raise PedidoNoEncontradoError
