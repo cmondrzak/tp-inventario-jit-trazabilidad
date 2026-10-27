@@ -11,7 +11,7 @@ from deposito import Deposito
 class Movimiento_retiro(Movimiento):
     lista_id=[]
     def __init__(self, id_movimiento, fecha, renglones_retiro,remesas_modificadas,materiales_modificacos,deposito,metodo_descarga,estado="no retirado"):
-        super().__init__(id_movimiento, fecha)
+        super().__init__(fecha)
         if not Validaciones.validarid(Movimiento_retiro.lista_id,self.id_movimiento):
             raise IdentificadorDuplicadoError("El identificador ya existe en la lista.")
 
@@ -24,6 +24,13 @@ class Movimiento_retiro(Movimiento):
         self.metodo_descarga=metodo_descarga
         self.estado=estado
         Movimiento_retiro.lista_id.append(self.id_movimiento)
+    def eliminar_renglon(self,renglon):
+        if self.estado!='no retirado':
+            raise EstadoInvalidoError ("El retiro ya fue realizado")
+        
+
+
+
         
     def cambiar_estado(self): #falta hacer toda la resta de las remesas, o en gestor cuando llama a esta funcion o aca.
         self.estado="retirado"
