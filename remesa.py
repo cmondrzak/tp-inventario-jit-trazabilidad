@@ -42,6 +42,9 @@ class Remesa:
         Remesa.lista_id.append(self.id_remesa)
 
         self.id_renglon_pedido = id_renglon_pedido
+
+    def guardar_lista_id(self,lista_id):
+        self.lista_id = lista_id
     
     def obtener_lista_id(self):
         return self.lista_id

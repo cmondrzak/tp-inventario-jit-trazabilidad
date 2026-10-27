@@ -19,6 +19,9 @@ class Pedido:
         self.estado=estado
         Pedido.lista_id.append(self.id_pedido)
 
+    def guardar_lista_id(self,lista_id):
+        self.lista_id = lista_id
+    
     def obtener_lista_id(self):
         return self.lista_id
     

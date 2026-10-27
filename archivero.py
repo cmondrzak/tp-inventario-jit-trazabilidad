@@ -39,10 +39,10 @@ class Archivero:
             return False
         with open(ruta, "rb") as f:
             datos = pickle.load(f)
-        gestor.deposito = datos["deposito"]
-        gestor.pedidos = datos["pedidos"]
-        gestor.proveedores = datos["proveedores"]
-        gestor.movimientos = datos["movimientos"]
+        gestor.guardar_deposito(datos["deposito"])
+        gestor.guardar_pedidos(datos["pedidos"])
+        gestor.guardar_proveedores(datos["proveedores"])
+        gestor.guardar_movimientos(datos["movimientos"])
         for clase in Archivero.CLASES_CON_IDS:
-            clase.lista_id = datos["ids"].get(clase.__name__, [])
+            clase.guardar_lista_id(datos["ids"].get(clase.__name__, []))
         return True

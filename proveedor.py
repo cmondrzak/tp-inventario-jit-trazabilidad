@@ -30,6 +30,8 @@ class Proveedor:
         self.telefono=telefono
         self.pedidos_pendientes = []
         Proveedor.lista_id.append(self.id_proveedor)
+    def guardar_lista_id(self,lista_id):
+        self.lista_id = lista_id
     
     def obtener_lista_id(self):
         return self.lista_id

@@ -21,6 +21,9 @@ class Movimiento_ingreso(Movimiento):
         self.pedido=pedido
         Movimiento_ingreso.lista_id.append(self.id_movimiento)
 
+    def guardar_lista_id(self,lista_id):
+        self.lista_id = lista_id
+
     def obtener_lista_id(self):
         return self.lista_id
     

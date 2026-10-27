@@ -25,7 +25,10 @@ class Material:
         self.unidad = unidad
         self.punto_reposicion = punto_reposicion
         Material.lista_id.append(self.id_material)
-        
+    
+    def guardar_lista_id(self,lista_id):
+        self.lista_id = lista_id
+    
     def obtener_lista_id(self):
         return self.lista_id    
     
