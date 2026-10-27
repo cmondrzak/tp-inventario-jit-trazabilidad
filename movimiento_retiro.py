@@ -28,8 +28,8 @@ class Movimiento_retiro(Movimiento):
     def cambiar_estado(self): #falta hacer toda la resta de las remesas, o en gestor cuando llama a esta funcion o aca.
         self.estado="retirado"
         for tup in self.remesas_modificadas:
-            if tup[0].saldo_disponible()-tup[1]>=0: #ver si esta bien porque estoy modificando un elemento adentro de una tupla
-                tup[0].saldo_disponible=-tup[1]
+            if tup[0].obtener_saldo_disponible()-tup[1]>=0: #ver si esta bien porque estoy modificando un elemento adentro de una tupla
+                tup[0].obtener_saldo_disponible() =-tup[1]
             else:
                 raise CantidadInvalidaError("Se esta tratando de retirar de la remesa una cantidad que esta no posee")
 
@@ -46,7 +46,7 @@ class Movimiento_retiro(Movimiento):
         remesas_posibles=self.deposito.remesas_por_material(material)
         tot=0
         for val in remesas_posibles:
-            tot+=val.cantidad_recibida
+            tot+=val.obtener_saldo_disponible()
         if tot<cantidad:
             raise CantidadInvalidaError
 
@@ -61,10 +61,12 @@ class Movimiento_retiro(Movimiento):
             count=cantidad
             for val in self.metodo_descarga(self.deposito.remesas_por_material(material)):
                 if val.saldo_disponible<count:
-                    count-=val.cantidad_recibida
+                    count-=val.saldo_disponible
                     self.remesas_modificadas.append((val,val.saldo_disponible))
                 else:
                     self.remesas_modificadas.append((val,count))
+                    break
+                    
             
                     
 
