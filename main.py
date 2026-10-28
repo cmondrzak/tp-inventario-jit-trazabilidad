@@ -4,8 +4,6 @@ from renglon_pedido import Renglon_pedido
 import exceptions
 from archivero import Archivero
 from validaciones import Validaciones
-from movimiento_retiro import Movimiento_retiro
-from movimiento_ingreso import Movimiento_ingreso
 
 def a_fecha(texto):
     return datetime.strptime(texto.strip(), '%d/%m/%Y').date()
@@ -41,7 +39,7 @@ def a_fecha(texto):
 ingresar = True
 
 while ingresar:
-    gestor = Gerencia([],{},{},{})
+    gestor = Gerencia([],{},{},{},{})
     Archivero.desarchivar(gestor)
     if not gestor.deposito:
         gestor.crear_deposito({},{})
@@ -183,7 +181,7 @@ while ingresar:
             print('Error: fecha invalida (formato dd/mm/aaaa, y el vencimiento no puede ser anterior a la recepcion).')
         
         except exceptions.PedidoNoEncontradoError:
-            print('Error: no hay un pedido pendiente de ese proveedor con ese renglon.')
+            print('Error: el proveedor no tiene un renglon pendiente con ese id, material y cantidad.')
         
         except KeyError:
             print('Error: no existe un proveedor con ese id.')
@@ -245,8 +243,8 @@ while ingresar:
                     vencida = vencimiento is not None and a_fecha(vencimiento) < fecha_consulta
                     if opcion == '6' or not vencida:
                         cantidad = remesa.obtener_cantidad_recibida()
-                        for movimiento in gestor.obtener_movimientos().values():
-                            if isinstance(movimiento, Movimiento_retiro) and movimiento.estado == 'retirado' and a_fecha(movimiento.fecha) <= fecha_consulta:
+                        for movimiento in gestor.obtener_movimientos_de_egreso().values():
+                            if movimiento.estado == 'retirado' and a_fecha(movimiento.fecha) <= fecha_consulta:
                                 for remesa_retirada, cantidad_retirada in movimiento.remesas_modificadas:
                                     if remesa_retirada.obtener_id_remesa() == remesa.obtener_id_remesa():
                                         cantidad -= cantidad_retirada
@@ -266,7 +264,7 @@ while ingresar:
         try:
             id_movimiento = int(input('Ingrese el id del movimiento de ingreso: '))
             ingreso = gestor.obtener_movimientos_de_ingreso().get(id_movimiento)
-            if not isinstance(ingreso, Movimiento_ingreso):
+            if ingreso is None:
                 raise exceptions.EntidadNoEncontradaError
             remesa = gestor.deposito[0].remesas[str(ingreso.remesa)]
             pedido = gestor.obtener_pedidos()[ingreso.pedido]
@@ -282,12 +280,11 @@ while ingresar:
             print(f'Fecha de vencimiento: {vencimiento if vencimiento is not None else "sin vencimiento"}')
             print('Retiros que usaron esta remesa:')
             hubo_retiros = False
-            for movimiento in gestor.obtener_movimientos_de_ingreso().values():
-                if isinstance(movimiento, Movimiento_retiro):
-                    for remesa_retirada, cantidad_retirada in movimiento.remesas_modificadas:
-                        if remesa_retirada.obtener_id_remesa() == remesa.obtener_id_remesa():
-                            hubo_retiros = True
-                            print(f'  Retiro {movimiento.id_movimiento} - fecha: {movimiento.fecha} - cantidad: {cantidad_retirada} - estado: {movimiento.estado}')
+            for movimiento in gestor.obtener_movimientos_de_egreso().values():
+                for remesa_retirada, cantidad_retirada in movimiento.remesas_modificadas:
+                    if remesa_retirada.obtener_id_remesa() == remesa.obtener_id_remesa():
+                        hubo_retiros = True
+                        print(f'  Retiro {movimiento.id_movimiento} - fecha: {movimiento.fecha} - cantidad: {cantidad_retirada} - estado: {movimiento.estado}')
             if not hubo_retiros:
                 print('  Ninguno.')
 

@@ -13,7 +13,7 @@ class Gerencia():
         self.deposito=deposito
         self.pedidos=pedidos
         self.proveedores=proveedores
-        self.movimientos_de_ingreso = self.movimientos_de_ingreso
+        self.movimientos_de_ingreso = movimientos_de_ingreso
         self.movimientos_de_egreso = movimientos_de_egreso
 
     def registrar_material(self,id_material,nombre,unidad_medida,reposicion):
@@ -88,19 +88,21 @@ class Gerencia():
     
     def guardar_movimientos_de_ingreso(self,movimientos_de_ingreso):
         self.movimientos_de_ingreso = movimientos_de_ingreso
+
+    def guardar_movimientos_de_egreso(self,movimientos_de_egreso):
+        self.movimientos_de_egreso = movimientos_de_egreso
     
     
-    # es correcto eliminar los pedidos pendientes de los proveedores, pero no los renglones de los pedidos. (cambiar, pensar una logica distinta para no procesar renglones que ya fueron ingresados)
     def almacenar_remesa(self,id_movimiento_ingreso, id_remesa, material, id_proveedor, id_renglon_pedido, cantidad_recibida, fecha_recepcion, **datos_opcionales):
         for pedido in self.proveedores[id_proveedor].obtener_pedidos_pendientes():
             for renglon in pedido.obtener_renglones():
-                if id_renglon_pedido == renglon.obtener_id_renglon_pedido() and material == renglon.obtener_material() and cantidad_recibida == renglon.obtener_cantidad():
+                if not renglon.obtener_ingresado() and id_renglon_pedido == renglon.obtener_id_renglon_pedido() and material == renglon.obtener_material() and cantidad_recibida == renglon.obtener_cantidad():
                     r = Proveedor.generar_remesa(id_remesa, material, id_proveedor, id_renglon_pedido, cantidad_recibida, fecha_recepcion, **datos_opcionales)
                     m = Movimiento_ingreso(id_movimiento_ingreso, fecha_recepcion, id_remesa, pedido.obtener_id_pedido())
                     self.movimientos_de_ingreso[id_movimiento_ingreso] = m
                     self.deposito[0].almacenar_remesa(r)
-                    pedido.eliminar_renglon_pedido(id_renglon_pedido)
-                    if len(pedido.obtener_renglones()) == 0:
+                    renglon.modificar_ingresado()
+                    if all(r_pedido.obtener_ingresado() for r_pedido in pedido.obtener_renglones()):
                         self.proveedores[id_proveedor].eliminar_pedido_pendiente(pedido.obtener_id_pedido())
                     return
-            raise PedidoNoEncontradoError
+        raise PedidoNoEncontradoError

@@ -5,7 +5,6 @@ from material import Material
 from pedido import Pedido
 from renglon_pedido import Renglon_pedido
 from remesa import Remesa
-from movimiento import Movimiento
 from movimiento_ingreso import Movimiento_ingreso
 from movimiento_retiro import Movimiento_retiro
 
@@ -23,7 +22,7 @@ class Archivero:
         (pedidos, depositos) sigan siendo los mismos al cargarlos.
         """
         ruta = ruta or Archivero.ARCHIVO
-        datos = {"deposito": gestor.obtener_deposito(), "pedidos": gestor.obtener_pedidos(), "proveedores": gestor.obtener_proveedores(), "movimientos": gestor.obtener_movimientos(),
+        datos = {"deposito": gestor.obtener_deposito(), "pedidos": gestor.obtener_pedidos(), "proveedores": gestor.obtener_proveedores(), "movimientos_de_ingreso": gestor.obtener_movimientos_de_ingreso(), "movimientos_de_egreso": gestor.obtener_movimientos_de_egreso(),
             "ids": {clase.__name__: list(clase.obtener_lista_id()) for clase in Archivero.CLASES_CON_IDS},
         }
         temporal = ruta + ".tmp"
@@ -42,7 +41,8 @@ class Archivero:
         gestor.guardar_deposito(datos["deposito"])
         gestor.guardar_pedidos(datos["pedidos"])
         gestor.guardar_proveedores(datos["proveedores"])
-        gestor.guardar_movimientos(datos["movimientos"])
+        gestor.guardar_movimientos_de_ingreso(datos["movimientos_de_ingreso"])
+        gestor.guardar_movimientos_de_egreso(datos["movimientos_de_egreso"])
         for clase in Archivero.CLASES_CON_IDS:
             clase.guardar_lista_id(datos["ids"].get(clase.__name__, []))
         return True

@@ -1,7 +1,7 @@
-from movimiento import Movimiento
 from renglon_retiro import RenglonRetiro
 from validaciones import Validaciones
 from exceptions import IdentificadorDuplicadoError
+from exceptions import FechaInvalidaError
 from exceptions import MaterialInvalidoError
 from exceptions import CantidadInvalidaError
 from exceptions import EstadoInvalidoError
@@ -9,9 +9,12 @@ from deposito import Deposito
 from remesa import Remesa
 
 
-class Movimiento_retiro(Movimiento):
+class Movimiento_retiro:
     lista_id=[]
     def __init__(self, id_movimiento, fecha, renglones_retiro,remesas_modificadas,materiales_modificacos,deposito,metodo_descarga,estado="no retirado"):
+        if not Validaciones.es_fecha(fecha):
+            raise FechaInvalidaError("Fecha invalida.")
+
         if not Validaciones.validarid(Movimiento_retiro.lista_id,id_movimiento):
             raise IdentificadorDuplicadoError("El identificador ya existe en la lista.")
 

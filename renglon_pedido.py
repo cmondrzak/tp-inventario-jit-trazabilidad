@@ -34,6 +34,9 @@ class Renglon_pedido:
     def modificar_ingresado(self):
         self.ingresado = True
 
+    def obtener_ingresado(self):
+        return self.ingresado
+
     def subtotal_renglon(self):
         return self.cantidad * self.precio_unitario
     

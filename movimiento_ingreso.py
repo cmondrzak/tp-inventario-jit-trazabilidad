@@ -1,18 +1,17 @@
-from movimiento import Movimiento
 from validaciones import Validaciones
 from exceptions import IdentificadorDuplicadoError, FechaInvalidaError
 import validaciones
-class Movimiento_ingreso(Movimiento):
+class Movimiento_ingreso:
     lista_id=[]
     def __init__(self, id_movimiento, fecha, remesa,pedido):   
+        if not Validaciones.es_fecha(fecha):
+            raise FechaInvalidaError("Fecha invalida.")
+
         if not Validaciones.es_no_vacio(remesa):
             raise ValueError("La remesa no puede estar vacía.")
         
         if not Validaciones.validarid(Movimiento_ingreso.lista_id,id_movimiento):
             raise IdentificadorDuplicadoError("El identificador ya existe en la lista.")
-
-        if not Validaciones.es_fecha(self.fecha):
-            raise FechaInvalidaError("Fecha invalida.")
 
         self.id_movimiento = id_movimiento
         self.fecha = fecha
