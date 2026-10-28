@@ -22,6 +22,9 @@ class Remesa:
         if not Validaciones.es_fecha(fecha_recepcion):
             raise FechaInvalidaError("La fecha de recepción no es válida.")
 
+        if Remesa._a_fecha(fecha_recepcion) > date.today():
+            raise FechaInvalidaError("La fecha de recepción no puede ser futura.")
+
         if fecha_vencimiento is not None:
             if not Validaciones.es_fecha(fecha_vencimiento):
                 raise FechaInvalidaError("La fecha de vencimiento no es válida.")
@@ -35,7 +38,6 @@ class Remesa:
         self.id_proveedor = id_proveedor
         self.cantidad_recibida = cantidad_recibida
         self.saldo_disponible = cantidad_recibida
-        self.fecha_recepcion = date.today()
         self.fecha_recepcion = fecha_recepcion
         self.fecha_vencimiento = fecha_vencimiento
         self.datos_opcionales = dict(datos_opcionales)

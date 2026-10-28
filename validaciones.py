@@ -76,7 +76,7 @@ class Validaciones:
         elif mail.count('@') != 1:
             return False
         usuario, dominio = mail.split('@')
-        if usuario == '' or dominio == '':
+        if usuario == '' or dominio == '' or '.' not in dominio or dominio.startswith('.') or dominio.endswith('.'):
             return False
         else: 
             return True

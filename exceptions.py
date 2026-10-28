@@ -26,6 +26,9 @@ class RemesaNoEncontradaError(EntidadNoEncontradaError):
 class ValorInvalidoError(InventarioError):
     pass
 
+class IdentificadorInvalidoError(ValorInvalidoError):
+    pass
+
 class NombreInvalidoError(ValorInvalidoError):
     pass
 

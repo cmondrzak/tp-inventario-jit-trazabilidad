@@ -5,6 +5,12 @@ import exceptions
 from archivero import Archivero
 from validaciones import Validaciones
 
+def leer_id(mensaje):
+    identificador = int(input(mensaje))
+    if not Validaciones.es_positivo(identificador):
+        raise exceptions.IdentificadorInvalidoError
+    return identificador
+
 def a_fecha(texto):
     return datetime.strptime(texto.strip(), '%d/%m/%Y').date()
 
@@ -56,11 +62,11 @@ while ingresar:
     opcion = input('Ingrese el numero correspondiente: ')
     if opcion == '1':
         try:
-            id_proveedor = int(input('Ingrese el id del nuevo proveedor: '))
+            id_proveedor = leer_id('Ingrese el id del nuevo proveedor: ')
             nombre_proveedor = input('Ingrese el nombre del nuevo proveedor: ')
             plazo_de_entrega = int(input('Ingrese el plazo de entrega de este proveedor: '))
-            mail_proveedor = input('Ingrese el mail del proveedor: ')
-            telefono_proveedor = input('Ingrese el telefono del proveedor: ')
+            mail_proveedor = input('Ingrese el mail del proveedor (vacio si no tiene): ').strip() or None
+            telefono_proveedor = input('Ingrese el telefono del proveedor (vacio si no tiene): ').strip() or None
             gestor.registrar_proveedor(id_proveedor,nombre_proveedor,plazo_de_entrega,mail_proveedor,telefono_proveedor)
             print('Proveedor registrado correctamente.')
             
@@ -76,12 +82,15 @@ while ingresar:
         except exceptions.DatoInvalidoError:
             print('Error: el mail o el telefono ingresado no es valido.')
             
+        except exceptions.IdentificadorInvalidoError:
+            print('Error: el id debe ser mayor que cero.')
+
         except ValueError:
             print('Error: el id y el plazo de entrega deben ser numeros.')
             
     elif opcion == '2':
         try:
-            id_material = int(input('Ingrese el id del nuevo material: '))
+            id_material = leer_id('Ingrese el id del nuevo material: ')
             nombre_material = Validaciones.normalizar_texto(input('Ingrese el nombre del nuevo material: '))
             unidad_medida = input('Ingrese la unidad de medida del material: ')
             punto_reposicion = int(input('Ingrese el punto de reposicion del material: '))
@@ -103,13 +112,16 @@ while ingresar:
         except exceptions.PuntoDeReposicionInvalidoError:
             print('Error: el punto de reposicion debe ser mayor que cero.')
             
+        except exceptions.IdentificadorInvalidoError:
+            print('Error: el id debe ser mayor que cero.')
+
         except ValueError:
             print('Error: el id y el punto de reposicion deben ser numeros.')
             
     elif opcion == '3':
         try:
-            id_pedido = int(input('Ingrese el id del pedido: '))
-            id_proveedor = int(input('Ingrese el id del proveedor: '))
+            id_pedido = leer_id('Ingrese el id del pedido: ')
+            id_proveedor = leer_id('Ingrese el id del proveedor: ')
             
             if id_proveedor not in gestor.obtener_proveedores():
                 raise exceptions.ProveedorNoEncontradoError
@@ -119,7 +131,7 @@ while ingresar:
             try:
                 agregar = True
                 while agregar:
-                    id_renglon = int(input('Ingrese el id del renglon: '))
+                    id_renglon = leer_id('Ingrese el id del renglon: ')
                     material = Validaciones.normalizar_texto(input('Ingrese el material del renglon: '))
                     if not gestor.material_registrado(material):
                         raise exceptions.MaterialNoEncontradoError
@@ -154,16 +166,19 @@ while ingresar:
         except exceptions.PlazoEntregaInvalidoError:
             print('Error: el plazo de entrega debe ser mayor que cero.')
             
+        except exceptions.IdentificadorInvalidoError:
+            print('Error: el id debe ser mayor que cero.')
+
         except ValueError:
             print('Error: los ids, el plazo, la cantidad y el precio deben ser numeros.')
             
     elif opcion == '4':
         try:
-            id_movimiento = int(input('Ingrese el id del movimiento de ingreso: '))
-            id_remesa = int(input('Ingrese el id de la remesa: '))
+            id_movimiento = leer_id('Ingrese el id del movimiento de ingreso: ')
+            id_remesa = leer_id('Ingrese el id de la remesa: ')
             material = Validaciones.normalizar_texto(input('Ingrese el material recibido: '))
-            id_proveedor = int(input('Ingrese el id del proveedor: '))
-            id_renglon = int(input('Ingrese el id del renglon del pedido: '))
+            id_proveedor = leer_id('Ingrese el id del proveedor: ')
+            id_renglon = leer_id('Ingrese el id del renglon del pedido: ')
             cantidad_recibida = int(input('Ingrese la cantidad recibida: '))
             fecha_recepcion = input('Ingrese la fecha de recepcion (dd/mm/aaaa): ')
             fecha_vencimiento = input('Ingrese la fecha de vencimiento (dd/mm/aaaa, vacio si no tiene): ')
@@ -186,18 +201,21 @@ while ingresar:
         except exceptions.CantidadInvalidaError:
             print('Error: la cantidad recibida debe ser mayor que cero.')
             
-        except exceptions.FechaInvalidaError:
-            print('Error: fecha invalida (formato dd/mm/aaaa, y el vencimiento no puede ser anterior a la recepcion).')
+        except exceptions.FechaInvalidaError as error:
+            print(f'Error: {error} Use el formato dd/mm/aaaa.')
         
         except exceptions.PedidoNoEncontradoError:
             print('Error: el proveedor no tiene un renglon pendiente con ese id, material y cantidad.')
         
+        except exceptions.IdentificadorInvalidoError:
+            print('Error: el id debe ser mayor que cero.')
+
         except ValueError:
             print('Error: los ids y la cantidad deben ser numeros.')
             
     elif opcion == '5':
         try:
-            id_movimiento = int(input('Ingrese el id del movimiento de egreso: '))
+            id_movimiento = leer_id('Ingrese el id del movimiento de egreso: ')
             fecha = input('Ingrese la fecha del egreso (dd/mm/aaaa): ')
             deposito = gestor.deposito[0]
             gestor.generar_retiro(id_movimiento,fecha,deposito.retirar_fefo,deposito)
@@ -230,6 +248,9 @@ while ingresar:
         except exceptions.CantidadInvalidaError:
             print('Error: la cantidad a retirar debe ser mayor que cero y no exceder la disponible.')
             
+        except exceptions.IdentificadorInvalidoError:
+            print('Error: el id debe ser mayor que cero.')
+
         except ValueError:
             print('Error: el id y la cantidad deben ser numeros.')
             
@@ -273,7 +294,7 @@ while ingresar:
 
     elif opcion == '8':
         try:
-            id_movimiento = int(input('Ingrese el id del movimiento de ingreso: '))
+            id_movimiento = leer_id('Ingrese el id del movimiento de ingreso: ')
             ingreso = gestor.obtener_movimientos_de_ingreso().get(id_movimiento)
             if ingreso is None:
                 raise exceptions.EntidadNoEncontradaError
@@ -305,6 +326,9 @@ while ingresar:
         except KeyError:
             print('Error: faltan datos asociados a ese ingreso (remesa, pedido o proveedor).')
 
+        except exceptions.IdentificadorInvalidoError:
+            print('Error: el id debe ser mayor que cero.')
+
         except ValueError:
             print('Error: el id debe ser un numero.')
 
@@ -315,7 +339,8 @@ while ingresar:
     else:
         print('Opcion invalida, ingrese un numero del 1 al 9.')
 
-    Archivero.archivar(gestor)
+    if opcion in ('1','2','3','4','5'):
+        Archivero.archivar(gestor)
         
 
 

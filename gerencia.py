@@ -45,7 +45,7 @@ class Gerencia():
          cantidad_total=0
          for clave,valor in rem.items():
               if valor.obtener_material()==material:
-                   cantidad_total+=valor.obtener_saldo_disponible()
+                   cantidad_total+=valor.obtener_saldo()
          return cantidad_total
         
     def registrar_proveedor(self, id_proveedor, nombre, plazo_entrega , mail,telefono):
