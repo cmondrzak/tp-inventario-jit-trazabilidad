@@ -45,10 +45,6 @@ class Pedido:
         for objeto in self.renglones:
             sub_total+=objeto.subtotal_renglon()
         return sub_total
-
-    def cambiar_estado(self,estado): #validar que solo puedan haber 3 estados, en proceso, aceptado, rechazado
-        self.estado=estado
-        return
     
     def eliminar_renglon_pedido(self,id_renglon):
         for renglon in self.renglones:
