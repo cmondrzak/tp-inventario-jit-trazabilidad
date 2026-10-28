@@ -6,6 +6,7 @@ from exceptions import MaterialInvalidoError
 from exceptions import CantidadInvalidaError
 from exceptions import EstadoInvalidoError
 from deposito import Deposito
+from remesa import Remesa
 
 
 class Movimiento_retiro(Movimiento):
@@ -49,13 +50,12 @@ class Movimiento_retiro(Movimiento):
 
 
         
-    def cambiar_estado(self): #falta hacer toda la resta de las remesas, o en gestor cuando llama a esta funcion o aca.
-        self.estado="retirado"
+    def cambiar_estado(self):
+        if self.estado!='no retirado':
+            raise EstadoInvalidoError
         for tup in self.remesas_modificadas:
-            if tup[0].obtener_saldo_disponible()-tup[1]>=0: #ver si esta bien porque estoy modificando un elemento adentro de una tupla
-                tup[0].obtener_saldo_disponible() =-tup[1]
-            else:
-                raise CantidadInvalidaError("Se esta tratando de retirar de la remesa una cantidad que esta no posee")
+            tup[0].consumir(tup[1])
+        self.estado="retirado"
 
     @classmethod
     def guardar_lista_id(cls,lista_id):

@@ -30,7 +30,7 @@ class Remesa:
                     "La fecha de vencimiento no puede ser anterior a la de recepción."
                 )
             
-        self.id_remesa = id_remesa
+        self.id_remesa = id_remesa 
         self.material = material
         self.id_proveedor = id_proveedor
         self.cantidad_recibida = cantidad_recibida
@@ -61,6 +61,8 @@ class Remesa:
 
     def obtener_dato(self, clave):
         return self.datos_opcionales.get(clave)
+    def obtener_saldo(self):
+        return self.saldo_disponible
     
     def obtener_id_remesa(self):
         return self.id_remesa
@@ -73,7 +75,7 @@ class Remesa:
     
     def obtener_id_renglon_pedido(self):
         return self.id_renglon_pedido
-
+    
     def obtener_material(self):
         return self.material
 
@@ -102,11 +104,6 @@ class Remesa:
         return (f"Remesa({self.id_remesa!r}, saldo={self.saldo_disponible}/"
                 f"{self.cantidad_recibida}, vto={self.fecha_vencimiento})")
     
-    def generar_movimiento_ingreso(self):
-        return
-    
-    def obtener_idremesa(self):
-        return self.id_remesa
 
     @classmethod
     def reiniciar_ids(cls):

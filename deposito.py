@@ -40,7 +40,7 @@ class Deposito:
     def remesas_por_material(self, material):
         lista = []
         for remesa in self.remesas.values():
-            if remesa.obtener_material() == material and not remesa.esta_vencida(date.today()):
+            if remesa.obtener_material() == material and not remesa.esta_vencida(date.today()) and remesa.obtener_saldo()>0:
                 lista.append(remesa)
         return lista
 
