@@ -1,9 +1,9 @@
-class nodo:
+class Nodo:
     def __init__(self, dato):
         self.dato = dato
         self.siguiente = None
 
-class lista_enlazada:
+class ListaEnlazada:
     def __init__(self):
         self._inicio = None
 
@@ -11,7 +11,7 @@ class lista_enlazada:
         return self._inicio is None
 
     def agregar_final(self, dato):
-        nuevo = nodo(dato)
+        nuevo = Nodo(dato)
 
         if self.esta_vacia():
             self._inicio = nuevo
