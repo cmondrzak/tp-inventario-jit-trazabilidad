@@ -1,6 +1,7 @@
 from validaciones import Validaciones
 from exceptions import IdentificadorDuplicadoError, PedidoNoEncontradoError, PlazoEntregaInvalidoError, DatoInvalidoError
 from renglon_pedido import Renglon_pedido
+from lista_enlazada import ListaEnlazada
 
 class Pedido:
     lista_id=[]
@@ -14,7 +15,11 @@ class Pedido:
         
         self.id_pedido = id_pedido
         self.proveedor = proveedor
-        self.renglones = renglones
+        self._renglones = ListaEnlazada()
+
+        for renglon in renglones:
+            self._renglones.agregar_final(renglon)
+
         self.plazo_entrega=plazo_entrega
         self.estado=estado
         Pedido.lista_id.append(self.id_pedido)
@@ -28,27 +33,35 @@ class Pedido:
         return cls.lista_id
     
     def obtener_renglones(self):
-        return self.renglones
+        return self._renglones.obtener_datos()
     
     def obtener_id_pedido(self):
         return self.id_pedido
     
     def __repr__(self):
-        return f'{self.id_pedido},{self.proveedor},{self.renglones},{self.plazo_entrega},{self.estado}'
+        return f'{self.id_pedido},{self.proveedor},{self.obtener_renglones()},{self.plazo_entrega},{self.estado}'
 
     def generar_renglon(self,id_renglon,material,cantidad,precio_unitario):
-        r=Renglon_pedido(id_renglon,material,cantidad,precio_unitario)
-        self.renglones.append(r)
+        renglon = Renglon_pedido(id_renglon,material,cantidad,precio_unitario)
+        self._renglones.agregar_final(renglon)
 
     def subtotal(self):
         sub_total=0
-        for objeto in self.renglones:
-            sub_total+=objeto.subtotal_renglon()
+
+        for renglon in self.obtener_renglones():
+            sub_total+=renglon.subtotal_renglon()
         return sub_total
     
     def eliminar_renglon_pedido(self,id_renglon):
-        for renglon in self.renglones:
-            if renglon.id_renglon == id_renglon:
-                self.renglones.remove(renglon)
+        for renglon in self.obtener_renglones():
+            if renglon.obtener_id_renglon_pedido() == id_renglon:
+                self._renglones.eliminar(renglon)
+                return
+
+        raise ValueError("No existe un renglon con ese ID en el pedido.")
     
-        
+    def cambiar_estado(self,nuevo_estado):
+        if nuevo_estado not in ["Pendiente", "En Proceso", "Completado"]:
+            raise DatoInvalidoError("El estado ingresado no es válido. Debe ser 'Pendiente', 'En Proceso' o 'Completado'.")
+        else: 
+            self.estado=nuevo_estado

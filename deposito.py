@@ -24,18 +24,18 @@ class Deposito:
     
     def almacenar_remesa(self,remesa):
         self.remesas[str(remesa.obtener_id_remesa())] = remesa
-        return
+
     def modificar_materiales(self,material,id_material):
         self.materiales[id_material]=material
         return
-    def obtener_remesas(self,remesas):
-        return remesas
+    def obtener_remesas(self):
+        return self.remesas
     
     def validar_reposicion(self,id_material):
         return
     
     def obtener_materiales(self):
-        return self.materiales
+        return self.materiales.copy()
     
     def remesas_por_material(self, material):
         lista = []
