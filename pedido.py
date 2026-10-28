@@ -1,5 +1,5 @@
 from validaciones import Validaciones
-from exceptions import IdentificadorDuplicadoError, PedidoNoEncontradoError, PlazoEntregaInvalidoError, DatoInvalidoError
+from exceptions import IdentificadorDuplicadoError, PlazoEntregaInvalidoError, DatoInvalidoError
 from renglon_pedido import Renglon_pedido
 from lista_enlazada import ListaEnlazada
 
@@ -61,7 +61,9 @@ class Pedido:
         raise ValueError("No existe un renglon con ese ID en el pedido.")
     
     def cambiar_estado(self,nuevo_estado):
-        if nuevo_estado not in ["Pendiente", "En Proceso", "Completado"]:
+        estados_validos = ["Pendiente", "En Proceso", "Completado"]
+
+        if nuevo_estado not in estados_validos:
             raise DatoInvalidoError("El estado ingresado no es válido. Debe ser 'Pendiente', 'En Proceso' o 'Completado'.")
-        else: 
-            self.estado=nuevo_estado
+
+        self.estado=nuevo_estado
