@@ -7,7 +7,8 @@ from movimiento_retiro import Movimiento_retiro
 from movimiento_ingreso import Movimiento_ingreso
 from validaciones import Validaciones
 from remesa import Remesa
-from exceptions import PedidoNoEncontradoError
+from renglon_pedido import Renglon_pedido
+from exceptions import PedidoNoEncontradoError, MaterialNoEncontradoError, ProveedorNoEncontradoError, IdentificadorDuplicadoError
 class Gerencia():
     def __init__(self,deposito,pedidos,proveedores,movimientos_de_ingreso,movimientos_de_egreso):
         self.deposito=deposito
@@ -16,7 +17,21 @@ class Gerencia():
         self.movimientos_de_ingreso = movimientos_de_ingreso
         self.movimientos_de_egreso = movimientos_de_egreso
 
+    def material_registrado(self,nombre):
+        nombre = Validaciones.normalizar_texto(nombre)
+        for material in self.deposito[0].obtener_materiales().values():
+            if Validaciones.normalizar_texto(material.obtener_nombre()) == nombre:
+                return True
+        return False
+
+    def liberar_ids_renglones(self,renglones):
+        for renglon in renglones:
+            if renglon.obtener_id_renglon_pedido() in Renglon_pedido.obtener_lista_id():
+                Renglon_pedido.obtener_lista_id().remove(renglon.obtener_id_renglon_pedido())
+
     def registrar_material(self,id_material,nombre,unidad_medida,reposicion):
+        if self.material_registrado(nombre):
+            raise IdentificadorDuplicadoError("Ya existe un material con ese nombre.")
         m=Material(id_material,nombre,unidad_medida,reposicion)
         self.deposito[0].modificar_materiales(m,id_material)
 
@@ -46,7 +61,16 @@ class Gerencia():
          return cantidad_total
         
     def generar_pedido(self,id_pedido,proveedor,renglones,plazo_entrega): #por ahi estaria bueno que estado pedido y renglones tengan valor por defecto al iniciar el pedido
-        p=Pedido(id_pedido,proveedor,renglones,plazo_entrega,"Solicitado")
+        try:
+            if proveedor not in self.proveedores:
+                raise ProveedorNoEncontradoError("El proveedor no existe.")
+            for renglon in renglones:
+                if not self.material_registrado(renglon.obtener_material()):
+                    raise MaterialNoEncontradoError("El material no esta registrado.")
+            p=Pedido(id_pedido,proveedor,renglones,plazo_entrega,"Solicitado")
+        except Exception:
+            self.liberar_ids_renglones(renglones)
+            raise
         self.pedidos[id_pedido] = p
         self.proveedores[proveedor].agregar_pedido_pendiente(p)
 
@@ -94,9 +118,16 @@ class Gerencia():
     
     
     def almacenar_remesa(self,id_movimiento_ingreso, id_remesa, material, id_proveedor, id_renglon_pedido, cantidad_recibida, fecha_recepcion, **datos_opcionales):
+        if id_proveedor not in self.proveedores:
+            raise ProveedorNoEncontradoError("El proveedor no existe.")
+        material = Validaciones.normalizar_texto(material)
+        if not self.material_registrado(material):
+            raise MaterialNoEncontradoError("El material no esta registrado.")
+        if not Validaciones.validarid(Movimiento_ingreso.obtener_lista_id(), id_movimiento_ingreso):
+            raise IdentificadorDuplicadoError("El identificador ya existe en la lista.")
         for pedido in self.proveedores[id_proveedor].obtener_pedidos_pendientes():
             for renglon in pedido.obtener_renglones():
-                if not renglon.obtener_ingresado() and id_renglon_pedido == renglon.obtener_id_renglon_pedido() and material == renglon.obtener_material() and cantidad_recibida == renglon.obtener_cantidad():
+                if not renglon.obtener_ingresado() and id_renglon_pedido == renglon.obtener_id_renglon_pedido() and material == Validaciones.normalizar_texto(renglon.obtener_material()) and cantidad_recibida == renglon.obtener_cantidad():
                     r = Proveedor.generar_remesa(id_remesa, material, id_proveedor, id_renglon_pedido, cantidad_recibida, fecha_recepcion, **datos_opcionales)
                     m = Movimiento_ingreso(id_movimiento_ingreso, fecha_recepcion, id_remesa, pedido.obtener_id_pedido())
                     self.movimientos_de_ingreso[id_movimiento_ingreso] = m

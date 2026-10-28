@@ -38,6 +38,10 @@ class Validaciones:
         return True
         
     @staticmethod
+    def normalizar_texto(texto):
+        return " ".join(texto.split()).lower()
+
+    @staticmethod
     def validarid(lista,codigo):
         if codigo in lista:
             return False

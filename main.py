@@ -82,7 +82,7 @@ while ingresar:
     elif opcion == '2':
         try:
             id_material = int(input('Ingrese el id del nuevo material: '))
-            nombre_material = input('Ingrese el nombre del nuevo material: ')
+            nombre_material = Validaciones.normalizar_texto(input('Ingrese el nombre del nuevo material: '))
             unidad_medida = input('Ingrese la unidad de medida del material: ')
             punto_reposicion = int(input('Ingrese el punto de reposicion del material: '))
             gestor.registrar_material(id_material,nombre_material,unidad_medida,punto_reposicion)
@@ -92,7 +92,7 @@ while ingresar:
             print('Error: el material no puede estar vacio.')
             
         except exceptions.IdentificadorDuplicadoError:
-            print('Error: ya existe un material con ese id.')
+            print('Error: ya existe un material con ese id o con ese nombre.')
             
         except exceptions.NombreInvalidoError:
             print('Error: el nombre no puede estar vacio.')
@@ -116,19 +116,28 @@ while ingresar:
             
             plazo_de_entrega = int(input('Ingrese el plazo de entrega del pedido: '))
             renglones = []
-            agregar = True
-            while agregar:
-                id_renglon = int(input('Ingrese el id del renglon: '))
-                material = input('Ingrese el material del renglon: ')
-                cantidad = int(input('Ingrese la cantidad: '))
-                precio_unitario = float(input('Ingrese el precio unitario: '))
-                renglones.append(Renglon_pedido(id_renglon,material,cantidad,precio_unitario))
-                agregar = input('Desea agregar otro renglon? (s/n): ').lower() == 's'
-            gestor.generar_pedido(id_pedido,id_proveedor,renglones,plazo_de_entrega)
+            try:
+                agregar = True
+                while agregar:
+                    id_renglon = int(input('Ingrese el id del renglon: '))
+                    material = Validaciones.normalizar_texto(input('Ingrese el material del renglon: '))
+                    if not gestor.material_registrado(material):
+                        raise exceptions.MaterialNoEncontradoError
+                    cantidad = int(input('Ingrese la cantidad: '))
+                    precio_unitario = float(input('Ingrese el precio unitario: '))
+                    renglones.append(Renglon_pedido(id_renglon,material,cantidad,precio_unitario))
+                    agregar = input('Desea agregar otro renglon? (s/n): ').lower() == 's'
+                gestor.generar_pedido(id_pedido,id_proveedor,renglones,plazo_de_entrega)
+            except Exception:
+                gestor.liberar_ids_renglones(renglones)
+                raise
             print('Pedido generado correctamente.')
             
         except exceptions.ProveedorNoEncontradoError:
             print('Error: no existe un proveedor con ese id.')
+
+        except exceptions.MaterialNoEncontradoError:
+            print('Error: el material no esta registrado (registrelo primero con la opcion 2).')
             
         except exceptions.IdentificadorDuplicadoError:
             print('Error: ya existe un pedido o renglon con ese id.')
@@ -152,7 +161,7 @@ while ingresar:
         try:
             id_movimiento = int(input('Ingrese el id del movimiento de ingreso: '))
             id_remesa = int(input('Ingrese el id de la remesa: '))
-            material = input('Ingrese el material recibido: ')
+            material = Validaciones.normalizar_texto(input('Ingrese el material recibido: '))
             id_proveedor = int(input('Ingrese el id del proveedor: '))
             id_renglon = int(input('Ingrese el id del renglon del pedido: '))
             cantidad_recibida = int(input('Ingrese la cantidad recibida: '))
@@ -169,10 +178,10 @@ while ingresar:
             print('Error: ya existe una remesa o movimiento con ese id.')
             
         except exceptions.MaterialNoEncontradoError:
-            print('Error: el material no puede estar vacio.')
+            print('Error: el material no esta registrado (registrelo primero con la opcion 2).')
             
         except exceptions.ProveedorNoEncontradoError:
-            print('Error: el proveedor no puede estar vacio.')
+            print('Error: no existe un proveedor con ese id.')
             
         except exceptions.CantidadInvalidaError:
             print('Error: la cantidad recibida debe ser mayor que cero.')
@@ -182,9 +191,6 @@ while ingresar:
         
         except exceptions.PedidoNoEncontradoError:
             print('Error: el proveedor no tiene un renglon pendiente con ese id, material y cantidad.')
-        
-        except KeyError:
-            print('Error: no existe un proveedor con ese id.')
         
         except ValueError:
             print('Error: los ids y la cantidad deben ser numeros.')
@@ -229,10 +235,12 @@ while ingresar:
             
     elif opcion == '6' or opcion == '7':
         try:
-            material = input('Ingrese el material a consultar: ')
+            material = Validaciones.normalizar_texto(input('Ingrese el material a consultar: '))
             fecha_consulta = input('Ingrese la fecha de consulta (dd/mm/aaaa): ')
             if not Validaciones.es_no_vacio(material):
                 raise exceptions.MaterialInvalidoError
+            if not gestor.material_registrado(material):
+                raise exceptions.MaterialNoEncontradoError
             if not Validaciones.es_fecha(fecha_consulta):
                 raise exceptions.FechaInvalidaError
             fecha_consulta = a_fecha(fecha_consulta)
@@ -256,6 +264,9 @@ while ingresar:
 
         except exceptions.MaterialInvalidoError:
             print('Error: el material no puede estar vacio.')
+
+        except exceptions.MaterialNoEncontradoError:
+            print('Error: el material no esta registrado.')
 
         except exceptions.FechaInvalidaError:
             print('Error: fecha invalida (formato dd/mm/aaaa).')

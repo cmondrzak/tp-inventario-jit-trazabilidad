@@ -38,6 +38,9 @@ class Material:
         return f'{self.id_material},{self.nombre},{self.unidad},{self.punto_reposicion}'
     
 
+    def obtener_nombre(self):
+        return self.nombre
+
     def requiere_reposicion(self, existencia_disponible):
         return existencia_disponible < self.punto_reposicion
 
