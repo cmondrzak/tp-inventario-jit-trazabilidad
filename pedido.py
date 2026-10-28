@@ -15,10 +15,10 @@ class Pedido:
         
         self.id_pedido = id_pedido
         self.proveedor = proveedor
-        self.renglones = ListaEnlazada()
+        self._renglones = ListaEnlazada()
 
         for renglon in renglones:
-            self.renglones.agregar_final(renglon)
+            self._renglones.agregar_final(renglon)
 
         self.plazo_entrega=plazo_entrega
         self.estado=estado
@@ -54,7 +54,7 @@ class Pedido:
     
     def eliminar_renglon_pedido(self,id_renglon):
         for renglon in self.obtener_renglones():
-            if renglon.obtener_id_renglon() == id_renglon:
+            if renglon.obtener_id_renglon_pedido() == id_renglon:
                 self._renglones.eliminar(renglon)
                 return
 
