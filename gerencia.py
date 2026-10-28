@@ -77,11 +77,6 @@ class Gerencia():
     def generar_retiro(self,id_movimiento,fecha,metodo_descarga,deposito): 
         r = Movimiento_retiro(id_movimiento,fecha,[],[],[],deposito,metodo_descarga)
         self.movimientos_de_egreso[id_movimiento] = r
-    def generar_renglon_retiro(self,retiro,material,cantidad):
-        retiro.agregar_renglon(material,cantidad)
-        
-    def generar_renglon(self,id_material,cantidad):
-        return
     
     def realizar_retiro(self,retiro):
          retiro.cambiar_estado()
