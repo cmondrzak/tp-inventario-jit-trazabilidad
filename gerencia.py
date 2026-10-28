@@ -9,11 +9,12 @@ from validaciones import Validaciones
 from remesa import Remesa
 from exceptions import PedidoNoEncontradoError
 class Gerencia():
-    def __init__(self,deposito,pedidos,proveedores,movimientos):
+    def __init__(self,deposito,pedidos,proveedores,movimientos_de_ingreso,movimientos_de_egreso):
         self.deposito=deposito
         self.pedidos=pedidos
         self.proveedores=proveedores
-        self.movimientos=movimientos
+        self.movimientos_de_ingreso = self.movimientos_de_ingreso
+        self.movimientos_de_egreso = movimientos_de_egreso
 
     def registrar_material(self,id_material,nombre,unidad_medida,reposicion):
         m=Material(id_material,nombre,unidad_medida,reposicion)
@@ -51,7 +52,7 @@ class Gerencia():
 
     def generar_retiro(self,id_movimiento,fecha,metodo_descarga,deposito): 
         r = Movimiento_retiro(id_movimiento,fecha,[],[],[],deposito,metodo_descarga)
-        self.movimientos[id_movimiento] = r
+        self.movimientos_de_egreso[id_movimiento] = r
     def generar_renglon_retiro(self,retiro,material,cantidad):
         retiro.agregar_renglon(material,cantidad)
         
@@ -67,8 +68,11 @@ class Gerencia():
     def obtener_proveedores(self):
         return self.proveedores
     
-    def obtener_movimientos(self):
-        return self.movimientos
+    def obtener_movimientos_de_ingreso(self):
+        return self.movimientos_de_ingreso
+    
+    def obtener_movimientos_de_egreso(self):
+        return self.movimientos_de_egreso
     
     def obtener_deposito(self):
         return self.deposito
@@ -82,8 +86,8 @@ class Gerencia():
     def guardar_proveedores(self,proveedores):
         self.proveedores = proveedores
     
-    def guardar_movimientos(self,movimientos):
-        self.movimientos = movimientos
+    def guardar_movimientos_de_ingreso(self,movimientos_de_ingreso):
+        self.movimientos_de_ingreso = movimientos_de_ingreso
     
     
     # es correcto eliminar los pedidos pendientes de los proveedores, pero no los renglones de los pedidos. (cambiar, pensar una logica distinta para no procesar renglones que ya fueron ingresados)
@@ -93,7 +97,7 @@ class Gerencia():
                 if id_renglon_pedido == renglon.obtener_id_renglon_pedido() and material == renglon.obtener_material() and cantidad_recibida == renglon.obtener_cantidad():
                     r = Proveedor.generar_remesa(id_remesa, material, id_proveedor, id_renglon_pedido, cantidad_recibida, fecha_recepcion, **datos_opcionales)
                     m = Movimiento_ingreso(id_movimiento_ingreso, fecha_recepcion, id_remesa, pedido.obtener_id_pedido())
-                    self.movimientos[id_movimiento_ingreso] = m
+                    self.movimientos_de_ingreso[id_movimiento_ingreso] = m
                     self.deposito[0].almacenar_remesa(r)
                     pedido.eliminar_renglon_pedido(id_renglon_pedido)
                     if len(pedido.obtener_renglones()) == 0:

@@ -12,7 +12,6 @@ from remesa import Remesa
 class Movimiento_retiro(Movimiento):
     lista_id=[]
     def __init__(self, id_movimiento, fecha, renglones_retiro,remesas_modificadas,materiales_modificacos,deposito,metodo_descarga,estado="no retirado"):
-        super().__init__(fecha)
         if not Validaciones.validarid(Movimiento_retiro.lista_id,id_movimiento):
             raise IdentificadorDuplicadoError("El identificador ya existe en la lista.")
 

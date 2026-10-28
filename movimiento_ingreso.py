@@ -5,7 +5,6 @@ import validaciones
 class Movimiento_ingreso(Movimiento):
     lista_id=[]
     def __init__(self, id_movimiento, fecha, remesa,pedido):   
-        super().__init__(fecha)
         if not Validaciones.es_no_vacio(remesa):
             raise ValueError("La remesa no puede estar vacía.")
         

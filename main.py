@@ -37,7 +37,7 @@ def a_fecha(texto):
 # print(gestor.deposito[1].obtener_materiales())
 
 # print(gestor.obtener_proveedores())
-
+#movimiento
 ingresar = True
 
 while ingresar:
@@ -197,7 +197,7 @@ while ingresar:
             fecha = input('Ingrese la fecha del egreso (dd/mm/aaaa): ')
             deposito = gestor.deposito[0]
             gestor.generar_retiro(id_movimiento,fecha,deposito.retirar_fefo,deposito)
-            retiro = gestor.obtener_movimientos()[id_movimiento]
+            retiro = gestor.obtener_movimientos_de_egreso()[id_movimiento]
             agregar = True
             
             while agregar:
@@ -265,7 +265,7 @@ while ingresar:
     elif opcion == '8':
         try:
             id_movimiento = int(input('Ingrese el id del movimiento de ingreso: '))
-            ingreso = gestor.obtener_movimientos().get(id_movimiento)
+            ingreso = gestor.obtener_movimientos_de_ingreso().get(id_movimiento)
             if not isinstance(ingreso, Movimiento_ingreso):
                 raise exceptions.EntidadNoEncontradaError
             remesa = gestor.deposito[0].remesas[str(ingreso.remesa)]
@@ -282,7 +282,7 @@ while ingresar:
             print(f'Fecha de vencimiento: {vencimiento if vencimiento is not None else "sin vencimiento"}')
             print('Retiros que usaron esta remesa:')
             hubo_retiros = False
-            for movimiento in gestor.obtener_movimientos().values():
+            for movimiento in gestor.obtener_movimientos_de_ingreso().values():
                 if isinstance(movimiento, Movimiento_retiro):
                     for remesa_retirada, cantidad_retirada in movimiento.remesas_modificadas:
                         if remesa_retirada.obtener_id_remesa() == remesa.obtener_id_remesa():
