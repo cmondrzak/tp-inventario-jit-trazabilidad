@@ -51,4 +51,8 @@ class Pedido:
             if renglon.id_renglon == id_renglon:
                 self.renglones.remove(renglon)
     
-        
+    def cambiar_estado(self,nuevo_estado):
+        if nuevo_estado not in ["Pendiente", "En Proceso", "Completado"]:
+            raise DatoInvalidoError("El estado ingresado no es válido. Debe ser 'Pendiente', 'En Proceso' o 'Completado'.")
+        else: 
+            self.estado=nuevo_estado
