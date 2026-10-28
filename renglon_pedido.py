@@ -20,6 +20,7 @@ class Renglon_pedido:
         self.material = material
         self.precio_unitario = precio_unitario
         self.cantidad = cantidad
+        self.ingresado = False
         Renglon_pedido.lista_id.append(self.id_renglon)
         
     @classmethod
@@ -29,6 +30,9 @@ class Renglon_pedido:
     @classmethod
     def obtener_lista_id(cls):
         return cls.lista_id
+
+    def modificar_ingresado(self):
+        self.ingresado = True
 
     def subtotal_renglon(self):
         return self.cantidad * self.precio_unitario

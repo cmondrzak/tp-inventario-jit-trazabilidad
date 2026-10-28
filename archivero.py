@@ -13,7 +13,7 @@ from movimiento_retiro import Movimiento_retiro
 
 class Archivero:
     ARCHIVO = os.path.join(os.path.dirname(os.path.abspath(__file__)), "inventario.pickle")
-    CLASES_CON_IDS = [Proveedor, Material, Pedido, Renglon_pedido, Remesa, Movimiento, Movimiento_ingreso, Movimiento_retiro]
+    CLASES_CON_IDS = [Proveedor, Material, Pedido, Renglon_pedido, Remesa, Movimiento_ingreso, Movimiento_retiro]
 
     @staticmethod
     def archivar(gestor, ruta=None):
