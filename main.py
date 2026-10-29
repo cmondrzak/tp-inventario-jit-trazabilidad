@@ -14,8 +14,45 @@ def leer_id(mensaje):
 def a_fecha(texto):
     return datetime.strptime(texto.strip(), '%d/%m/%Y').date()
 
+def mostrar_menu():
+    ancho = 54
+
+    print()
+    print("=" * ancho)
+    print("AEROTECH COMPONENTS".center(ancho))
+    print("Inventario JIT y trazabilidad".center(ancho))
+    print("=" * ancho)
+
+    print("\n  REGISTROS")
+    print("  1. Registrar proveedor")
+    print("  2. Registrar material")
+
+    print("\n  OPERACIONES")
+    print("  3. Crear pedido")
+    print("  4. Registrar ingreso de materiales")
+    print("  5. Registrar retiro de materiales")
+
+    print("\n  CONSULTAS")
+    print("  6. Consultar existencia física")
+    print("  7. Consultar existencia disponible")
+    print("  8. Consultar trazabilidad de un ingreso")
+
+    print("\n  9. Salir")
+    print()
+    print("=" * ancho)
+
+    return input("  Elegí una opción: ").strip()
+
+def mostrar_titulo(titulo):
+    print()
+    print("-" * 54)
+    print(titulo.center(54))
+    print("-" * 54)
+    print()
 
 
+def pausar():
+    input("\nPresioná Enter para volver al menú...")
 # r = Renglon_pedido(1,'acero',20,5)
 
 
@@ -49,18 +86,9 @@ while ingresar:
     Archivero.desarchivar(gestor)
     if not gestor.deposito:
         gestor.crear_deposito({},{})
-    print(f'{"==== MENU PRINCIPAL ====":^30}')
-    print(f'{"1. Registrar proveedor.":<30}')
-    print(f'{"2. Registrar material.":<30}')
-    print(f'{"3. Realizar pedido.":<30}')
-    print(f'{"4. Registrar ingreso.":<30}')
-    print(f'{"5. Registrar egreso.":<30}')
-    print(f'{"6. Consultar existencia fisica.":<30}')
-    print(f'{"7. Consultar existencia disponible.":<30}')
-    print(f'{"8. Ver trazabilidad de un ingreso.":<30}')
-    print(f'{"9. Salir del programa.":<30}')
-    opcion = input('Ingrese el numero correspondiente: ')
+    opcion = mostrar_menu()
     if opcion == '1':
+        mostrar_titulo("REGISTRAR PROVEEDOR")
         try:
             id_proveedor = leer_id('Ingrese el id del nuevo proveedor: ')
             nombre_proveedor = input('Ingrese el nombre del nuevo proveedor: ')
@@ -89,6 +117,7 @@ while ingresar:
             print('Error: el id y el plazo de entrega deben ser numeros.')
             
     elif opcion == '2':
+        mostrar_titulo("REGISTRAR MATERIAL")
         try:
             id_material = leer_id('Ingrese el id del nuevo material: ')
             nombre_material = Validaciones.normalizar_texto(input('Ingrese el nombre del nuevo material: '))
@@ -119,6 +148,7 @@ while ingresar:
             print('Error: el id y el punto de reposicion deben ser numeros.')
             
     elif opcion == '3':
+        mostrar_titulo("CREAR PEDIDO")
         try:
             id_pedido = leer_id('Ingrese el id del pedido: ')
             id_proveedor = leer_id('Ingrese el id del proveedor: ')
@@ -173,6 +203,7 @@ while ingresar:
             print('Error: los ids, el plazo, la cantidad y el precio deben ser numeros.')
             
     elif opcion == '4':
+        mostrar_titulo("REGISTRAR INGRESO")
         try:
             id_movimiento = leer_id('Ingrese el id del movimiento de ingreso: ')
             id_remesa = leer_id('Ingrese el id de la remesa: ')
@@ -214,6 +245,7 @@ while ingresar:
             print('Error: los ids y la cantidad deben ser numeros.')
             
     elif opcion == '5':
+        mostrar_titulo("REGISTRAR RETIRO")
         try:
             id_movimiento = leer_id('Ingrese el id del movimiento de egreso: ')
             fecha = input('Ingrese la fecha del egreso (dd/mm/aaaa): ')
@@ -255,6 +287,10 @@ while ingresar:
             print('Error: el id y la cantidad deben ser numeros.')
             
     elif opcion == '6' or opcion == '7':
+        if opcion == '6':
+            mostrar_titulo("EXISTENCIA FISICA")
+        else:
+            mostrar_titulo("EXISTENCIA DISPONIBLE")
         try:
             material = Validaciones.normalizar_texto(input('Ingrese el material a consultar: '))
             fecha_consulta = input('Ingrese la fecha de consulta (dd/mm/aaaa): ')
@@ -293,6 +329,7 @@ while ingresar:
             print('Error: fecha invalida (formato dd/mm/aaaa).')
 
     elif opcion == '8':
+        mostrar_titulo("TRAZABILIDAD DE UN INGRESO")
         try:
             id_movimiento = leer_id('Ingrese el id del movimiento de ingreso: ')
             ingreso = gestor.obtener_movimientos_de_ingreso().get(id_movimiento)
@@ -341,6 +378,9 @@ while ingresar:
 
     if opcion in ('1','2','3','4','5'):
         Archivero.archivar(gestor)
+    
+    if ingresar:
+        pausar()
         
 
 
