@@ -49,4 +49,7 @@ class Renglon_pedido:
     def obtener_cantidad(self):
         return self.cantidad
 
+    def obtener_precio_unitario(self):
+        return self.precio_unitario
+
     
