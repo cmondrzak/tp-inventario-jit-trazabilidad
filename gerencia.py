@@ -75,6 +75,7 @@ class Gerencia():
         self.proveedores[proveedor].agregar_pedido_pendiente(p)
 
     def generar_retiro(self,id_movimiento,fecha,metodo_descarga,deposito): 
+        #borrar metodo_descarga como parametro, poner opciones para metodos de descarga (con input) y continuar con fefo solo
         r = Movimiento_retiro(id_movimiento,fecha,[],[],[],deposito,metodo_descarga)
         self.movimientos_de_egreso[id_movimiento] = r
     
