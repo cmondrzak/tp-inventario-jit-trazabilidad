@@ -53,6 +53,37 @@ def mostrar_titulo(titulo):
 
 def pausar():
     input("\nPresioná Enter para volver al menú...")
+
+def mostrar_resumen_pedido(renglones):
+    mostrar_titulo("RESUMEN DEL PEDIDO")
+
+    print(
+        f"{'Material':<22}"
+        f"{'Cantidad':>10}"
+        f"{'Precio unit.':>14}"
+        f"{'Subtotal':>14}"
+    )
+    print("-" * 60)
+
+    total = 0
+
+    for renglon in renglones:
+        material = str(renglon.obtener_material())
+        cantidad = renglon.obtener_cantidad()
+        precio = renglon.obtener_precio_unitario()
+        subtotal = renglon.subtotal_renglon()
+
+        print(
+            f"{material[:22]:<22}"
+            f"{cantidad:>10.2f}"
+            f"{precio:>14.2f}"
+            f"{subtotal:>14.2f}"
+        )
+
+        total += subtotal
+
+    print("-" * 60)
+    print(f"{'TOTAL:':<46}{total:>14.2f}")
 # r = Renglon_pedido(1,'acero',20,5)
 
 
@@ -169,6 +200,7 @@ while ingresar:
                     precio_unitario = float(input('Ingrese el precio unitario: '))
                     renglones.append(Renglon_pedido(id_renglon,material,cantidad,precio_unitario))
                     agregar = input('Desea agregar otro renglon? (s/n): ').lower() == 's'
+                    mostrar_resumen_pedido(renglones)
                 gestor.generar_pedido(id_pedido,id_proveedor,renglones,plazo_de_entrega)
             except Exception:
                 gestor.liberar_ids_renglones(renglones)
