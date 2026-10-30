@@ -105,7 +105,18 @@ class Remesa:
     def __repr__(self):
         return (f"Remesa({self.id_remesa!r}, saldo={self.saldo_disponible}/"
                 f"{self.cantidad_recibida}, vto={self.fecha_vencimiento})")
-    
+
+    def clave_fefo(self):
+        sin_vencimiento = self.fecha_vencimiento is None
+
+        if sin_vencimiento:
+            vencimiento = date.max
+        else:
+            vencimiento = self._a_fecha(self.fecha_vencimiento)
+
+        recepcion = self._a_fecha(self.fecha_recepcion)
+
+        return (sin_vencimiento, vencimiento, recepcion, self.id_remesa)
 
     @classmethod
     def reiniciar_ids(cls):

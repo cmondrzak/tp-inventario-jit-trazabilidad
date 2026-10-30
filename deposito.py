@@ -46,6 +46,10 @@ class Deposito:
 
 
     
-    def retirar_fefo(retiro):
-        return
+    @staticmethod
+    def retirar_fefo(remesas):
+        def criterio(remesa):
+            return remesa.clave_fefo()
+
+        return sorted(remesas, key=criterio)
     
