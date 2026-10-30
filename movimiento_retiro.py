@@ -70,7 +70,7 @@ class Movimiento_retiro:
             )
 
         ordenadas = self.metodo_descarga(disponibles)
-
+        #probablemente aca podria implementarse recursividad sin grandes complicaciones (linea 74 a 91)
         plan = []
         faltante = cantidad
 
@@ -103,7 +103,7 @@ class Movimiento_retiro:
             )
 
         plan_completo = []
-
+        #corregir encapsulamiento (linea 109 y 110)
         for renglon in self.renglones_retiro:
             plan = self._planificar_consumo(
                 renglon.material,
