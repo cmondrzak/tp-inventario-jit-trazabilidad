@@ -84,6 +84,19 @@ def mostrar_resumen_pedido(renglones):
 
     print("-" * 60)
     print(f"{'TOTAL:':<46}{total:>14.2f}")
+
+def seleccionar_metodo_descarga():
+    mostrar_titulo("MÉTODO DE DESCARGA")
+
+    print("1. FEFO: retirar primero lo que vence antes")
+
+    opcion = input("\nElegí una opción: ").strip()
+
+    while opcion != "1":
+        print("Opción inválida. Por ahora solo está disponible FEFO.")
+        opcion = input("Elegí una opción: ").strip()
+
+    return "FEFO"
 # r = Renglon_pedido(1,'acero',20,5)
 
 
@@ -279,11 +292,27 @@ while ingresar:
     elif opcion == '5':
         mostrar_titulo("REGISTRAR RETIRO")
         try:
-            id_movimiento = leer_id('Ingrese el id del movimiento de egreso: ')
-            fecha = input('Ingrese la fecha del egreso (dd/mm/aaaa): ')
+            metodo = seleccionar_metodo_descarga()
+            print(f"\nMétodo seleccionado: {metodo}")
+
+            id_movimiento = leer_id(
+                "Ingrese el id del movimiento de egreso: "
+            )
+
+            fecha = input(
+                "Ingrese la fecha del egreso (dd/mm/aaaa): "
+            )
+
             deposito = gestor.deposito[0]
-            gestor.generar_retiro(id_movimiento,fecha,deposito.retirar_fefo,deposito)
+
+            gestor.generar_retiro(
+                id_movimiento,
+                fecha,
+                deposito
+            )
+
             retiro = gestor.obtener_movimientos_de_egreso()[id_movimiento]
+
             agregar = True
             
             while agregar:
