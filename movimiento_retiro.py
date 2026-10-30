@@ -92,11 +92,32 @@ class Movimiento_retiro:
 
         
     def cambiar_estado(self):
-        if self.estado!='no retirado':
-            raise EstadoInvalidoError
-        for tup in self.remesas_modificadas:
-            tup[0].consumir(tup[1])
-        self.estado="retirado"
+        if self.estado != "no retirado":
+            raise EstadoInvalidoError(
+                "El retiro ya fue realizado."
+            )
+
+        if not self.renglones_retiro:
+            raise EstadoInvalidoError(
+                "No se puede confirmar un retiro sin renglones."
+            )
+
+        plan_completo = []
+
+        for renglon in self.renglones_retiro:
+            plan = self._planificar_consumo(
+                renglon.material,
+                renglon.cantidad_solicitada
+            )
+
+            for consumo in plan:
+                plan_completo.append(consumo)
+
+        for remesa, cantidad in plan_completo:
+            remesa.consumir(cantidad)
+
+        self.remesas_modificadas = plan_completo
+        self.estado = "retirado"
 
     @classmethod
     def guardar_lista_id(cls,lista_id):
