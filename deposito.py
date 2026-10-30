@@ -37,13 +37,14 @@ class Deposito:
     def obtener_materiales(self):
         return self.materiales.copy()
     
-    def remesas_por_material(self, material):
-        lista = []
-        for remesa in self.remesas.values():
-            if remesa.obtener_material() == material and not remesa.esta_vencida(date.today()) and remesa.obtener_saldo()>0:
-                lista.append(remesa)
-        return lista
+    def remesas_por_material(self, material, fecha):
+        disponibles = []
 
+        for remesa in self.remesas.values():
+            if (remesa.obtener_material() == material and remesa.es_utilizable(fecha)):
+                disponibles.append(remesa)
+
+        return disponibles
 
     
     @staticmethod
