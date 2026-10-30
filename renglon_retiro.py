@@ -1,15 +1,14 @@
 from validaciones import Validaciones
-from exceptions import CantidadInvalidaError, MaterialNoEncontradoError, PrecioInvalidoError, SaldoInvalidoError, RemesaNoEncontradaError
+from exceptions import MaterialNoIndicadoError, CantidadARetirarNoPositivaError
 
 class RenglonRetiro:
     def __init__(self, material, cantidad_solicitada):
 
         if not Validaciones.es_no_vacio(material):
-            raise MaterialNoEncontradoError("El material no puede estar vacío.")
-        
-        if not Validaciones.es_positivo(cantidad_solicitada):
-            raise CantidadInvalidaError("La cantidad solicitada debe ser mayor que cero.")
+            raise MaterialNoIndicadoError("Cada renglón del retiro tiene que indicar qué material se retira.")
 
-        self.material = material 
+        if not Validaciones.es_positivo(cantidad_solicitada):
+            raise CantidadARetirarNoPositivaError(f"La cantidad a retirar debe ser mayor que cero; se pidió {cantidad_solicitada!r}.")
+
+        self.material = material
         self.cantidad_solicitada = cantidad_solicitada
-    

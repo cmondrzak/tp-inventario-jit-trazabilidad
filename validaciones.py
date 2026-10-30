@@ -12,6 +12,19 @@ class Validaciones:
             return False
 
     @staticmethod
+    def es_numero_entero(valor):
+        return isinstance(valor, int) and not isinstance(valor, bool)
+
+    @staticmethod
+    def es_identificador_valido(valor):
+        # Un id puede ser un entero mayor que cero (ej: 1) o un texto no vacio (ej: "P1")
+        if Validaciones.es_numero_entero(valor):
+            return valor > 0
+        if isinstance(valor, str):
+            return len(valor.strip()) > 0
+        return False
+
+    @staticmethod
     def es_positivo(valor):
         return Validaciones.es_numero(valor) and valor > 0
 
@@ -73,13 +86,20 @@ class Validaciones:
     def es_mail_valido(mail):
         if not isinstance(mail, str):
             return False
-        elif mail.count('@') != 1:
+        # Un mail no puede tener espacios en ningun lugar
+        for caracter in mail:
+            if caracter.isspace():
+                return False
+        if mail.count('@') != 1:
             return False
         usuario, dominio = mail.split('@')
         if usuario == '' or dominio == '' or '.' not in dominio or dominio.startswith('.') or dominio.endswith('.'):
             return False
-        else: 
-            return True
+        # Ninguna parte del dominio puede estar vacia: rechaza "a@b..com"
+        for parte in dominio.split('.'):
+            if parte == '':
+                return False
+        return True
 
     @staticmethod
     def es_telefono_valido(telefono):

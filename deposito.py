@@ -8,7 +8,7 @@ from remesa import Remesa
 
 from validaciones import Validaciones
 
-from exceptions import CantidadInvalidaError, PrecioInvalidoError, SaldoInvalidoError, IdentificadorDuplicadoError, MaterialNoEncontradoError, ProveedorNoEncontradoError, RemesaNoEncontradaError, ExistenciaInsuficienteError
+from exceptions import ObjetoNoEsUnaRemesaError, ObjetoNoEsUnMaterialError, IdentificadorDeRemesaDuplicadoError, IdentificadorDeMaterialDuplicadoError, IdentificadorDeMaterialNoCoincideConLaClaveError
 
 
 
@@ -23,9 +23,21 @@ class Deposito:
     #     metodo_descarga(retiro)
     
     def almacenar_remesa(self,remesa):
-        self.remesas[str(remesa.obtener_id_remesa())] = remesa
+        if not isinstance(remesa, Remesa):
+            raise ObjetoNoEsUnaRemesaError(f"El depósito solo puede almacenar remesas, pero recibió un objeto de tipo {type(remesa).__name__}.")
+        clave = str(remesa.obtener_id_remesa())
+        # La clave es str(id): 1 y "1" chocarian y se perderia una remesa
+        if clave in self.remesas:
+            raise IdentificadorDeRemesaDuplicadoError(f"El depósito ya tiene almacenada una remesa con el identificador {clave!r}; guardar otra con el mismo identificador haría perder la anterior.")
+        self.remesas[clave] = remesa
 
     def modificar_materiales(self,material,id_material):
+        if not isinstance(material, Material):
+            raise ObjetoNoEsUnMaterialError(f"En el depósito solo se pueden registrar materiales, pero se recibió un objeto de tipo {type(material).__name__}.")
+        if material.id_material != id_material:
+            raise IdentificadorDeMaterialNoCoincideConLaClaveError(f"Se intentó guardar el material {material.id_material!r} bajo el identificador {id_material!r}; los dos tienen que ser iguales.")
+        if id_material in self.materiales:
+            raise IdentificadorDeMaterialDuplicadoError(f"El depósito ya tiene registrado un material con el identificador {id_material!r}.")
         self.materiales[id_material]=material
         return
     def obtener_remesas(self):

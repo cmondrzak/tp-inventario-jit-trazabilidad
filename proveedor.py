@@ -1,6 +1,6 @@
 from validaciones import Validaciones
 
-from exceptions import IdentificadorDuplicadoError, NombreInvalidoError, DatoInvalidoError, PlazoEntregaInvalidoError, PuntoDeReposicionInvalidoError, UnidadNoEncontradaError
+from exceptions import IdentificadorDeProveedorInvalidoError, IdentificadorDeProveedorDuplicadoError, NombreDeProveedorVacioError, PlazoDeEntregaNoPositivoError, CorreoElectronicoInvalidoError, NumeroDeTelefonoInvalidoError
 
 from remesa import Remesa
 
@@ -8,20 +8,23 @@ from remesa import Remesa
 class Proveedor:
     lista_id=[]
     def __init__(self, id_proveedor, nombre, plazo_entrega, mail=None, telefono=None):
+        if not Validaciones.es_identificador_valido(id_proveedor):
+            raise IdentificadorDeProveedorInvalidoError(f"El identificador del proveedor debe ser un número entero positivo o un texto con contenido; se recibió {id_proveedor!r}.")
+
         if not Validaciones.validarid(Proveedor.lista_id,id_proveedor):
-            raise IdentificadorDuplicadoError("El identificador ya existe en la lista.")
-        
+            raise IdentificadorDeProveedorDuplicadoError(f"Ya hay un proveedor registrado con el identificador {id_proveedor!r}.")
+
         if not Validaciones.es_no_vacio(nombre):
-            raise NombreInvalidoError("El nombre no puede estar vacío.")
+            raise NombreDeProveedorVacioError("El nombre del proveedor es obligatorio y no puede quedar en blanco.")
 
         if not Validaciones.es_positivo(plazo_entrega):
-            raise PlazoEntregaInvalidoError("El plazo de entrega debe ser mayor que cero.")
+            raise PlazoDeEntregaNoPositivoError(f"El plazo de entrega del proveedor debe ser de al menos un día; se recibió {plazo_entrega!r}.")
 
         if mail is not None and not Validaciones.es_mail_valido(mail):
-            raise DatoInvalidoError("El correo electrónico no es válido.")
+            raise CorreoElectronicoInvalidoError(f"La dirección de correo '{mail}' no es válida: tiene que tener la forma usuario@dominio.com y no puede llevar espacios.")
 
         if telefono is not None and not Validaciones.es_telefono_valido(telefono):
-            raise DatoInvalidoError("El número de teléfono no es válido.")
+            raise NumeroDeTelefonoInvalidoError(f"El teléfono '{telefono}' no es válido: tiene que tener al menos 8 dígitos y solo puede llevar números, espacios, guiones y '+'.")
 
         self.id_proveedor = id_proveedor
         self.nombre = nombre

@@ -8,7 +8,7 @@ from movimiento_ingreso import Movimiento_ingreso
 from validaciones import Validaciones
 from remesa import Remesa
 from renglon_pedido import Renglon_pedido
-from exceptions import PedidoNoEncontradoError, MaterialNoEncontradoError, ProveedorNoEncontradoError, IdentificadorDuplicadoError
+from exceptions import ProveedorNoRegistradoError, MaterialNoRegistradoError, MaterialNoIndicadoError, NombreDeMaterialDuplicadoError, IdentificadorDeMovimientoDuplicadoError, MaterialRecibidoDistintoDelPedidoError, RenglonDePedidoPendienteNoEncontradoError
 class Gerencia():
     def __init__(self,deposito,pedidos,proveedores,movimientos_de_ingreso,movimientos_de_egreso):
         self.deposito=deposito
@@ -25,13 +25,19 @@ class Gerencia():
         return False
 
     def liberar_ids_renglones(self,renglones):
+        # Si no llego una lista de renglones no hay ids que liberar (el error lo da Pedido)
+        if not isinstance(renglones, list):
+            return
         for renglon in renglones:
+            if not isinstance(renglon, Renglon_pedido):
+                continue
             if renglon.obtener_id_renglon_pedido() in Renglon_pedido.obtener_lista_id():
                 Renglon_pedido.obtener_lista_id().remove(renglon.obtener_id_renglon_pedido())
 
     def registrar_material(self,id_material,nombre,unidad_medida,reposicion):
-        if self.material_registrado(nombre):
-            raise IdentificadorDuplicadoError("Ya existe un material con ese nombre.")
+        # Si el nombre no es texto, el error lo da Material al validarlo
+        if isinstance(nombre, str) and self.material_registrado(nombre):
+            raise NombreDeMaterialDuplicadoError(f"Ya hay un material registrado con el nombre '{nombre.strip()}'; cada material debe tener un nombre único.")
         m=Material(id_material,nombre,unidad_medida,reposicion)
         self.deposito[0].modificar_materiales(m,id_material)
 
@@ -63,10 +69,12 @@ class Gerencia():
     def generar_pedido(self,id_pedido,proveedor,renglones,plazo_entrega): #por ahi estaria bueno que estado pedido y renglones tengan valor por defecto al iniciar el pedido
         try:
             if proveedor not in self.proveedores:
-                raise ProveedorNoEncontradoError("El proveedor no existe.")
-            for renglon in renglones:
-                if not self.material_registrado(renglon.obtener_material()):
-                    raise MaterialNoEncontradoError("El material no esta registrado.")
+                raise ProveedorNoRegistradoError(f"No se puede generar el pedido: no existe ningún proveedor registrado con el identificador {proveedor!r}.")
+            # Si renglones no es una lista de Renglon_pedido, el error lo da Pedido al validarlos
+            if isinstance(renglones, list):
+                for renglon in renglones:
+                    if isinstance(renglon, Renglon_pedido) and not self.material_registrado(renglon.obtener_material()):
+                        raise MaterialNoRegistradoError(f"No se puede pedir '{renglon.obtener_material()}' porque ese material todavía no fue registrado en el depósito.")
             p=Pedido(id_pedido,proveedor,renglones,plazo_entrega,"Solicitado")
         except Exception:
             self.liberar_ids_renglones(renglones)
@@ -123,12 +131,14 @@ class Gerencia():
     
     def almacenar_remesa(self,id_movimiento_ingreso, id_remesa, material, id_proveedor, id_renglon_pedido, cantidad_recibida, fecha_recepcion, **datos_opcionales):
         if id_proveedor not in self.proveedores:
-            raise ProveedorNoEncontradoError("El proveedor no existe.")
+            raise ProveedorNoRegistradoError(f"No se puede registrar el ingreso: no existe ningún proveedor registrado con el identificador {id_proveedor!r}.")
+        if not isinstance(material, str) or not Validaciones.es_no_vacio(material):
+            raise MaterialNoIndicadoError(f"El ingreso tiene que indicar el nombre del material recibido; se recibió {material!r}.")
         material = Validaciones.normalizar_texto(material)
         if not self.material_registrado(material):
-            raise MaterialNoEncontradoError("El material no esta registrado.")
+            raise MaterialNoRegistradoError(f"No se puede ingresar '{material}' porque ese material todavía no fue registrado en el depósito.")
         if not Validaciones.validarid(Movimiento_ingreso.obtener_lista_id(), id_movimiento_ingreso):
-            raise IdentificadorDuplicadoError("El identificador ya existe en la lista.")
+            raise IdentificadorDeMovimientoDuplicadoError(f"Ya se registró un movimiento de ingreso con el identificador {id_movimiento_ingreso!r}.")
         for pedido in self.proveedores[id_proveedor].obtener_pedidos_pendientes():
             for renglon in pedido.obtener_renglones():
                 if not renglon.obtener_ingresado() and id_renglon_pedido == renglon.obtener_id_renglon_pedido() and material == Validaciones.normalizar_texto(renglon.obtener_material()) and cantidad_recibida == renglon.obtener_cantidad():
@@ -140,4 +150,11 @@ class Gerencia():
                     if all(r_pedido.obtener_ingresado() for r_pedido in pedido.obtener_renglones()):
                         self.proveedores[id_proveedor].eliminar_pedido_pendiente(pedido.obtener_id_pedido())
                     return
-        raise PedidoNoEncontradoError
+        # No hubo un renglon que coincida en todo: se busca el renglon por id para explicar por que
+        for pedido in self.proveedores[id_proveedor].obtener_pedidos_pendientes():
+            for renglon in pedido.obtener_renglones():
+                if id_renglon_pedido == renglon.obtener_id_renglon_pedido() and not renglon.obtener_ingresado():
+                    if material != Validaciones.normalizar_texto(renglon.obtener_material()):
+                        raise MaterialRecibidoDistintoDelPedidoError(f"Se recibió '{material}', pero el renglón {id_renglon_pedido!r} del pedido solicitaba '{renglon.obtener_material()}'.")
+                    raise RenglonDePedidoPendienteNoEncontradoError(f"El renglón {id_renglon_pedido!r} del pedido solicitaba {renglon.obtener_cantidad()}, pero se recibieron {cantidad_recibida}; la cantidad recibida tiene que coincidir con la pedida.")
+        raise RenglonDePedidoPendienteNoEncontradoError(f"El proveedor {id_proveedor!r} no tiene ningún pedido pendiente con el renglón {id_renglon_pedido!r} sin ingresar.")

@@ -151,8 +151,8 @@ while ingresar:
         except exceptions.PlazoEntregaInvalidoError:
             print('Error: el plazo de entrega debe ser mayor que cero.')
             
-        except exceptions.DatoInvalidoError:
-            print('Error: el mail o el telefono ingresado no es valido.')
+        except exceptions.DatoInvalidoError as e:
+            print(f'Error: {e}')
             
         except exceptions.IdentificadorInvalidoError:
             print('Error: el id debe ser mayor que cero.')
@@ -170,11 +170,14 @@ while ingresar:
             gestor.registrar_material(id_material,nombre_material,unidad_medida,punto_reposicion)
             print('Material registrado correctamente.')
             
-        except exceptions.MaterialInvalidoError:
-            print('Error: el material no puede estar vacio.')
-            
+        except exceptions.IdentificadorDeMaterialInvalidoError:
+            print('Error: el id del material no puede estar vacio.')
+
         except exceptions.IdentificadorDuplicadoError:
-            print('Error: ya existe un material con ese id o con ese nombre.')
+            print('Error: ya existe un material con ese id.')
+
+        except exceptions.NombreDeMaterialDuplicadoError:
+            print('Error: ya existe un material con ese nombre.')
             
         except exceptions.NombreInvalidoError:
             print('Error: el nombre no puede estar vacio.')
@@ -229,9 +232,15 @@ while ingresar:
         except exceptions.IdentificadorDuplicadoError:
             print('Error: ya existe un pedido o renglon con ese id.')
             
-        except exceptions.MaterialInvalidoError:
+        except exceptions.MaterialNoIndicadoError:
             print('Error: el material no puede estar vacio.')
-            
+
+        except exceptions.MaterialRepetidoEnElPedidoError:
+            print('Error: el pedido no puede tener dos renglones con el mismo material.')
+
+        except (exceptions.DatoObligatorioFaltanteError, exceptions.TipoDeObjetoIncorrectoError) as e:
+            print(f'Error: {e}')
+
         except exceptions.CantidadInvalidaError:
             print('Error: la cantidad debe ser mayor que cero.')
             
@@ -278,10 +287,16 @@ while ingresar:
             print('Error: la cantidad recibida debe ser mayor que cero.')
             
         except exceptions.FechaInvalidaError as error:
-            print(f'Error: {error} Use el formato dd/mm/aaaa.')
+            print(f'Error: {error}')
+
+        except exceptions.DatoObligatorioFaltanteError as error:
+            print(f'Error: {error}')
         
-        except exceptions.PedidoNoEncontradoError:
-            print('Error: el proveedor no tiene un renglon pendiente con ese id, material y cantidad.')
+        except exceptions.MaterialRecibidoDistintoDelPedidoError as error:
+            print(f'Error: {error}')
+
+        except exceptions.RenglonDePedidoPendienteNoEncontradoError as error:
+            print(f'Error: {error}')
         
         except exceptions.IdentificadorInvalidoError:
             print('Error: el id debe ser mayor que cero.')
@@ -329,17 +344,23 @@ while ingresar:
         except exceptions.FechaInvalidaError:
             print('Error: fecha invalida (formato dd/mm/aaaa).')
             
-        except exceptions.EstadoInvalidoError:
+        except exceptions.RetiroYaRealizadoError:
             print('Error: el retiro ya fue realizado.')
-            
-        except exceptions.MaterialInvalidoError:
+
+        except exceptions.EstadoInvalidoError as e:
+            print(f'Error: {e}')
+
+        except exceptions.MaterialRepetidoEnElRetiroError:
             print('Error: ya existe un renglon que retira este material.')
-            
-        except exceptions.MaterialNoEncontradoError:
+
+        except exceptions.ExistenciaInsuficienteError as e:
+            print(f'Error: {e}')
+
+        except exceptions.MaterialNoIndicadoError:
             print('Error: el material no puede estar vacio.')
-            
+
         except exceptions.CantidadInvalidaError:
-            print('Error: la cantidad a retirar debe ser mayor que cero y no exceder la disponible.')
+            print('Error: la cantidad a retirar debe ser mayor que cero.')
             
         except exceptions.IdentificadorInvalidoError:
             print('Error: el id debe ser mayor que cero.')

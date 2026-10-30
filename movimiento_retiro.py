@@ -1,9 +1,13 @@
 from renglon_retiro import RenglonRetiro
 from validaciones import Validaciones
-from exceptions import IdentificadorDuplicadoError
-from exceptions import FechaInvalidaError
+from exceptions import IdentificadorDeMovimientoInvalidoError
+from exceptions import IdentificadorDeMovimientoDuplicadoError
+from exceptions import FormatoDeFechaInvalidoError
 from exceptions import MaterialInvalidoError
-from exceptions import CantidadInvalidaError
+from exceptions import MaterialRepetidoEnElRetiroError
+from exceptions import CantidadARetirarNoPositivaError
+from exceptions import ExistenciaDisponibleInsuficienteParaElRetiroError
+from exceptions import RetiroYaRealizadoError
 from exceptions import EstadoInvalidoError
 from deposito import Deposito
 from remesa import Remesa
@@ -12,13 +16,16 @@ from remesa import Remesa
 class Movimiento_retiro:
     lista_id=[]
     def __init__(self, id_movimiento, fecha, renglones_retiro,remesas_modificadas,materiales_modificados,deposito,metodo_descarga,estado="no retirado"):
-        if not Validaciones.es_fecha(fecha):
-            raise FechaInvalidaError("Fecha invalida.")
+        if not Validaciones.es_identificador_valido(id_movimiento):
+            raise IdentificadorDeMovimientoInvalidoError(f"El identificador del movimiento debe ser un número entero positivo o un texto con contenido; se recibió {id_movimiento!r}.")
 
         if not Validaciones.validarid(Movimiento_retiro.lista_id,id_movimiento):
-            raise IdentificadorDuplicadoError("El identificador ya existe en la lista.")
+            raise IdentificadorDeMovimientoDuplicadoError(f"Ya existe un movimiento de retiro con el identificador {id_movimiento!r}.")
 
-        self.id_movimiento = id_movimiento                         #falta validar atributos
+        if not Validaciones.es_fecha(fecha):
+            raise FormatoDeFechaInvalidoError(f"La fecha del retiro debe escribirse como dd/mm/aaaa y ser una fecha real; se recibió {fecha!r}.")
+
+        self.id_movimiento = id_movimiento                  
         self.fecha = fecha
         self.renglones_retiro = renglones_retiro
         self.remesas_modificadas=remesas_modificadas
@@ -30,7 +37,7 @@ class Movimiento_retiro:
 
     def eliminar_renglon(self,material):
         if self.estado!="no retirado":
-            raise EstadoInvalidoError("El retiro ya fue realizado")
+            raise RetiroYaRealizadoError("No se pueden quitar renglones de un retiro que ya fue realizado.")
 
         for renglon in self.renglones_retiro:
             if renglon.material==material:
@@ -46,13 +53,13 @@ class Movimiento_retiro:
                 self.remesas_modificadas=remesas_restantes
                 return
 
-        raise MaterialInvalidoError("No existe un renglon con ese material")
+        raise MaterialInvalidoError(f"El retiro no tiene ningún renglón para el material {material!r}.")
         
 
     def _planificar_consumo(self, material, cantidad):
         if not Validaciones.es_positivo(cantidad):
-            raise CantidadInvalidaError(
-                "La cantidad debe ser mayor que cero."
+            raise CantidadARetirarNoPositivaError(
+                f"La cantidad a retirar debe ser mayor que cero; se pidió {cantidad!r}."
             )
 
         disponibles = self.deposito.remesas_por_material(
@@ -65,8 +72,8 @@ class Movimiento_retiro:
             total += remesa.obtener_saldo()
 
         if total < cantidad:
-            raise CantidadInvalidaError(
-                "No hay suficiente stock disponible."
+            raise ExistenciaDisponibleInsuficienteParaElRetiroError(
+                f"Se quieren retirar {cantidad} de '{material}', pero la existencia disponible al {self.fecha} es {total}."
             )
 
         ordenadas = self.metodo_descarga(disponibles)
@@ -93,8 +100,8 @@ class Movimiento_retiro:
         
     def cambiar_estado(self):
         if self.estado != "no retirado":
-            raise EstadoInvalidoError(
-                "El retiro ya fue realizado."
+            raise RetiroYaRealizadoError(
+                "El retiro ya fue realizado; no se puede volver a confirmar."
             )
 
         if not self.renglones_retiro:
@@ -130,15 +137,15 @@ class Movimiento_retiro:
 
     def agregar_renglon(self, material, cantidad):
         if self.estado != "no retirado":
-            raise EstadoInvalidoError(
-                "El retiro ya fue realizado."
+            raise RetiroYaRealizadoError(
+                "No se pueden agregar renglones a un retiro que ya fue realizado."
             )
 
         material = Validaciones.normalizar_texto(material)
 
         if material in self.materiales_modificados:
-            raise MaterialInvalidoError(
-                "Ya existe un renglón para este material."
+            raise MaterialRepetidoEnElRetiroError(
+                "Este retiro ya tiene un renglón para ese material; sumá la cantidad en ese renglón en lugar de agregar otro."
             )
 
         renglon = RenglonRetiro(material, cantidad)

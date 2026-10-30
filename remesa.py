@@ -1,36 +1,42 @@
-from exceptions import CantidadInvalidaError, FechaInvalidaError, SaldoInvalidoError, IdentificadorDuplicadoError, MaterialNoEncontradoError, ProveedorNoEncontradoError
+from exceptions import IdentificadorDeRemesaInvalidoError, IdentificadorDeRemesaDuplicadoError, MaterialNoIndicadoError, ProveedorNoIndicadoError, RenglonDePedidoNoIndicadoError, CantidadRecibidaNoPositivaError, CantidadAConsumirNoPositivaError, FormatoDeFechaInvalidoError, FechaDeRecepcionFuturaError, FechaDeVencimientoAnteriorALaRecepcionError, SaldoDeRemesaInsuficienteError
 from validaciones import Validaciones
 from datetime import date, datetime
 
 class Remesa:
     lista_id=[]
     def __init__(self, id_remesa, material, id_proveedor, id_renglon_pedido, cantidad_recibida,fecha_recepcion, **datos_opcionales):
+        if not Validaciones.es_identificador_valido(id_remesa):
+            raise IdentificadorDeRemesaInvalidoError(f"El identificador de la remesa debe ser un número entero positivo o un texto con contenido; se recibió {id_remesa!r}.")
+
         if not Validaciones.validarid(Remesa.lista_id, id_remesa):
-            raise IdentificadorDuplicadoError("El identificador ya existe en la lista.")
-        
+            raise IdentificadorDeRemesaDuplicadoError(f"Ya se registró una remesa con el identificador {id_remesa!r}.")
+
         if not Validaciones.es_no_vacio(material):
-            raise MaterialNoEncontradoError("El material no puede estar vacío.")
-        
+            raise MaterialNoIndicadoError("Toda remesa tiene que indicar qué material contiene.")
+
         if not Validaciones.es_no_vacio(id_proveedor):
-            raise ProveedorNoEncontradoError("El Proveedor no puede estar vacío.")
+            raise ProveedorNoIndicadoError("Toda remesa tiene que indicar qué proveedor la entregó.")
+
+        if not Validaciones.es_identificador_valido(id_renglon_pedido):
+            raise RenglonDePedidoNoIndicadoError(f"Para conservar la trazabilidad, la remesa tiene que indicar de qué renglón de pedido proviene; se recibió {id_renglon_pedido!r}.")
 
         if not Validaciones.es_positivo(cantidad_recibida):
-            raise CantidadInvalidaError("La cantidad recibida debe ser mayor que cero.")
+            raise CantidadRecibidaNoPositivaError(f"La cantidad recibida en una remesa debe ser mayor que cero (RN9); se recibió {cantidad_recibida!r}.")
 
-    
+
         fecha_vencimiento = datos_opcionales.get("fecha_vencimiento")
         if not Validaciones.es_fecha(fecha_recepcion):
-            raise FechaInvalidaError("La fecha de recepción no es válida.")
+            raise FormatoDeFechaInvalidoError(f"La fecha de recepción debe escribirse como dd/mm/aaaa y ser una fecha real; se recibió {fecha_recepcion!r}.")
 
         if Remesa._a_fecha(fecha_recepcion) > date.today():
-            raise FechaInvalidaError("La fecha de recepción no puede ser futura.")
+            raise FechaDeRecepcionFuturaError(f"La fecha de recepción {fecha_recepcion} es posterior a hoy; no se puede registrar mercadería que todavía no llegó.")
 
         if fecha_vencimiento is not None:
             if not Validaciones.es_fecha(fecha_vencimiento):
-                raise FechaInvalidaError("La fecha de vencimiento no es válida.")
+                raise FormatoDeFechaInvalidoError(f"La fecha de vencimiento debe escribirse como dd/mm/aaaa y ser una fecha real; se recibió {fecha_vencimiento!r}.")
             if Remesa._a_fecha(fecha_vencimiento) < Remesa._a_fecha(fecha_recepcion):
-                raise FechaInvalidaError(
-                    "La fecha de vencimiento no puede ser anterior a la de recepción."
+                raise FechaDeVencimientoAnteriorALaRecepcionError(
+                    f"La remesa vencería el {fecha_vencimiento}, antes de haberse recibido el {fecha_recepcion}; el vencimiento no puede ser anterior a la recepción."
                 )
             
         self.id_remesa = id_remesa 
@@ -84,21 +90,31 @@ class Remesa:
     def obtener_cantidad_recibida(self):
         return self.cantidad_recibida
     
+    @staticmethod
+    def _verificar_que_la_fecha_de_consulta_sea_valida(fecha):
+        if isinstance(fecha, date):
+            return
+        if not Validaciones.es_fecha(fecha):
+            raise FormatoDeFechaInvalidoError(f"La fecha de consulta debe ser un texto dd/mm/aaaa o una fecha de Python; se recibió {fecha!r}.")
+
     def esta_vencida(self, fecha):
+        Remesa._verificar_que_la_fecha_de_consulta_sea_valida(fecha)
         if self.fecha_vencimiento is None:
             return False
         return Remesa._a_fecha(self.fecha_vencimiento) < Remesa._a_fecha(fecha)
 
     def es_utilizable(self, fecha):
+        # Se valida primero para que una fecha invalida falle siempre, tenga o no saldo
+        Remesa._verificar_que_la_fecha_de_consulta_sea_valida(fecha)
         return self.saldo_disponible > 0 and not self.esta_vencida(fecha)
 
     def consumir(self, cantidad):
         if not Validaciones.es_positivo(cantidad):
-            raise CantidadInvalidaError("La cantidad a consumir debe ser mayor que cero.")
+            raise CantidadAConsumirNoPositivaError(f"La cantidad a consumir de una remesa debe ser mayor que cero; se recibió {cantidad!r}.")
         if cantidad > self.saldo_disponible:
-            raise SaldoInvalidoError(
-                f"Saldo insuficiente en remesa {self.id_remesa!r}: "
-                f"disponible {self.saldo_disponible}, solicitado {cantidad}."
+            raise SaldoDeRemesaInsuficienteError(
+                f"La remesa {self.id_remesa!r} no tiene saldo suficiente: "
+                f"se quieren consumir {cantidad} y solo quedan {self.saldo_disponible}."
             )
         self.saldo_disponible -= cantidad
         

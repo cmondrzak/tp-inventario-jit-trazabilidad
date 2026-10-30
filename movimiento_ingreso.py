@@ -1,17 +1,23 @@
 from validaciones import Validaciones
-from exceptions import IdentificadorDuplicadoError, FechaInvalidaError
+from exceptions import IdentificadorDeMovimientoInvalidoError, IdentificadorDeMovimientoDuplicadoError, FormatoDeFechaInvalidoError, RemesaNoIndicadaEnElIngresoError, PedidoNoIndicadoEnElIngresoError
 import validaciones
 class Movimiento_ingreso:
     lista_id=[]
-    def __init__(self, id_movimiento, fecha, remesa,pedido):   
-        if not Validaciones.es_fecha(fecha):
-            raise FechaInvalidaError("Fecha invalida.")
+    def __init__(self, id_movimiento, fecha, remesa,pedido):
+        if not Validaciones.es_identificador_valido(id_movimiento):
+            raise IdentificadorDeMovimientoInvalidoError(f"El identificador del movimiento debe ser un número entero positivo o un texto con contenido; se recibió {id_movimiento!r}.")
 
-        if not Validaciones.es_no_vacio(remesa):
-            raise ValueError("La remesa no puede estar vacía.")
-        
         if not Validaciones.validarid(Movimiento_ingreso.lista_id,id_movimiento):
-            raise IdentificadorDuplicadoError("El identificador ya existe en la lista.")
+            raise IdentificadorDeMovimientoDuplicadoError(f"Ya se registró un movimiento de ingreso con el identificador {id_movimiento!r}.")
+
+        if not Validaciones.es_fecha(fecha):
+            raise FormatoDeFechaInvalidoError(f"La fecha del movimiento debe escribirse como dd/mm/aaaa y ser una fecha real; se recibió {fecha!r}.")
+
+        if not Validaciones.es_identificador_valido(remesa):
+            raise RemesaNoIndicadaEnElIngresoError("Todo movimiento de ingreso tiene que indicar qué remesa entró al depósito.")
+
+        if not Validaciones.es_identificador_valido(pedido):
+            raise PedidoNoIndicadoEnElIngresoError("Todo movimiento de ingreso tiene que indicar de qué pedido proviene la mercadería.")
 
         self.id_movimiento = id_movimiento
         self.fecha = fecha
