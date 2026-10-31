@@ -446,6 +446,8 @@ while ingresar:
             print('Retiros que usaron esta remesa:')
             hubo_retiros = False
             for movimiento in gestor.obtener_movimientos_de_egreso().values():
+                if movimiento.obtener_estado() != "retirado":
+                    continue
                 for remesa_retirada, cantidad_retirada in movimiento.remesas_modificadas:
                     if remesa_retirada.obtener_id_remesa() == remesa.obtener_id_remesa():
                         hubo_retiros = True
