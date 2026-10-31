@@ -52,3 +52,9 @@ class Material:
     @classmethod
     def reiniciar_ids(cls):
         cls.lista_id = []
+        
+    def obtener_punto_reposicion(self):
+        return self.punto_reposicion
+
+    def obtener_unidad(self):
+        return self.unidad

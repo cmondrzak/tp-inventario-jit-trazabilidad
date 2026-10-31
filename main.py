@@ -36,8 +36,10 @@ def mostrar_menu():
     print("  6. Consultar existencia física")
     print("  7. Consultar existencia disponible")
     print("  8. Consultar trazabilidad de un ingreso")
+    print("  9. Consultar reposición de un material")
+    print("  10. Ver materiales que requieren reposición")
 
-    print("\n  9. Salir")
+    print("\n  11. Salir")
     print()
     print("=" * ancho)
 
@@ -337,6 +339,18 @@ while ingresar:
                 agregar = input('Desea agregar otro renglon? (s/n): ').lower() == 's'
             gestor.realizar_retiro(retiro)
             print('Egreso registrado correctamente.')
+
+            materiales_a_reponer = gestor.obtener_materiales_a_reponer()
+            if materiales_a_reponer:
+                print("\nATENCION: materiales que requieren reposicion hoy:")
+
+                for material in materiales_a_reponer:
+                    print(
+                        f"- {material['nombre']}: existencia disponible "
+                        f"inferior a {material['punto_reposicion']} "
+                        f"{material['unidad']}."
+                    )
+            
             
         except exceptions.IdentificadorDuplicadoError:
             print('Error: ya existe un movimiento con ese id.')
@@ -452,11 +466,77 @@ while ingresar:
             print('Error: el id debe ser un numero.')
 
     elif opcion == '9':
+        mostrar_titulo("REPOSICION DE UN MATERIAL")
+
+        try:
+            nombre = input("Ingrese el nombre del material: ")
+            datos = gestor.consultar_reposicion(nombre)
+
+            print(f"Material: {datos['nombre']}")
+            print(
+                f"Existencia disponible hoy: "
+                f"{datos['existencia']} {datos['unidad']}"
+            )
+            print(
+                f"Punto de reposicion: "
+                f"{datos['punto_reposicion']} {datos['unidad']}"
+            )
+
+            diferencia = datos["diferencia"]
+
+            if diferencia>0:
+                print(
+                    f"Esta {diferencia} {datos['unidad']} "
+                    f"por encima del punto de reposicion."
+                )
+            elif diferencia<0:
+                print(
+                    f"Esta {-diferencia} {datos['unidad']} "
+                    f"por debajo del punto de reposicion."
+                )
+                print("Requiere reposicion.")
+            else:
+                print("Esta justo en el punto de reposicion.")
+                print("Todavia no requiere reposicion.")
+
+        except exceptions.MaterialNoIndicadoError as e:
+            print(f"Error: {e}")
+
+        except exceptions.MaterialNoRegistradoError as e:
+            print(f"Error: {e}")
+
+    elif opcion == '10':
+        mostrar_titulo("MATERIALES QUE REQUIEREN REPOSICION")
+
+        materiales = gestor.obtener_materiales_a_reponer()
+
+        if not materiales:
+            print("No hay materiales por debajo de su punto de reposicion.")
+        else:
+            print("Situacion actual:")
+
+            for datos in materiales:
+                print()
+                print(f"Material: {datos['nombre']}")
+                print(
+                    f"Existencia disponible: "
+                    f"{datos['existencia']} {datos['unidad']}"
+                )
+                print(
+                    f"Punto de reposicion: "
+                    f"{datos['punto_reposicion']} {datos['unidad']}"
+                )
+                print(
+                    f"Esta {-datos['diferencia']} {datos['unidad']} "
+                    f"por debajo del punto de reposicion."
+                )
+
+    elif opcion == '11':
         ingresar = False
         print(f'{"Muchas gracias, regrese mas tarde por mas trabajo!!!":^30}')
         
     else:
-        print('Opcion invalida, ingrese un numero del 1 al 9.')
+        print('Opcion invalida, ingrese un numero del 1 al 11.')
 
     if opcion in ('1','2','3','4','5'):
         Archivero.archivar(gestor)

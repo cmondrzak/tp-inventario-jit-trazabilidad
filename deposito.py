@@ -22,7 +22,7 @@ class Deposito:
     
     # def retirar(retiro, metodo_descarga):
     #     metodo_descarga(retiro)
-    
+
     def almacenar_remesa(self,remesa):
         if not isinstance(remesa, Remesa):
             raise ObjetoNoEsUnaRemesaError(f"El depósito solo puede almacenar remesas, pero recibió un objeto de tipo {type(remesa).__name__}.")
@@ -83,7 +83,13 @@ class Deposito:
             del self.remesas[clave]
         
     def validar_reposicion(self,id_material):
-        return
+        material = self.materiales[id_material]
+
+        existencia = self.existencia_disponible(
+            material.obtener_nombre()
+        )
+
+        return material.requiere_reposicion(existencia)
     
     def obtener_materiales(self):
         return self.materiales.copy()
@@ -96,7 +102,15 @@ class Deposito:
                 disponibles.append(remesa)
 
         return disponibles
-    
+
+    def existencia_disponible(self,nombre):
+        nombre = Validaciones.normalizar_texto(nombre)
+        existencia = 0
+
+        for remesa in self.remesas_por_material(nombre,date.today()):
+            existencia += remesa.obtener_saldo()
+
+        return existencia
     
     @staticmethod
     def retirar_fefo(remesas):
@@ -104,4 +118,34 @@ class Deposito:
             return remesa.clave_fefo()
 
         return sorted(remesas, key=criterio)
+
+    def obtener_materiales_a_reponer(self):
+        materiales_a_reponer = []
+
+        for id_material in self.materiales:
+            datos = self.obtener_datos_reposicion(id_material)
+
+            if datos["requiere_reposicion"]:
+                materiales_a_reponer.append(datos)
+
+        return materiales_a_reponer
+
+    def obtener_datos_reposicion(self,id_material):
+        material = self.materiales[id_material]
+
+        existencia = self.existencia_disponible(
+            material.obtener_nombre()
+        )
+
+        punto = material.obtener_punto_reposicion()
+
+        return {
+            "id_material": id_material,
+            "nombre": material.obtener_nombre(),
+            "unidad": material.obtener_unidad(),
+            "existencia": existencia,
+            "punto_reposicion": punto,
+            "diferencia": existencia-punto,
+            "requiere_reposicion": material.requiere_reposicion(existencia)
+        }
     

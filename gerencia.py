@@ -60,14 +60,7 @@ class Gerencia():
 
     @staticmethod
     def existencia_disponible(deposito,material):
-        cantidad_total = 0
-
-        for remesa in deposito.obtener_remesas().values():
-            if remesa.obtener_material()==material:
-                if remesa.es_utilizable(datetime.date.today()):
-                    cantidad_total += remesa.obtener_saldo()
-
-        return cantidad_total
+        return deposito.existencia_disponible(material)
         
     def generar_pedido(self,id_pedido,proveedor,renglones,plazo_entrega): #por ahi estaria bueno que estado pedido y renglones tengan valor por defecto al iniciar el pedido
         try:
@@ -161,3 +154,24 @@ class Gerencia():
                         raise MaterialRecibidoDistintoDelPedidoError(f"Se recibió '{material}', pero el renglón {id_renglon_pedido!r} del pedido solicitaba '{renglon.obtener_material()}'.")
                     raise RenglonDePedidoPendienteNoEncontradoError(f"El renglón {id_renglon_pedido!r} del pedido solicitaba {renglon.obtener_cantidad()}, pero se recibieron {cantidad_recibida}; la cantidad recibida tiene que coincidir con la pedida.")
         raise RenglonDePedidoPendienteNoEncontradoError(f"El proveedor {id_proveedor!r} no tiene ningún pedido pendiente con el renglón {id_renglon_pedido!r} sin ingresar.")
+    
+    def obtener_materiales_a_reponer(self):
+        return self.deposito[0].obtener_materiales_a_reponer()
+
+    def consultar_reposicion(self,nombre):
+        if not isinstance(nombre,str) or not Validaciones.es_no_vacio(nombre):
+            raise MaterialNoIndicadoError(
+                "Debe indicar el nombre del material."
+            )
+
+        nombre = Validaciones.normalizar_texto(nombre)
+
+        for id_material, material in self.deposito[0].obtener_materiales().items():
+            if Validaciones.normalizar_texto(material.obtener_nombre())==nombre:
+                return self.deposito[0].obtener_datos_reposicion(
+                    id_material
+                )
+
+        raise MaterialNoRegistradoError(
+            f"No existe un material registrado con el nombre '{nombre}'."
+        )
