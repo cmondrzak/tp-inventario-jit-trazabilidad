@@ -138,3 +138,7 @@ class Remesa:
     def reiniciar_ids(cls):
         cls.lista_id = []
 
+    def obtener_fecha_recepcion(self):
+        return self.fecha_recepcion
+
+

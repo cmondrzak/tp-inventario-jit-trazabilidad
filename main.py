@@ -385,7 +385,7 @@ while ingresar:
             fecha_consulta = a_fecha(fecha_consulta)
             total = 0
             for remesa in gestor.deposito[0].obtener_todas_las_remesas().values():
-                if remesa.obtener_material() == material and a_fecha(remesa.fecha_recepcion) <= fecha_consulta:
+                if remesa.obtener_material() == material and a_fecha(remesa.obtener_fecha_recepcion()) <= fecha_consulta:
                     vencimiento = remesa.obtener_fecha_vencimiento()
                     vencida = vencimiento is not None and a_fecha(vencimiento) < fecha_consulta
                     if opcion == '6' or not vencida:
@@ -427,7 +427,7 @@ while ingresar:
             print(f'Pedido: {pedido.obtener_id_pedido()} (estado: {pedido.estado}, plazo de entrega: {pedido.plazo_entrega})')
             print(f'Renglon del pedido: {remesa.obtener_id_renglon_pedido()}')
             print(f'Remesa: {remesa.obtener_id_remesa()} - material: {remesa.obtener_material()}')
-            print(f'Cantidad recibida: {remesa.obtener_cantidad_recibida()}, saldo actual: {remesa.saldo_disponible}')
+            print(f'Cantidad recibida: {remesa.obtener_cantidad_recibida()}, saldo actual: {remesa.obtener_saldo()}')
             print(f'Fecha de vencimiento: {vencimiento if vencimiento is not None else "sin vencimiento"}')
             print('Retiros que usaron esta remesa:')
             hubo_retiros = False

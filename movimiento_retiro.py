@@ -40,7 +40,7 @@ class Movimiento_retiro:
             raise RetiroYaRealizadoError("No se pueden quitar renglones de un retiro que ya fue realizado.")
 
         for renglon in self.renglones_retiro:
-            if renglon.material==material:
+            if renglon.obtener_material()==material:
                 remesas_restantes=[]
                 for tup in self.remesas_modificadas:
                     if tup[0].obtener_material()!=material:
@@ -113,8 +113,8 @@ class Movimiento_retiro:
         #corregir encapsulamiento (linea 109 y 110)
         for renglon in self.renglones_retiro:
             plan = self._planificar_consumo(
-                renglon.material,
-                renglon.cantidad_solicitada
+                renglon.obtener_material(),
+                renglon.obtener_cantidad_solicitada()
             )
 
             for consumo in plan:
@@ -159,6 +159,21 @@ class Movimiento_retiro:
 
         for consumo in plan:
             self.remesas_modificadas.append(consumo)
+
+    def obtener_estado(self):
+        return self.estado
+
+    def obtener_renglones(self):
+        return self.renglones_retiro.copy()
+
+    def obtener_remesas_modificadas(self):
+        return self.remesas_modificadas.copy()
+
+    def obtener_fecha(self):
+        return self.fecha
+
+    def obtener_id_movimiento(self):
+        return self.id_movimiento
                     
             
                     

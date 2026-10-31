@@ -12,3 +12,8 @@ class RenglonRetiro:
 
         self.material = material
         self.cantidad_solicitada = cantidad_solicitada
+    def obtener_material(self):
+        return self.material
+
+    def obtener_cantidad_solicitada(self):
+        return self.cantidad_solicitada
