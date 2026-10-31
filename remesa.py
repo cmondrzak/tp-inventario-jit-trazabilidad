@@ -6,7 +6,7 @@ class Remesa:
     lista_id=[]
     def __init__(self, id_remesa, material, id_proveedor, id_renglon_pedido, cantidad_recibida,fecha_recepcion, **datos_opcionales):
         if not Validaciones.es_identificador_valido(id_remesa):
-            raise IdentificadorDeRemesaInvalidoError(f"El identificador de la remesa debe ser un número entero positivo o un texto con contenido; se recibió {id_remesa!r}.")
+            raise IdentificadorDeRemesaInvalidoError(f"El identificador de la remesa debe ser un número entero positivo; se recibió {id_remesa!r}.")
 
         if not Validaciones.validarid(Remesa.lista_id, id_remesa):
             raise IdentificadorDeRemesaDuplicadoError(f"Ya se registró una remesa con el identificador {id_remesa!r}.")

@@ -8,7 +8,7 @@ class Pedido:
     def __init__(self, id_pedido, proveedor, renglones,plazo_entrega,estado):
 
         if not Validaciones.es_identificador_valido(id_pedido):
-            raise IdentificadorDePedidoInvalidoError(f"El identificador del pedido debe ser un número entero positivo o un texto con contenido; se recibió {id_pedido!r}.")
+            raise IdentificadorDePedidoInvalidoError(f"El identificador del pedido debe ser un número entero positivo; se recibió {id_pedido!r}.")
 
         if not Validaciones.validarid(Pedido.lista_id,id_pedido):
             raise IdentificadorDePedidoDuplicadoError(f"Ya existe un pedido con el identificador {id_pedido!r}.")

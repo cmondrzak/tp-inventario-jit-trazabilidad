@@ -31,7 +31,7 @@ class ValorInvalidoError(InventarioError):
 
 # Identificadores
 class IdentificadorInvalidoError(ValorInvalidoError):
-    """Un identificador no es un entero positivo ni un texto con contenido."""
+    """Un identificador no es un entero positivo."""
     pass
 
 class IdentificadorDeMaterialInvalidoError(IdentificadorInvalidoError):

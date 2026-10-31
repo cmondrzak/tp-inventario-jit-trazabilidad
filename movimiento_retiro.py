@@ -17,7 +17,7 @@ class Movimiento_retiro:
     lista_id=[]
     def __init__(self, id_movimiento, fecha, renglones_retiro,remesas_modificadas,materiales_modificados,deposito,metodo_descarga,estado="no retirado"):
         if not Validaciones.es_identificador_valido(id_movimiento):
-            raise IdentificadorDeMovimientoInvalidoError(f"El identificador del movimiento debe ser un número entero positivo o un texto con contenido; se recibió {id_movimiento!r}.")
+            raise IdentificadorDeMovimientoInvalidoError(f"El identificador del movimiento debe ser un número entero positivo; se recibió {id_movimiento!r}.")
 
         if not Validaciones.validarid(Movimiento_retiro.lista_id,id_movimiento):
             raise IdentificadorDeMovimientoDuplicadoError(f"Ya existe un movimiento de retiro con el identificador {id_movimiento!r}.")

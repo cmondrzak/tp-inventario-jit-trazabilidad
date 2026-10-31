@@ -9,7 +9,7 @@ class Proveedor:
     lista_id=[]
     def __init__(self, id_proveedor, nombre, plazo_entrega, mail=None, telefono=None):
         if not Validaciones.es_identificador_valido(id_proveedor):
-            raise IdentificadorDeProveedorInvalidoError(f"El identificador del proveedor debe ser un número entero positivo o un texto con contenido; se recibió {id_proveedor!r}.")
+            raise IdentificadorDeProveedorInvalidoError(f"El identificador del proveedor debe ser un número entero positivo; se recibió {id_proveedor!r}.")
 
         if not Validaciones.validarid(Proveedor.lista_id,id_proveedor):
             raise IdentificadorDeProveedorDuplicadoError(f"Ya hay un proveedor registrado con el identificador {id_proveedor!r}.")

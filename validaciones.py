@@ -17,13 +17,11 @@ class Validaciones:
 
     @staticmethod
     def es_identificador_valido(valor):
-        # Un id puede ser un entero mayor que cero (ej: 1) o un texto no vacio (ej: "P1")
-        if Validaciones.es_numero_entero(valor):
-            return valor > 0
-        if isinstance(valor, str):
-            return len(valor.strip()) > 0
-        return False
-
+        return (
+            Validaciones.es_numero_entero(valor)
+            and valor > 0
+        )
+    
     @staticmethod
     def es_positivo(valor):
         return Validaciones.es_numero(valor) and valor > 0
