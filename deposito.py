@@ -18,6 +18,7 @@ class Deposito:
     def __init__(self,remesas, materiales):
         self.remesas = remesas
         self.materiales = materiales
+        self.remesas_agotadas = {}
     
     # def retirar(retiro, metodo_descarga):
     #     metodo_descarga(retiro)
@@ -27,9 +28,12 @@ class Deposito:
             raise ObjetoNoEsUnaRemesaError(f"El depósito solo puede almacenar remesas, pero recibió un objeto de tipo {type(remesa).__name__}.")
         clave = str(remesa.obtener_id_remesa())
         # La clave es str(id): 1 y "1" chocarian y se perderia una remesa
-        if clave in self.remesas:
+        if clave in self.remesas or clave in self.remesas_agotadas:
             raise IdentificadorDeRemesaDuplicadoError(f"El depósito ya tiene almacenada una remesa con el identificador {clave!r}; guardar otra con el mismo identificador haría perder la anterior.")
-        self.remesas[clave] = remesa
+        if remesa.obtener_saldo()==0:
+            self.remesas_agotadas[clave] = remesa
+        else:
+            self.remesas[clave] = remesa
 
     def modificar_materiales(self,material,id_material):
         if not isinstance(material, Material):
@@ -41,8 +45,43 @@ class Deposito:
         self.materiales[id_material]=material
         return
     def obtener_remesas(self):
-        return self.remesas
+        return self.remesas.copy()
+    def obtener_remesas_agotadas(self):
+        return self.remesas_agotadas.copy()
     
+    def obtener_todas_las_remesas(self):
+        todas = self.remesas.copy()
+        todas.update(self.remesas_agotadas)
+        return todas
+    def obtener_remesa(self,id_remesa):
+        clave = str(id_remesa)
+
+        if clave in self.remesas:
+            return self.remesas[clave]
+
+        return self.remesas_agotadas[clave]
+
+    def archivar_remesa_agotada(self,remesa):
+        clave = str(remesa.obtener_id_remesa())
+
+        if remesa.obtener_saldo()==0 and clave in self.remesas:
+            self.remesas_agotadas[clave] = self.remesas[clave]
+            del self.remesas[clave]
+
+    def actualizar_remesas_guardadas(self):
+        if not hasattr(self,"remesas_agotadas"):
+            self.remesas_agotadas = {}
+
+        claves_agotadas = []
+
+        for clave, remesa in self.remesas.items():
+            if remesa.obtener_saldo()==0:
+                claves_agotadas.append(clave)
+
+        for clave in claves_agotadas:
+            self.remesas_agotadas[clave] = self.remesas[clave]
+            del self.remesas[clave]
+        
     def validar_reposicion(self,id_material):
         return
     
@@ -57,7 +96,7 @@ class Deposito:
                 disponibles.append(remesa)
 
         return disponibles
-
+    
     
     @staticmethod
     def retirar_fefo(remesas):

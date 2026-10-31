@@ -123,6 +123,9 @@ class Movimiento_retiro:
         for remesa, cantidad in plan_completo:
             remesa.consumir(cantidad)
 
+        for remesa, cantidad in plan_completo:
+            self.deposito.archivar_remesa_agotada(remesa)
+
         self.remesas_modificadas = plan_completo
         self.estado = "retirado"
 

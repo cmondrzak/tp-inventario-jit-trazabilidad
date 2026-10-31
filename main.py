@@ -384,7 +384,7 @@ while ingresar:
                 raise exceptions.FechaInvalidaError
             fecha_consulta = a_fecha(fecha_consulta)
             total = 0
-            for remesa in gestor.deposito[0].remesas.values():
+            for remesa in gestor.deposito[0].obtener_todas_las_remesas().values():
                 if remesa.obtener_material() == material and a_fecha(remesa.fecha_recepcion) <= fecha_consulta:
                     vencimiento = remesa.obtener_fecha_vencimiento()
                     vencida = vencimiento is not None and a_fecha(vencimiento) < fecha_consulta
@@ -417,7 +417,7 @@ while ingresar:
             ingreso = gestor.obtener_movimientos_de_ingreso().get(id_movimiento)
             if ingreso is None:
                 raise exceptions.EntidadNoEncontradaError
-            remesa = gestor.deposito[0].remesas[str(ingreso.remesa)]
+            remesa = gestor.deposito[0].obtener_remesa(ingreso.remesa)
             pedido = gestor.obtener_pedidos()[ingreso.pedido]
             proveedor = gestor.obtener_proveedores()[pedido.proveedor]
             vencimiento = remesa.obtener_fecha_vencimiento()

@@ -37,6 +37,8 @@ class Archivero:
         with open(ruta, "rb") as f:
             datos = pickle.load(f)
         gestor.guardar_deposito(datos["deposito"])
+        for deposito in gestor.obtener_deposito():
+            deposito.actualizar_remesas_guardadas()
         gestor.guardar_pedidos(datos["pedidos"])
         gestor.guardar_proveedores(datos["proveedores"])
         gestor.guardar_movimientos_de_ingreso(datos["movimientos_de_ingreso"])

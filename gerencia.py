@@ -60,11 +60,14 @@ class Gerencia():
 
     @staticmethod
     def existencia_disponible(deposito,material):
-         cantidad_total=0
-         for remesa in deposito.remesas.values():
-              if remesa.obtener_material()==material and remesa.es_utilizable(datetime.date.today()):
-                   cantidad_total+=remesa.saldo_disponible
-         return cantidad_total
+        cantidad_total = 0
+
+        for remesa in deposito.obtener_remesas().values():
+            if remesa.obtener_material()==material:
+                if remesa.es_utilizable(datetime.date.today()):
+                    cantidad_total += remesa.obtener_saldo()
+
+        return cantidad_total
         
     def generar_pedido(self,id_pedido,proveedor,renglones,plazo_entrega): #por ahi estaria bueno que estado pedido y renglones tengan valor por defecto al iniciar el pedido
         try:
