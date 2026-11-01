@@ -113,11 +113,9 @@ class Deposito:
         return existencia
     
     @staticmethod
+    
     def retirar_fefo(remesas):
-        def criterio(remesa):
-            return remesa.clave_fefo()
-
-        return sorted(remesas, key=criterio)
+        return sorted(remesas, key = lambda remesa: remesa.clave_fefo())
 
     def obtener_materiales_a_reponer(self):
         materiales_a_reponer = []

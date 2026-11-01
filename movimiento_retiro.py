@@ -77,26 +77,26 @@ class Movimiento_retiro:
             )
 
         ordenadas = self.metodo_descarga(disponibles)
-        #probablemente aca podria implementarse recursividad sin grandes complicaciones (linea 74 a 91)
+        #probablemente aca podria implementarse recursividad sin grandes complicaciones (linea 81 a 98)
         plan = []
         faltante = cantidad
-
-        for remesa in ordenadas:
+        def armar_plan(ordenadas,plan, faltante):
+            remesa = ordenadas[0]
             saldo = remesa.obtener_saldo()
-
+            
             if saldo < faltante:
                 cantidad_a_retirar = saldo
+                plan.append((remesa,cantidad_a_retirar))
+                faltante -= saldo
+                armar_plan(ordenadas[1:],plan,faltante)
             else:
                 cantidad_a_retirar = faltante
-
-            plan.append((remesa, cantidad_a_retirar))
-            faltante -= cantidad_a_retirar
-
-            if faltante == 0:
-                break
-
-        return plan
-
+                plan.append((remesa,cantidad_a_retirar))
+            
+            return plan    
+        
+        return armar_plan(ordenadas, plan, faltante)
+            
         
     def cambiar_estado(self):
         if self.estado != "no retirado":
@@ -110,7 +110,7 @@ class Movimiento_retiro:
             )
 
         plan_completo = []
-        #corregir encapsulamiento (linea 109 y 110)
+
         for renglon in self.renglones_retiro:
             plan = self._planificar_consumo(
                 renglon.obtener_material(),

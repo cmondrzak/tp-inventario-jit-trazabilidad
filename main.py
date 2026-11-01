@@ -99,32 +99,7 @@ def seleccionar_metodo_descarga():
         opcion = input("Elegí una opción: ").strip()
 
     return "FEFO"
-# r = Renglon_pedido(1,'acero',20,5)
 
-
-
-# gestor.registrar_material(1,"acero","kg",20)
-
-# gestor.registrar_proveedor(1,'proveedor 1',5,"proveedor1@gmail.com",'123456789')
-
-
-# gestor.generar_pedido(1,1,[r],15)
-
-
-
-# gestor.almacenar_remesa(1,1,'acero',1,1,20,'2026:10:10')
-
-
-
-
-# print(gestor.obtener_movimientos())
-
-
-# print(gestor.deposito[0].obtener_materiales())
-# print(gestor.deposito[1].obtener_materiales())
-
-# print(gestor.obtener_proveedores())
-#movimiento
 ingresar = True
 
 while ingresar:
