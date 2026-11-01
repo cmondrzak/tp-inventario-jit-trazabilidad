@@ -115,6 +115,8 @@ while ingresar:
             nombre_proveedor = input('Ingrese el nombre del nuevo proveedor: ')
             plazo_de_entrega = int(input('Ingrese el plazo de entrega de este proveedor: '))
             mail_proveedor = input('Ingrese el mail del proveedor (vacio si no tiene): ').strip() or None
+            if mail_proveedor is not None and not Validaciones.es_mail_valido(mail_proveedor):
+                raise exceptions.CorreoElectronicoInvalidoError(f"La dirección de correo '{mail_proveedor}' no es válida: tiene que tener la forma usuario@dominio.com y no puede llevar espacios.")
             telefono_proveedor = input('Ingrese el telefono del proveedor (vacio si no tiene): ').strip() or None
             gestor.registrar_proveedor(id_proveedor,nombre_proveedor,plazo_de_entrega,mail_proveedor,telefono_proveedor)
             print('Proveedor registrado correctamente.')
@@ -372,6 +374,9 @@ while ingresar:
             if not Validaciones.es_fecha(fecha_consulta):
                 raise exceptions.FechaInvalidaError
             fecha_consulta = a_fecha(fecha_consulta)
+            if fecha_consulta > date.today():
+                tipo = 'fisica' if opcion == '6' else 'disponible'
+                raise exceptions.FechaDeConsultaFuturaError(f"no se puede consultar la existencia {tipo} de una fecha futura (hoy es {date.today().strftime('%d/%m/%Y')}).")
             total = 0
             for remesa in gestor.deposito[0].obtener_todas_las_remesas().values():
                 if remesa.obtener_material() == material and a_fecha(remesa.obtener_fecha_recepcion()) <= fecha_consulta:
@@ -395,6 +400,9 @@ while ingresar:
 
         except exceptions.MaterialNoEncontradoError:
             print('Error: el material no esta registrado.')
+
+        except exceptions.FechaDeConsultaFuturaError as e:
+            print(f'Error: {e}')
 
         except exceptions.FechaInvalidaError:
             print('Error: fecha invalida (formato dd/mm/aaaa).')

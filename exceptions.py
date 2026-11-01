@@ -153,6 +153,9 @@ class FechaDeRecepcionFuturaError(FechaInvalidaError):
 class FechaDeVencimientoAnteriorALaRecepcionError(FechaInvalidaError):
     pass
 
+class FechaDeConsultaFuturaError(FechaInvalidaError):
+    pass
+
 
 # Estados
 class EstadoInvalidoError(ValorInvalidoError):
