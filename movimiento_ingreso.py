@@ -35,5 +35,17 @@ class Movimiento_ingreso:
     
     def __repr__(self):
         return f'id = {self.id_movimiento}, fecha = {self.fecha}, remesa = {self.remesa}, pedido = {self.pedido}'
+    
+    def obtener_id_movimiento(self):
+        return self.id_movimiento
+
+    def obtener_fecha(self):
+        return self.fecha
+
+    def obtener_id_remesa(self):
+        return self.remesa
+
+    def obtener_id_pedido(self):
+        return self.pedido
 
         

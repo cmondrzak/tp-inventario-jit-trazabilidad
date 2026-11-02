@@ -212,3 +212,52 @@ class Gerencia():
             "renglones": renglones,
             "remesas": remesas
         }
+    def consultar_trazabilidad_remesa(self,id_remesa):
+        try:
+            remesa = self.deposito[0].obtener_remesa(id_remesa)
+        except KeyError:
+            raise EntidadNoEncontradaError(
+                f"No existe una remesa con el identificador {id_remesa}."
+            )
+
+        ingreso_encontrado = None
+
+        for ingreso in self.movimientos_de_ingreso.values():
+            if str(ingreso.obtener_id_remesa())==str(id_remesa):
+                ingreso_encontrado = ingreso
+                break
+
+        if ingreso_encontrado is None:
+            raise EntidadNoEncontradaError(
+                "La remesa existe, pero no se encontro su movimiento de ingreso."
+            )
+
+        retiros = []
+
+        for retiro in self.movimientos_de_egreso.values():
+            if retiro.obtener_estado()!="retirado":
+                continue
+
+            for remesa_consumida, cantidad in retiro.obtener_remesas_modificadas():
+                if str(remesa_consumida.obtener_id_remesa())==str(id_remesa):
+                    retiros.append({
+                        "id_retiro": retiro.obtener_id_movimiento(),
+                        "fecha": retiro.obtener_fecha(),
+                        "cantidad": cantidad
+                    })
+
+        return {
+            "id_remesa": remesa.obtener_id_remesa(),
+            "material": remesa.obtener_material(),
+            "id_proveedor": remesa.obtener_id_proveedor(),
+            "cantidad_recibida": remesa.obtener_cantidad_recibida(),
+            "saldo_actual": remesa.obtener_saldo(),
+            "fecha_vencimiento": remesa.obtener_fecha_vencimiento(),
+            "ingreso": {
+                "id_ingreso": ingreso_encontrado.obtener_id_movimiento(),
+                "fecha": ingreso_encontrado.obtener_fecha(),
+                "id_pedido": ingreso_encontrado.obtener_id_pedido(),
+                "id_renglon_pedido": remesa.obtener_id_renglon_pedido()
+            },
+            "retiros": retiros
+        }
