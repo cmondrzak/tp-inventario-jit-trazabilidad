@@ -38,8 +38,9 @@ def mostrar_menu():
     print("  8. Consultar trazabilidad de un ingreso")
     print("  9. Consultar reposición de un material")
     print("  10. Ver materiales que requieren reposición")
+    print("  11. Consultar trazabilidad de un retiro")
 
-    print("\n  11. Salir")
+    print("\n  12. Salir")
     print()
     print("=" * ancho)
 
@@ -515,13 +516,54 @@ while ingresar:
                     f"Esta {-datos['diferencia']} {datos['unidad']} "
                     f"por debajo del punto de reposicion."
                 )
-
     elif opcion == '11':
+        mostrar_titulo("TRAZABILIDAD DE UN RETIRO")
+
+        try:
+            id_retiro = leer_id("Ingrese el id del retiro: ")
+            datos = gestor.consultar_trazabilidad_retiro(id_retiro)
+
+            print(f"Retiro: {datos['id_retiro']}")
+            print(f"Fecha: {datos['fecha']}")
+            print(f"Estado: {datos['estado']}")
+
+            print("\nMATERIALES RETIRADOS")
+            print("-" * 54)
+
+            for renglon in datos["renglones"]:
+                print(
+                    f"Material: {renglon['material']} - "
+                    f"Cantidad retirada: {renglon['cantidad']}"
+                )
+
+            print("\nREMESAS UTILIZADAS")
+            print("-" * 54)
+
+            for remesa in datos["remesas"]:
+                print(
+                    f"Remesa: {remesa['id_remesa']} - "
+                    f"Material: {remesa['material']} - "
+                    f"Cantidad extraida: {remesa['cantidad']}"
+                )
+
+        except exceptions.EntidadNoEncontradaError as e:
+            print(f"Error: {e}")
+
+        except exceptions.EstadoInvalidoError as e:
+            print(f"Error: {e}")
+
+        except exceptions.IdentificadorInvalidoError:
+            print("Error: el id debe ser mayor que cero.")
+
+        except ValueError:
+            print("Error: el id debe ser un numero.")
+
+    elif opcion == '12':
         ingresar = False
         print(f'{"Muchas gracias, regrese mas tarde por mas trabajo!!!":^30}')
         
     else:
-        print('Opcion invalida, ingrese un numero del 1 al 11.')
+        print('Opcion invalida, ingrese un numero del 1 al 12.')
 
     if opcion in ('1','2','3','4','5'):
         Archivero.archivar(gestor)

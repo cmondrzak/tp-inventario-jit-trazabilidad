@@ -8,7 +8,7 @@ from movimiento_ingreso import Movimiento_ingreso
 from validaciones import Validaciones
 from remesa import Remesa
 from renglon_pedido import Renglon_pedido
-from exceptions import ProveedorNoRegistradoError, MaterialNoRegistradoError, MaterialNoIndicadoError, NombreDeMaterialDuplicadoError, IdentificadorDeMovimientoDuplicadoError, MaterialRecibidoDistintoDelPedidoError, RenglonDePedidoPendienteNoEncontradoError
+from exceptions import ProveedorNoRegistradoError, MaterialNoRegistradoError, MaterialNoIndicadoError, NombreDeMaterialDuplicadoError, IdentificadorDeMovimientoDuplicadoError, MaterialRecibidoDistintoDelPedidoError, RenglonDePedidoPendienteNoEncontradoError, EntidadNoEncontradaError, EstadoInvalidoError
 class Gerencia():
     def __init__(self,deposito,pedidos,proveedores,movimientos_de_ingreso,movimientos_de_egreso):
         self.deposito=deposito
@@ -175,3 +175,40 @@ class Gerencia():
         raise MaterialNoRegistradoError(
             f"No existe un material registrado con el nombre '{nombre}'."
         )
+    def consultar_trazabilidad_retiro(self,id_retiro):
+        if id_retiro not in self.movimientos_de_egreso:
+            raise EntidadNoEncontradaError(
+                f"No existe un retiro con el identificador {id_retiro}."
+            )
+
+        retiro = self.movimientos_de_egreso[id_retiro]
+
+        if retiro.obtener_estado()!="retirado":
+            raise EstadoInvalidoError(
+                "El retiro todavia no fue realizado; no hay consumos confirmados."
+            )
+
+        renglones = []
+
+        for renglon in retiro.obtener_renglones():
+            renglones.append({
+                "material": renglon.obtener_material(),
+                "cantidad": renglon.obtener_cantidad_solicitada()
+            })
+
+        remesas = []
+
+        for remesa, cantidad in retiro.obtener_remesas_modificadas():
+            remesas.append({
+                "id_remesa": remesa.obtener_id_remesa(),
+                "material": remesa.obtener_material(),
+                "cantidad": cantidad
+            })
+
+        return {
+            "id_retiro": retiro.obtener_id_movimiento(),
+            "fecha": retiro.obtener_fecha(),
+            "estado": retiro.obtener_estado(),
+            "renglones": renglones,
+            "remesas": remesas
+        }
