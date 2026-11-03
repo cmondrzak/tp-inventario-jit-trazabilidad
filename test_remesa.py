@@ -1,136 +1,212 @@
-from datetime import date
+from datetime import date, datetime, timedelta
 
 import pytest
 
 from remesa import Remesa
-from exceptions import CantidadInvalidaError, IdentificadorDuplicadoError, MaterialNoEncontradoError, ProveedorNoEncontradoError
+from conftest import fecha
+from exceptions import (
+    IdentificadorDeRemesaInvalidoError,
+    IdentificadorDeRemesaDuplicadoError,
+    MaterialNoIndicadoError,
+    IdentificadorDeProveedorInvalidoError,
+    RenglonDePedidoNoIndicadoError,
+    CantidadRecibidaNoPositivaError,
+    CantidadAConsumirNoPositivaError,
+    FormatoDeFechaInvalidoError,
+    FechaDeRecepcionFuturaError,
+    FechaDeVencimientoAnteriorALaRecepcionError,
+    SaldoDeRemesaInsuficienteError,
+)
 
 
-@pytest.fixture(autouse=True)
-def reset_remesa_state():
-    Remesa.lista_id = []
-
-
-def crear_remesa(**overrides):
+def crear_remesa(**cambios):
     datos = dict(
-        id_remesa="R-1",
-        material="AL-01",
-        proveedor="P1",
-        renglon_pedido=None,
+        id_remesa=1,
+        material="aluminio",
+        id_proveedor=1,
+        id_renglon_pedido=1,
         cantidad_recibida=10,
-        saldo_disponible=10,
+        fecha_recepcion=fecha(-5),
     )
-    datos.update(overrides)
+    datos.update(cambios)
     return Remesa(**datos)
 
 
+# --- ingreso de datos -------------------------------------------------------
+
 def test_creacion_remesa_valida():
-    remesa = crear_remesa()
+    remesa = crear_remesa(fecha_vencimiento=fecha(30), lote="L-998")
 
-    assert remesa.id_remesa == "R-1"
-    assert remesa.cantidad_recibida == 10
-    assert remesa.saldo_disponible == 10
-
-
-def test_remesa_id_duplicado_lanza_error():
-    crear_remesa(id_remesa="R-1")
-
-    with pytest.raises(IdentificadorDuplicadoError):
-        crear_remesa(id_remesa="R-1")
-
-
-def test_remesa_material_vacio_lanza_error():
-    with pytest.raises(MaterialNoEncontradoError):
-        crear_remesa(material="")
-
-
-def test_remesa_proveedor_vacio_lanza_error():
-    with pytest.raises(ProveedorNoEncontradoError):
-        crear_remesa(proveedor="")
-
-
-def test_remesa_cantidad_recibida_cero_lanza_error():
-    with pytest.raises(CantidadInvalidaError):
-        crear_remesa(cantidad_recibida=0)
-
-
-def test_remesa_cantidad_recibida_negativa_lanza_error():
-    with pytest.raises(CantidadInvalidaError):
-        crear_remesa(cantidad_recibida=-5)
-
-
-def test_obtener_dato_con_dato_presente():
-    remesa = crear_remesa(lote_proveedor="L-998")
-
-    assert remesa.obtener_dato("lote_proveedor") == "L-998"
-
-
-def test_obtener_dato_ausente_devuelve_default():
-    remesa = crear_remesa()
-
+    assert remesa.obtener_id_remesa() == 1
+    assert remesa.obtener_material() == "aluminio"
+    assert remesa.obtener_id_proveedor() == 1
+    assert remesa.obtener_id_renglon_pedido() == 1
+    assert remesa.obtener_cantidad_recibida() == 10
+    assert remesa.obtener_saldo() == 10
+    assert remesa.obtener_fecha_recepcion() == fecha(-5)
+    assert remesa.obtener_fecha_vencimiento() == fecha(30)
+    assert remesa.obtener_dato("lote") == "L-998"
     assert remesa.obtener_dato("nro_guia") is None
-    assert remesa.obtener_dato("nro_guia", "sin dato") == "sin dato"
 
 
-def test_obtener_fecha_vencimiento_ausente_es_none():
-    remesa = crear_remesa()
+@pytest.mark.parametrize("id_remesa", [0, -1, "R-1", None])
+def test_id_invalido(id_remesa):
+    with pytest.raises(IdentificadorDeRemesaInvalidoError):
+        crear_remesa(id_remesa=id_remesa)
 
-    assert remesa.obtener_fecha_vencimiento() is None
+
+def test_id_duplicado():
+    Remesa.registrar_id(1)
+
+    with pytest.raises(IdentificadorDeRemesaDuplicadoError):
+        crear_remesa(id_remesa=1)
 
 
-def test_obtener_fecha_vencimiento_presente():
-    remesa = crear_remesa(fecha_vencimiento=date(2026, 3, 20))
+@pytest.mark.parametrize("material", ["", "  ", None])
+def test_material_invalido(material):
+    with pytest.raises(MaterialNoIndicadoError):
+        crear_remesa(material=material)
 
-    assert remesa.obtener_fecha_vencimiento() == date(2026, 3, 20)
 
+@pytest.mark.parametrize("id_proveedor", [0, None, "P1"])
+def test_proveedor_invalido(id_proveedor):
+    with pytest.raises(IdentificadorDeProveedorInvalidoError):
+        crear_remesa(id_proveedor=id_proveedor)
+
+
+@pytest.mark.parametrize("id_renglon", [0, None, "R1"])
+def test_renglon_pedido_invalido(id_renglon):
+    with pytest.raises(RenglonDePedidoNoIndicadoError):
+        crear_remesa(id_renglon_pedido=id_renglon)
+
+
+@pytest.mark.parametrize("cantidad", [0, -5, "10", None])
+def test_cantidad_recibida_invalida(cantidad):
+    with pytest.raises(CantidadRecibidaNoPositivaError):
+        crear_remesa(cantidad_recibida=cantidad)
+
+
+@pytest.mark.parametrize("valor", ["2026-03-01", "", None, "30/02/2026", date.today()])
+def test_fecha_recepcion_formato_invalido(valor):
+    with pytest.raises(FormatoDeFechaInvalidoError):
+        crear_remesa(fecha_recepcion=valor)
+
+
+def test_fecha_recepcion_futura():
+    with pytest.raises(FechaDeRecepcionFuturaError):
+        crear_remesa(fecha_recepcion=fecha(1))
+
+
+def test_fecha_recepcion_hoy_es_valida():
+    assert crear_remesa(fecha_recepcion=fecha()).obtener_fecha_recepcion() == fecha()
+
+
+@pytest.mark.parametrize("valor", ["2026-03-01", "", "99/99/9999"])
+def test_fecha_vencimiento_formato_invalido(valor):
+    with pytest.raises(FormatoDeFechaInvalidoError):
+        crear_remesa(fecha_vencimiento=valor)
+
+
+def test_vencimiento_anterior_a_la_recepcion():
+    with pytest.raises(FechaDeVencimientoAnteriorALaRecepcionError):
+        crear_remesa(fecha_recepcion=fecha(-5), fecha_vencimiento=fecha(-6))
+
+
+def test_vencimiento_igual_a_la_recepcion_es_valido():
+    crear_remesa(fecha_recepcion=fecha(-5), fecha_vencimiento=fecha(-5))
+
+
+def test_crear_remesa_no_registra_el_id():
+    crear_remesa()
+
+    assert Remesa.obtener_lista_id() == []
+
+
+# --- consumo ----------------------------------------------------------------
 
 def test_consumir_reduce_el_saldo():
     remesa = crear_remesa(cantidad_recibida=10)
 
     remesa.consumir(4)
+    remesa.consumir(6)
 
-    assert remesa.saldo_disponible == 6
+    assert remesa.obtener_saldo() == 0
+    assert remesa.obtener_cantidad_recibida() == 10
 
 
-def test_consumir_cantidad_mayor_al_saldo_lanza_error():
+def test_consumir_mas_que_el_saldo():
     remesa = crear_remesa(cantidad_recibida=10)
 
-    with pytest.raises(Exception):
+    with pytest.raises(SaldoDeRemesaInsuficienteError):
         remesa.consumir(11)
+    assert remesa.obtener_saldo() == 10
 
 
-def test_consumir_cantidad_no_positiva_lanza_error():
-    remesa = crear_remesa(cantidad_recibida=10)
-
-    with pytest.raises(CantidadInvalidaError):
-        remesa.consumir(0)
-
-
-def test_obtener_idremesa():
-    remesa = crear_remesa(id_remesa="R-1")
-
-    assert remesa.obtener_idremesa() == "R-1"
-
-
-def test_esta_vencida_sin_fecha_de_vencimiento_nunca_esta_vencida():
+@pytest.mark.parametrize("cantidad", [0, -1, "2", None])
+def test_consumir_cantidad_invalida(cantidad):
     remesa = crear_remesa()
 
-    assert remesa.esta_vencida(date(2026, 1, 1)) is False
+    with pytest.raises(CantidadAConsumirNoPositivaError):
+        remesa.consumir(cantidad)
 
 
-def test_es_utilizable_con_saldo_y_sin_vencimiento_es_true():
-    remesa = crear_remesa(cantidad_recibida=10)
+# --- vencimiento y utilizacion ----------------------------------------------
 
-    assert remesa.es_utilizable(date(2026, 1, 1)) is True
-
-
-def test_obtener_material_devuelve_el_material():
-    remesa = crear_remesa(material="AL-01")
-
-    assert remesa.obtener_material() == "AL-01"
+def test_sin_vencimiento_nunca_vence():
+    assert crear_remesa().esta_vencida(date(2100, 1, 1)) is False
 
 
-def test_obtener_cantidad_recibida_devuelve_la_cantidad():
-    remesa = crear_remesa(cantidad_recibida=10)
+def test_esta_vencida():
+    remesa = crear_remesa(fecha_vencimiento=fecha(10))
 
-    assert remesa.obtener_cantidad_recibida() == 10
+    assert remesa.esta_vencida(fecha(10)) is False
+    assert remesa.esta_vencida(fecha(11)) is True
+    assert remesa.esta_vencida(date.today() + timedelta(days=11)) is True
+    assert remesa.esta_vencida(datetime.now() + timedelta(days=11)) is True
+
+
+def test_fue_recibida_para():
+    remesa = crear_remesa(fecha_recepcion=fecha(-5))
+
+    assert remesa.fue_recibida_para(fecha(-6)) is False
+    assert remesa.fue_recibida_para(fecha(-5)) is True
+
+
+def test_es_utilizable():
+    remesa = crear_remesa(fecha_recepcion=fecha(-5), fecha_vencimiento=fecha(5))
+
+    assert remesa.es_utilizable(fecha()) is True
+    assert remesa.es_utilizable(fecha(-6)) is False
+    assert remesa.es_utilizable(fecha(6)) is False
+
+
+def test_remesa_agotada_no_es_utilizable():
+    remesa = crear_remesa(cantidad_recibida=3)
+    remesa.consumir(3)
+
+    assert remesa.es_utilizable(fecha()) is False
+
+
+@pytest.mark.parametrize("valor", ["2026-01-01", None, 5])
+def test_fecha_de_consulta_invalida(valor):
+    with pytest.raises(FormatoDeFechaInvalidoError):
+        crear_remesa().es_utilizable(valor)
+
+
+def test_clave_fefo_ordena_por_vencimiento_y_deja_sin_vencimiento_al_final():
+    sin_vto = crear_remesa(id_remesa=1)
+    vence_tarde = crear_remesa(id_remesa=2, fecha_vencimiento=fecha(20))
+    vence_pronto = crear_remesa(id_remesa=3, fecha_vencimiento=fecha(5))
+
+    ordenadas = sorted([sin_vto, vence_tarde, vence_pronto], key=lambda r: r.clave_fefo())
+
+    assert [r.obtener_id_remesa() for r in ordenadas] == [3, 2, 1]
+
+
+def test_clave_fefo_desempata_por_recepcion():
+    nueva = crear_remesa(id_remesa=1, fecha_recepcion=fecha(-1), fecha_vencimiento=fecha(10))
+    vieja = crear_remesa(id_remesa=2, fecha_recepcion=fecha(-9), fecha_vencimiento=fecha(10))
+
+    ordenadas = sorted([nueva, vieja], key=lambda r: r.clave_fefo())
+
+    assert [r.obtener_id_remesa() for r in ordenadas] == [2, 1]

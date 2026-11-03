@@ -1,33 +1,51 @@
-from datetime import date
-
 import pytest
 
-from movimiento_ingreso import movimiento_ingreso
-from movimiento import Movimiento
-from exceptions import IdentificadorDuplicadoError
-
-
-@pytest.fixture(autouse=True)
-def reset_movimiento_ingreso_state():
-    Movimiento.lista_id = []
-    movimiento_ingreso.lista_id = []
+from movimiento_ingreso import Movimiento_ingreso
+from conftest import fecha
+from exceptions import (
+    IdentificadorDeMovimientoInvalidoError,
+    IdentificadorDeMovimientoDuplicadoError,
+    FormatoDeFechaInvalidoError,
+    RemesaNoIndicadaEnElIngresoError,
+    PedidoNoIndicadoEnElIngresoError,
+)
 
 
 def test_creacion_movimiento_ingreso_valido():
-    mov = movimiento_ingreso(1, date(2026, 3, 1), "R-1", None)
+    mov = Movimiento_ingreso(1, fecha(), 10, 20)
 
-    assert mov.id_movimiento == 1
-    assert mov.remesa == "R-1"
-    assert mov.pedido is None
-
-
-def test_movimiento_ingreso_remesa_vacia_lanza_error():
-    with pytest.raises(ValueError, match="remesa"):
-        movimiento_ingreso(1, date(2026, 3, 1), "", None)
+    assert mov.obtener_id_movimiento() == 1
+    assert mov.obtener_fecha() == fecha()
+    assert mov.obtener_id_remesa() == 10
+    assert mov.obtener_id_pedido() == 20
 
 
-def test_movimiento_ingreso_id_duplicado_lanza_error():
-    movimiento_ingreso(1, date(2026, 3, 1), "R-1", None)
+@pytest.mark.parametrize("id_mov", [0, -1, "M1", None])
+def test_id_invalido(id_mov):
+    with pytest.raises(IdentificadorDeMovimientoInvalidoError):
+        Movimiento_ingreso(id_mov, fecha(), 10, 20)
 
-    with pytest.raises(IdentificadorDuplicadoError):
-        movimiento_ingreso(1, date(2026, 3, 2), "R-2", None)
+
+def test_id_duplicado():
+    Movimiento_ingreso.registrar_id(1)
+
+    with pytest.raises(IdentificadorDeMovimientoDuplicadoError):
+        Movimiento_ingreso(1, fecha(), 10, 20)
+
+
+@pytest.mark.parametrize("valor", ["2026-03-01", "", None, "31/04/2026"])
+def test_fecha_invalida(valor):
+    with pytest.raises(FormatoDeFechaInvalidoError):
+        Movimiento_ingreso(1, valor, 10, 20)
+
+
+@pytest.mark.parametrize("remesa", [None, 0, "R-1"])
+def test_remesa_no_indicada(remesa):
+    with pytest.raises(RemesaNoIndicadaEnElIngresoError):
+        Movimiento_ingreso(1, fecha(), remesa, 20)
+
+
+@pytest.mark.parametrize("pedido", [None, 0, "PED-1"])
+def test_pedido_no_indicado(pedido):
+    with pytest.raises(PedidoNoIndicadoEnElIngresoError):
+        Movimiento_ingreso(1, fecha(), 10, pedido)

@@ -2,54 +2,86 @@ import pytest
 
 from material import Material
 from exceptions import (
-    IdentificadorDuplicadoError,
-    NombreInvalidoError,
-    PuntoDeReposicionInvalidoError,
-    UnidadNoEncontradaError,
+    IdentificadorDeMaterialInvalidoError,
+    IdentificadorDeMaterialDuplicadoError,
+    NombreDeMaterialVacioError,
+    UnidadDeMedidaVaciaError,
+    PuntoDeReposicionNoEnteroError,
+    PuntoDeReposicionNoPositivoError,
+    ExistenciaDisponibleInvalidaError,
 )
 
 
-@pytest.fixture(autouse=True)
-def reset_material_state():
-    Material.lista_id = []
-
-
 def test_creacion_material_valida():
-    material = Material("AL-01", "Aluminio AL-01", "kg", 10)
+    material = Material(1, "Aluminio", "kg", 10)
 
-    assert material.id_material == "AL-01"
-    assert material.nombre == "Aluminio AL-01"
-    assert material.unidad == "kg"
-    assert material.punto_reposicion == 10
-
-
-def test_material_id_vacio_lanza_error():
-    with pytest.raises(NombreInvalidoError, match="identificador"):
-        Material("", "Aluminio AL-01", "kg", 10)
+    assert material.id_material == 1
+    assert material.obtener_nombre() == "Aluminio"
+    assert material.obtener_unidad() == "kg"
+    assert material.obtener_punto_reposicion() == 10
 
 
-def test_material_id_duplicado_lanza_error():
-    Material("AL-01", "Aluminio AL-01", "kg", 10)
-
-    with pytest.raises(IdentificadorDuplicadoError):
-        Material("AL-01", "Otro material", "kg", 5)
-
-
-def test_material_nombre_vacio_lanza_error():
-    with pytest.raises(NombreInvalidoError, match="nombre"):
-        Material("AL-01", "", "kg", 10)
+@pytest.mark.parametrize("id_material", [0, -1, "AL-01", 1.5, None, True])
+def test_material_id_invalido(id_material):
+    with pytest.raises(IdentificadorDeMaterialInvalidoError):
+        Material(id_material, "Aluminio", "kg", 10)
 
 
-def test_material_unidad_vacia_lanza_error():
-    with pytest.raises(UnidadNoEncontradaError, match="unidad"):
-        Material("AL-01", "Aluminio AL-01", "", 10)
+def test_material_id_duplicado():
+    Material.registrar_id(1)
+
+    with pytest.raises(IdentificadorDeMaterialDuplicadoError):
+        Material(1, "Otro", "kg", 5)
 
 
-def test_material_punto_reposicion_cero_lanza_error():
-    with pytest.raises(PuntoDeReposicionInvalidoError, match="reposición"):
-        Material("AL-01", "Aluminio AL-01", "kg", 0)
+@pytest.mark.parametrize("nombre", ["", "   ", None, 5])
+def test_material_nombre_invalido(nombre):
+    with pytest.raises(NombreDeMaterialVacioError):
+        Material(1, nombre, "kg", 10)
 
 
-def test_material_punto_reposicion_negativo_lanza_error():
-    with pytest.raises(PuntoDeReposicionInvalidoError, match="reposición"):
-        Material("AL-01", "Aluminio AL-01", "kg", -5)
+@pytest.mark.parametrize("unidad", ["", "  ", None, 1])
+def test_material_unidad_invalida(unidad):
+    with pytest.raises(UnidadDeMedidaVaciaError):
+        Material(1, "Aluminio", unidad, 10)
+
+
+@pytest.mark.parametrize("punto", [2.5, "10", None, True])
+def test_material_punto_reposicion_no_entero(punto):
+    with pytest.raises(PuntoDeReposicionNoEnteroError):
+        Material(1, "Aluminio", "kg", punto)
+
+
+@pytest.mark.parametrize("punto", [0, -5])
+def test_material_punto_reposicion_no_positivo(punto):
+    with pytest.raises(PuntoDeReposicionNoPositivoError):
+        Material(1, "Aluminio", "kg", punto)
+
+
+def test_crear_material_no_registra_el_id():
+    Material(1, "Aluminio", "kg", 10)
+
+    assert Material.obtener_lista_id() == []
+
+
+@pytest.mark.parametrize("existencia, esperado", [(0, True), (9, True), (10, False), (50, False)])
+def test_requiere_reposicion(existencia, esperado):
+    material = Material(1, "Aluminio", "kg", 10)
+
+    assert material.requiere_reposicion(existencia) is esperado
+
+
+@pytest.mark.parametrize("existencia", [-1, "5", None])
+def test_requiere_reposicion_existencia_invalida(existencia):
+    material = Material(1, "Aluminio", "kg", 10)
+
+    with pytest.raises(ExistenciaDisponibleInvalidaError):
+        material.requiere_reposicion(existencia)
+
+
+def test_reiniciar_y_guardar_lista_id():
+    Material.guardar_lista_id([1, 2])
+    assert Material.obtener_lista_id() == [1, 2]
+
+    Material.reiniciar_ids()
+    assert Material.obtener_lista_id() == []
