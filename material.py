@@ -55,6 +55,9 @@ class Material:
         return f'{self.id_material},{self.nombre},{self.unidad},{self.punto_reposicion}'
     
 
+    def obtener_id_material(self):
+        return self.id_material
+
     def obtener_nombre(self):
         return self.nombre
 
@@ -63,10 +66,6 @@ class Material:
             raise ExistenciaDisponibleInvalidaError(f"Para saber si hay que reponer, la existencia disponible debe ser un número mayor o igual a cero; se recibió {existencia_disponible!r}.")
         return existencia_disponible < self.punto_reposicion
 
-    @classmethod
-    def reiniciar_ids(cls):
-        cls.lista_id = []
-        
     def obtener_punto_reposicion(self):
         return self.punto_reposicion
 

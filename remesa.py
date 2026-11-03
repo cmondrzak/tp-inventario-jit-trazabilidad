@@ -1,4 +1,4 @@
-from exceptions import IdentificadorDeRemesaInvalidoError, IdentificadorDeRemesaDuplicadoError, MaterialNoIndicadoError, IdentificadorDeProveedorInvalidoError, RenglonDePedidoNoIndicadoError, CantidadRecibidaNoPositivaError, CantidadAConsumirNoPositivaError, FormatoDeFechaInvalidoError, FechaDeRecepcionFuturaError, FechaDeVencimientoAnteriorALaRecepcionError, SaldoDeRemesaInsuficienteError
+from exceptions import IdentificadorDeRemesaInvalidoError, IdentificadorDeRemesaDuplicadoError, MaterialNoIndicadoError, IdentificadorDeProveedorInvalidoError, RenglonDePedidoNoIndicadoError, CantidadRecibidaNoPositivaError, CantidadAConsumirNoPositivaError, FormatoDeFechaInvalidoError, FechaDeRecepcionFuturaError, FechaDeVencimientoAnteriorALaRecepcionError, FechaDeVencimientoPasadaError, SaldoDeRemesaInsuficienteError
 from validaciones import Validaciones
 from datetime import date, datetime
 
@@ -54,6 +54,18 @@ class Remesa:
             raise FormatoDeFechaInvalidoError(f"La fecha de recepción debe escribirse como dd/mm/aaaa y ser una fecha real; se recibió {fecha_recepcion!r}.")
         if Remesa._a_fecha(fecha_recepcion) > date.today():
             raise FechaDeRecepcionFuturaError(f"La fecha de recepción {fecha_recepcion} es posterior a hoy; no se puede registrar mercadería que todavía no llegó.")
+
+    @staticmethod
+    def validar_vencimiento_no_pasado(fecha_vencimiento):
+        """Al ingresar mercaderia no se acepta una remesa que ya llega vencida (vencer hoy todavia es valido)."""
+        if fecha_vencimiento is None:
+            return
+        if not Validaciones.es_fecha(fecha_vencimiento):
+            raise FormatoDeFechaInvalidoError(f"La fecha de vencimiento debe escribirse como dd/mm/aaaa y ser una fecha real; se recibió {fecha_vencimiento!r}.")
+        if Remesa._a_fecha(fecha_vencimiento) < date.today():
+            raise FechaDeVencimientoPasadaError(
+                f"La fecha de vencimiento {fecha_vencimiento.strip()} ya pasó (hoy es {date.today().strftime('%d/%m/%Y')}); no se puede ingresar mercadería vencida."
+            )
 
     @staticmethod
     def validar_fecha_vencimiento(fecha_vencimiento, fecha_recepcion):
@@ -157,10 +169,6 @@ class Remesa:
         recepcion = self._a_fecha(self.fecha_recepcion)
 
         return (sin_vencimiento, vencimiento, recepcion, self.id_remesa)
-
-    @classmethod
-    def reiniciar_ids(cls):
-        cls.lista_id = []
 
     def obtener_fecha_recepcion(self):
         return self.fecha_recepcion

@@ -45,6 +45,6 @@ def gerencia():
 def gerencia_con_pedido_aceptado(gerencia):
     """Agrega el pedido 1 (renglon 1: aluminio x 20, renglon 2: titanio x 8) ya aceptado."""
     renglones = [Renglon_pedido(1, "aluminio", 20, 100), Renglon_pedido(2, "titanio", 8, 300)]
-    gerencia.generar_pedido(1, 1, renglones, 5)
+    gerencia.registrar_pedido(gerencia.crear_borrador_pedido(1, 1, renglones, 5))
     gerencia.aceptar_pedido(1)
     return gerencia

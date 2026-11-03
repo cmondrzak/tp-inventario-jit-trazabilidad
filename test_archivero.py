@@ -16,8 +16,7 @@ def test_desarchivar_sin_archivo_devuelve_false(tmp_path):
 def test_archivar_y_desarchivar_conserva_datos_e_ids(tmp_path, gerencia_con_pedido_aceptado):
     g = gerencia_con_pedido_aceptado
     g.almacenar_remesa(1, 1, "aluminio", 1, 1, 20, fecha())
-    retiro = g.generar_retiro(1, fecha(), g.obtener_deposito()[0], [RenglonRetiro("aluminio", 20)])
-    g.realizar_retiro(retiro)
+    g.registrar_retiro(g.crear_borrador_retiro(1, fecha(), [RenglonRetiro("aluminio", 20)]))
     ruta = str(tmp_path / "inventario.pickle")
 
     Archivero.archivar(g, ruta)
@@ -36,7 +35,7 @@ def test_archivar_y_desarchivar_conserva_datos_e_ids(tmp_path, gerencia_con_pedi
 
 def test_desarchivar_mantiene_objetos_compartidos(tmp_path, gerencia):
     from renglon_pedido import Renglon_pedido
-    gerencia.generar_pedido(1, 1, [Renglon_pedido(1, "aluminio", 1, 1)], 5)
+    gerencia.registrar_pedido(gerencia.crear_borrador_pedido(1, 1, [Renglon_pedido(1, "aluminio", 1, 1)], 5))
     ruta = str(tmp_path / "inventario.pickle")
     Archivero.archivar(gerencia, ruta)
 

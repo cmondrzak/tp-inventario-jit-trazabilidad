@@ -6,18 +6,13 @@ from exceptions import FormatoDeFechaInvalidoError
 from exceptions import MaterialInvalidoError
 from exceptions import MaterialRepetidoEnElRetiroError
 from exceptions import CantidadARetirarNoPositivaError
-from exceptions import ExistenciaDisponibleInsuficienteParaElRetiroError
 from exceptions import RetiroYaRealizadoError
-from exceptions import EstadoInvalidoError
 from exceptions import RetiroSinRenglonesError
 from exceptions import RenglonesDelRetiroNoSonUnaListaError
 from exceptions import ElementoNoEsUnRenglonDeRetiroError
 from exceptions import FechaDeRetiroFuturaError
-from exceptions import MaterialNoRegistradoError
 from exceptions import MaterialNoIndicadoError
 from datetime import date, datetime
-from deposito import Deposito
-from remesa import Remesa
 
 
 class Movimiento_retiro:
@@ -155,11 +150,6 @@ class Movimiento_retiro:
                 "El retiro ya fue realizado; no se puede volver a confirmar."
             )
 
-        if not self.renglones_retiro:
-            raise EstadoInvalidoError(
-                "No se puede confirmar un retiro sin renglones."
-            )
-
         plan_completo = []
 
         for renglon in self.renglones_retiro:
@@ -199,6 +189,7 @@ class Movimiento_retiro:
                 "No se pueden agregar renglones a un retiro que ya fue realizado."
             )
 
+        RenglonRetiro.validar_material(material)
         material = Validaciones.normalizar_texto(material)
 
         if material in self.materiales_modificados:

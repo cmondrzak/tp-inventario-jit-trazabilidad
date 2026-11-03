@@ -148,7 +148,7 @@ class FechaDeRecepcionFuturaError(FechaInvalidaError):
 class FechaDeVencimientoAnteriorALaRecepcionError(FechaInvalidaError):
     pass
 
-class FechaDeConsultaFuturaError(FechaInvalidaError):
+class FechaDeVencimientoPasadaError(FechaInvalidaError):
     pass
 
 class FechaDeRecepcionAnteriorAlPedidoError(FechaInvalidaError):
@@ -267,6 +267,9 @@ class ProveedorNoRegistradoError(ProveedorNoEncontradoError):
     pass
 
 class RenglonDePedidoPendienteNoEncontradoError(EntidadNoEncontradaError):
+    pass
+
+class RenglonDePedidoNoEncontradoError(EntidadNoEncontradaError):
     pass
 
 

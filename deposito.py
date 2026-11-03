@@ -1,7 +1,5 @@
 from datetime import date
 
-from proveedor import Proveedor
-
 from material import Material
 
 from remesa import Remesa
@@ -33,8 +31,8 @@ class Deposito:
     def modificar_materiales(self,material,id_material):
         if not isinstance(material, Material):
             raise ObjetoNoEsUnMaterialError(f"En el depósito solo se pueden registrar materiales, pero se recibió un objeto de tipo {type(material).__name__}.")
-        if material.id_material != id_material:
-            raise IdentificadorDeMaterialNoCoincideConLaClaveError(f"Se intentó guardar el material {material.id_material!r} bajo el identificador {id_material!r}; los dos tienen que ser iguales.")
+        if material.obtener_id_material() != id_material:
+            raise IdentificadorDeMaterialNoCoincideConLaClaveError(f"Se intentó guardar el material {material.obtener_id_material()!r} bajo el identificador {id_material!r}; los dos tienen que ser iguales.")
         if id_material in self.materiales:
             raise IdentificadorDeMaterialDuplicadoError(f"El depósito ya tiene registrado un material con el identificador {id_material!r}.")
         self.materiales[id_material]=material
@@ -64,9 +62,6 @@ class Deposito:
             del self.remesas[clave]
 
     def actualizar_remesas_guardadas(self):
-        if not hasattr(self,"remesas_agotadas"):
-            self.remesas_agotadas = {}
-
         claves_agotadas = []
 
         for clave, remesa in self.remesas.items():
@@ -77,15 +72,6 @@ class Deposito:
             self.remesas_agotadas[clave] = self.remesas[clave]
             del self.remesas[clave]
         
-    def validar_reposicion(self,id_material):
-        material = self.materiales[id_material]
-
-        existencia = self.existencia_disponible(
-            material.obtener_nombre()
-        )
-
-        return material.requiere_reposicion(existencia)
-    
     def obtener_materiales(self):
         return self.materiales.copy()
 

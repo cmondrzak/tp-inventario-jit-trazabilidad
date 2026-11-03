@@ -79,9 +79,7 @@ def test_requiere_reposicion_existencia_invalida(existencia):
         material.requiere_reposicion(existencia)
 
 
-def test_reiniciar_y_guardar_lista_id():
+def test_guardar_lista_id():
     Material.guardar_lista_id([1, 2])
-    assert Material.obtener_lista_id() == [1, 2]
 
-    Material.reiniciar_ids()
-    assert Material.obtener_lista_id() == []
+    assert Material.obtener_lista_id() == [1, 2]

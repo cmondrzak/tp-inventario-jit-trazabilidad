@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 
 import pytest
 
@@ -33,6 +33,7 @@ from exceptions import (
     EstadoDePedidoInvalidoError,
     FechaDeRecepcionAnteriorAlPedidoError,
     FechaDeRecepcionFuturaError,
+    FechaDeVencimientoPasadaError,
 )
 
 
@@ -98,7 +99,7 @@ def test_registrar_material_nombre_invalido(gerencia):
 def test_generar_pedido(gerencia):
     renglones = [Renglon_pedido(1, "aluminio", 20, 100)]
 
-    gerencia.generar_pedido(1, 1, renglones, 5)
+    gerencia.registrar_pedido(gerencia.crear_borrador_pedido(1, 1, renglones, 5))
 
     pedido = gerencia.obtener_pedidos()[1]
     assert pedido.obtener_estado() == "Solicitado"
@@ -109,18 +110,18 @@ def test_generar_pedido(gerencia):
 
 def test_generar_pedido_proveedor_inexistente(gerencia):
     with pytest.raises(ProveedorNoRegistradoError):
-        gerencia.generar_pedido(1, 99, [Renglon_pedido(1, "aluminio", 1, 1)], 5)
+        gerencia.registrar_pedido(gerencia.crear_borrador_pedido(1, 99, [Renglon_pedido(1, "aluminio", 1, 1)], 5))
 
 
 def test_generar_pedido_material_no_registrado(gerencia):
     with pytest.raises(MaterialNoRegistradoError):
-        gerencia.generar_pedido(1, 1, [Renglon_pedido(1, "cobre", 1, 1)], 5)
+        gerencia.registrar_pedido(gerencia.crear_borrador_pedido(1, 1, [Renglon_pedido(1, "cobre", 1, 1)], 5))
     assert gerencia.obtener_pedidos() == {}
 
 
 def test_generar_pedido_id_repetido(gerencia_con_pedido_aceptado):
     with pytest.raises(IdentificadorDePedidoDuplicadoError):
-        gerencia_con_pedido_aceptado.generar_pedido(1, 1, [Renglon_pedido(3, "aluminio", 1, 1)], 5)
+        gerencia_con_pedido_aceptado.registrar_pedido(gerencia_con_pedido_aceptado.crear_borrador_pedido(1, 1, [Renglon_pedido(3, "aluminio", 1, 1)], 5))
 
 
 def test_aceptar_y_consultar_pedido(gerencia_con_pedido_aceptado):
@@ -130,7 +131,7 @@ def test_aceptar_y_consultar_pedido(gerencia_con_pedido_aceptado):
 
 
 def test_rechazar_pedido_lo_saca_de_pendientes(gerencia):
-    gerencia.generar_pedido(1, 1, [Renglon_pedido(1, "aluminio", 1, 1)], 5)
+    gerencia.registrar_pedido(gerencia.crear_borrador_pedido(1, 1, [Renglon_pedido(1, "aluminio", 1, 1)], 5))
 
     gerencia.rechazar_pedido(1, "precio")
 
@@ -170,12 +171,12 @@ def test_almacenar_todas_las_remesas_completa_el_pedido(gerencia_con_pedido_acep
 
     assert g.obtener_pedidos()[1].obtener_estado() == "Recibido"
     assert g.obtener_proveedores()[1].obtener_pedidos_pendientes() == []
-    assert Gerencia.existencia_disponible(g.obtener_deposito()[0], "titanio") == 8
-    assert Gerencia.existencia_fisica(g.obtener_deposito()[0], "aluminio") == 20
+    assert g.consultar_existencia("titanio", date.today(), incluir_vencidas=False) == 8
+    assert g.consultar_existencia("aluminio", date.today(), incluir_vencidas=True) == 20
 
 
 def test_almacenar_remesa_de_pedido_no_aceptado(gerencia):
-    gerencia.generar_pedido(1, 1, [Renglon_pedido(1, "aluminio", 20, 100)], 5)
+    gerencia.registrar_pedido(gerencia.crear_borrador_pedido(1, 1, [Renglon_pedido(1, "aluminio", 20, 100)], 5))
 
     with pytest.raises(EstadoDePedidoInvalidoError):
         ingresar(gerencia, 1, 1, "aluminio", 1, 20)
@@ -231,6 +232,25 @@ def test_almacenar_remesa_fecha_futura_no_deja_nada_a_medias(gerencia_con_pedido
     assert g.obtener_pedidos()[1].obtener_renglones()[0].obtener_ingresado() is False
 
 
+def test_almacenar_remesa_vencida_no_deja_nada_a_medias(gerencia_con_pedido_aceptado):
+    g = gerencia_con_pedido_aceptado
+    g.obtener_pedidos()[1].fecha_solicitud = date.today() - timedelta(days=10)
+
+    with pytest.raises(FechaDeVencimientoPasadaError):
+        g.almacenar_remesa(1, 1, "aluminio", 1, 1, 20, fecha(-5), fecha_vencimiento=fecha(-2))
+
+    assert g.obtener_deposito()[0].obtener_remesas() == {}
+    assert Remesa.obtener_lista_id() == []
+    assert Movimiento_ingreso.obtener_lista_id() == []
+
+
+def test_validar_fecha_vencimiento_rechaza_vencidas_antes_que_el_control_de_recepcion(gerencia):
+    with pytest.raises(FechaDeVencimientoPasadaError):
+        gerencia.validar_fecha_vencimiento(fecha(-1), fecha())
+    gerencia.validar_fecha_vencimiento(fecha(), fecha())
+    gerencia.validar_fecha_vencimiento(None, fecha())
+
+
 def test_almacenar_remesa_ids_repetidos(gerencia_con_pedido_aceptado):
     g = gerencia_con_pedido_aceptado
     ingresar(g, 1, 1, "aluminio", 1, 20)
@@ -251,24 +271,26 @@ def gerencia_con_stock(gerencia_con_pedido_aceptado):
     return g
 
 
-def test_generar_y_realizar_retiro(gerencia_con_stock):
+def test_borrador_y_registro_de_retiro(gerencia_con_stock):
     g = gerencia_con_stock
     deposito = g.obtener_deposito()[0]
 
-    retiro = g.generar_retiro(1, fecha(), deposito, [RenglonRetiro("aluminio", 15)])
-    assert g.obtener_movimientos_de_egreso()[1] is retiro
-    assert Movimiento_retiro.obtener_lista_id() == [1]
+    retiro = g.crear_borrador_retiro(1, fecha(), [RenglonRetiro("aluminio", 15)])
+    assert g.obtener_movimientos_de_egreso() == {}
+    assert Movimiento_retiro.obtener_lista_id() == []
+    assert deposito.existencia_disponible("aluminio") == 20
 
-    g.realizar_retiro(retiro)
+    g.registrar_retiro(retiro)
 
     assert retiro.obtener_estado() == "retirado"
+    assert g.obtener_movimientos_de_egreso()[1] is retiro
+    assert Movimiento_retiro.obtener_lista_id() == [1]
     assert deposito.existencia_disponible("aluminio") == 5
 
 
 def test_trazabilidad_retiro(gerencia_con_stock):
     g = gerencia_con_stock
-    retiro = g.generar_retiro(1, fecha(), g.obtener_deposito()[0], [RenglonRetiro("aluminio", 15)])
-    g.realizar_retiro(retiro)
+    g.registrar_retiro(g.crear_borrador_retiro(1, fecha(), [RenglonRetiro("aluminio", 15)]))
 
     traza = g.consultar_trazabilidad_retiro(1)
 
@@ -277,11 +299,11 @@ def test_trazabilidad_retiro(gerencia_con_stock):
     assert traza["remesas"] == [{"id_remesa": 1, "material": "aluminio", "cantidad": 15}]
 
 
-def test_trazabilidad_retiro_no_realizado(gerencia_con_stock):
+def test_trazabilidad_de_retiro_en_borrador_o_inexistente(gerencia_con_stock):
     g = gerencia_con_stock
-    g.generar_retiro(1, fecha(), g.obtener_deposito()[0], [RenglonRetiro("aluminio", 1)])
+    g.crear_borrador_retiro(1, fecha(), [RenglonRetiro("aluminio", 1)])
 
-    with pytest.raises(EstadoInvalidoError):
+    with pytest.raises(EntidadNoEncontradaError):
         g.consultar_trazabilidad_retiro(1)
     with pytest.raises(EntidadNoEncontradaError):
         g.consultar_trazabilidad_retiro(99)
@@ -289,8 +311,7 @@ def test_trazabilidad_retiro_no_realizado(gerencia_con_stock):
 
 def test_trazabilidad_remesa_incluye_agotadas(gerencia_con_stock):
     g = gerencia_con_stock
-    retiro = g.generar_retiro(1, fecha(), g.obtener_deposito()[0], [RenglonRetiro("titanio", 8)])
-    g.realizar_retiro(retiro)
+    g.registrar_retiro(g.crear_borrador_retiro(1, fecha(), [RenglonRetiro("titanio", 8)]))
 
     traza = g.consultar_trazabilidad_remesa(2)
 

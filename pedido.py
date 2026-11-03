@@ -1,5 +1,5 @@
 from validaciones import Validaciones
-from exceptions import IdentificadorDePedidoInvalidoError, IdentificadorDePedidoDuplicadoError, ProveedorNoIndicadoError, PlazoDeEntregaNoPositivoError, RenglonesDelPedidoNoSonUnaListaError, PedidoSinRenglonesError, ElementoNoEsUnRenglonDePedidoError, MaterialRepetidoEnElPedidoError, IdentificadorDeRenglonDePedidoDuplicadoError, EstadoDePedidoInvalidoError, FormatoDeFechaInvalidoError, FechaDeRecepcionAnteriorAlPedidoError
+from exceptions import IdentificadorDePedidoInvalidoError, IdentificadorDePedidoDuplicadoError, ProveedorNoIndicadoError, PlazoDeEntregaNoPositivoError, RenglonesDelPedidoNoSonUnaListaError, PedidoSinRenglonesError, ElementoNoEsUnRenglonDePedidoError, MaterialRepetidoEnElPedidoError, IdentificadorDeRenglonDePedidoDuplicadoError, EstadoDePedidoInvalidoError, FormatoDeFechaInvalidoError, FechaDeRecepcionAnteriorAlPedidoError, RenglonDePedidoNoEncontradoError
 from renglon_pedido import Renglon_pedido
 from lista_enlazada import ListaEnlazada
 from datetime import date, datetime
@@ -104,11 +104,11 @@ class Pedido:
 
     def generar_renglon(self,id_renglon,material,cantidad,precio_unitario):
         self.validar_edicion()
+        Pedido.validar_id_renglon_nuevo(self.obtener_renglones(), id_renglon)
         if Pedido.tiene_renglon_con_material(self.obtener_renglones(), material):
             raise MaterialRepetidoEnElPedidoError(f"El pedido {self.id_pedido!r} ya tiene un renglón para '{material}'; no se puede agregar un segundo renglón del mismo material.")
         renglon = Renglon_pedido(id_renglon,material,cantidad,precio_unitario)
         self._renglones.agregar_final(renglon)
-        Renglon_pedido.registrar_id(id_renglon)
 
     def subtotal(self):
         sub_total=0
@@ -131,13 +131,16 @@ class Pedido:
                 self._renglones.eliminar(renglon)
                 return
 
-        raise ValueError("No existe un renglon con ese ID.")
+        raise RenglonDePedidoNoEncontradoError(f"El pedido {self.id_pedido!r} no tiene ningún renglón con el identificador {id_renglon!r}.")
     
     def obtener_estado(self):
         return self.estado
 
     def obtener_id_proveedor(self):
         return self.proveedor
+
+    def obtener_plazo_entrega(self):
+        return self.plazo_entrega
 
     def obtener_fecha_solicitud(self):
         return self.fecha_solicitud

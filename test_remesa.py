@@ -15,6 +15,7 @@ from exceptions import (
     FormatoDeFechaInvalidoError,
     FechaDeRecepcionFuturaError,
     FechaDeVencimientoAnteriorALaRecepcionError,
+    FechaDeVencimientoPasadaError,
     SaldoDeRemesaInsuficienteError,
 )
 
@@ -114,6 +115,22 @@ def test_vencimiento_anterior_a_la_recepcion():
 
 def test_vencimiento_igual_a_la_recepcion_es_valido():
     crear_remesa(fecha_recepcion=fecha(-5), fecha_vencimiento=fecha(-5))
+
+
+@pytest.mark.parametrize("vencimiento", [None, fecha(), fecha(1), fecha(365)])
+def test_vencimiento_no_pasado_acepta_hoy_futuro_o_sin_vencimiento(vencimiento):
+    Remesa.validar_vencimiento_no_pasado(vencimiento)
+
+
+@pytest.mark.parametrize("vencimiento", [fecha(-1), fecha(-30)])
+def test_vencimiento_pasado(vencimiento):
+    with pytest.raises(FechaDeVencimientoPasadaError):
+        Remesa.validar_vencimiento_no_pasado(vencimiento)
+
+
+def test_vencimiento_no_pasado_formato_invalido():
+    with pytest.raises(FormatoDeFechaInvalidoError):
+        Remesa.validar_vencimiento_no_pasado("2026-01-01")
 
 
 def test_crear_remesa_no_registra_el_id():

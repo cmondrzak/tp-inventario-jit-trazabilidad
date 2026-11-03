@@ -1,7 +1,5 @@
 import re
-from datetime import date, datetime
-
-from exceptions import FechaInvalidaError
+from datetime import datetime
 
 class Validaciones:
     @staticmethod

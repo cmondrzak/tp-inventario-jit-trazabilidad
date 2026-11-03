@@ -1,6 +1,5 @@
 from validaciones import Validaciones
 from exceptions import IdentificadorDeMovimientoInvalidoError, IdentificadorDeMovimientoDuplicadoError, FormatoDeFechaInvalidoError, RemesaNoIndicadaEnElIngresoError, PedidoNoIndicadoEnElIngresoError
-import validaciones
 class Movimiento_ingreso:
     lista_id=[]
     def __init__(self, id_movimiento, fecha, remesa,pedido):

@@ -49,10 +49,8 @@ def test_leer_id_no_numerico(monkeypatch, texto):
         main["leer_id"]("id: ")
 
 
-def test_a_fecha():
-    assert main["a_fecha"](" 05/03/2026 ") == date(2026, 3, 5)
-    with pytest.raises(ValueError):
-        main["a_fecha"]("2026-03-05")
+def test_fecha_de_hoy():
+    assert main["fecha_de_hoy"]() == date.today().strftime("%d/%m/%Y")
 
 
 def test_mostrar_menu_devuelve_la_opcion_sin_espacios(monkeypatch, capsys):

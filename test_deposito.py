@@ -199,7 +199,6 @@ def test_datos_reposicion(deposito):
         "diferencia": -6,
         "requiere_reposicion": True,
     }
-    assert deposito.validar_reposicion(1) is True
 
 
 def test_materiales_a_reponer(deposito):

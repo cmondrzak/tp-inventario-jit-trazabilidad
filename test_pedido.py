@@ -18,6 +18,7 @@ from exceptions import (
     EstadoDePedidoInvalidoError,
     FormatoDeFechaInvalidoError,
     FechaDeRecepcionAnteriorAlPedidoError,
+    RenglonDePedidoNoEncontradoError,
 )
 
 
@@ -118,7 +119,10 @@ def test_generar_renglon_agrega_al_final():
 
     renglones = pedido.obtener_renglones()
     assert [r.obtener_id_renglon_pedido() for r in renglones] == [1, 2]
-    assert 2 in Renglon_pedido.obtener_lista_id()
+    assert Renglon_pedido.obtener_lista_id() == []
+
+    pedido.registrar_ids()
+    assert Renglon_pedido.obtener_lista_id() == [1, 2]
 
 
 def test_generar_renglon_material_repetido():
@@ -167,7 +171,7 @@ def test_eliminar_unico_renglon():
 def test_eliminar_renglon_inexistente():
     pedido = crear_pedido(renglones=[renglon(1, "aluminio"), renglon(2, "titanio")])
 
-    with pytest.raises(ValueError):
+    with pytest.raises(RenglonDePedidoNoEncontradoError):
         pedido.eliminar_renglon_pedido(99)
 
 
