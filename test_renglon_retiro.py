@@ -21,3 +21,10 @@ def test_material_invalido(material):
 def test_cantidad_invalida(cantidad):
     with pytest.raises(CantidadARetirarNoPositivaError):
         RenglonRetiro("aluminio", cantidad)
+
+
+def test_linea_resumen():
+    renglon = RenglonRetiro("aluminio", 5)
+
+    assert renglon.linea_resumen() == f"{'aluminio':<40}{5:>14}"
+    assert RenglonRetiro.encabezado_resumen().split() == ["Material", "Cantidad"]

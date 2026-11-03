@@ -67,4 +67,11 @@ class Renglon_pedido:
     def obtener_cantidad(self):
         return self.cantidad
 
+    @staticmethod
+    def encabezado_resumen():
+        return f"{'ID':<6}{'Material':<34}{'Cantidad':>14}"
+
+    def linea_resumen(self):
+        return f"{self.id_renglon:<6}{str(self.material)[:34]:<34}{self.cantidad:>14}"
+
     

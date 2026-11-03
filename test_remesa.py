@@ -11,7 +11,10 @@ from exceptions import (
     IdentificadorDeProveedorInvalidoError,
     RenglonDePedidoNoIndicadoError,
     CantidadRecibidaNoPositivaError,
+    CantidadRecibidaNoEnteraError,
+    PrecioInvalidoError,
     PrecioUnitarioNoPositivoError,
+    PrecioUnitarioNoFinitoError,
     CantidadAConsumirNoPositivaError,
     FormatoDeFechaInvalidoError,
     FechaDeRecepcionFuturaError,
@@ -104,10 +107,27 @@ def test_renglon_pedido_invalido(id_renglon):
         crear_remesa(id_renglon_pedido=id_renglon)
 
 
-@pytest.mark.parametrize("cantidad", [0, -5, "10", None])
-def test_cantidad_recibida_invalida(cantidad):
+@pytest.mark.parametrize("cantidad", [0, -5])
+def test_cantidad_recibida_no_positiva(cantidad):
     with pytest.raises(CantidadRecibidaNoPositivaError):
         crear_remesa(cantidad_recibida=cantidad)
+
+
+@pytest.mark.parametrize("cantidad", [2.5, "10", None, True])
+def test_cantidad_recibida_no_entera(cantidad):
+    with pytest.raises(CantidadRecibidaNoEnteraError):
+        crear_remesa(cantidad_recibida=cantidad)
+
+
+@pytest.mark.parametrize("precio", [float("inf"), float("1e309")])
+def test_precio_unitario_infinito(precio):
+    with pytest.raises(PrecioUnitarioNoFinitoError):
+        crear_remesa(precio_unitario=precio)
+
+
+def test_precio_unitario_nan():
+    with pytest.raises(PrecioInvalidoError):
+        crear_remesa(precio_unitario=float("nan"))
 
 
 @pytest.mark.parametrize("valor", ["2026-03-01", "", None, "30/02/2026", date.today()])

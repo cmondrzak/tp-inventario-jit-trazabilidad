@@ -12,7 +12,7 @@ class Material:
 
         self.id_material = id_material
         self.nombre = nombre
-        self.unidad = unidad
+        self.unidad = " ".join(unidad.split())
         self.punto_reposicion = punto_reposicion
 
     @staticmethod

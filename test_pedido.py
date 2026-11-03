@@ -10,6 +10,8 @@ from exceptions import (
     IdentificadorDePedidoDuplicadoError,
     IdentificadorDeRenglonDePedidoDuplicadoError,
     ProveedorNoIndicadoError,
+    PlazoDeEntregaNoEnteroError,
+    PlazoDeEntregaNoPositivoError,
     RenglonesDelPedidoNoSonUnaListaError,
     PedidoSinRenglonesError,
     ElementoNoEsUnRenglonDePedidoError,
@@ -26,19 +28,19 @@ def renglon(id_renglon=1, material="aluminio", cantidad=10):
 
 
 def crear_pedido(id_pedido=1, renglones=None):
-    return Pedido(id_pedido, 1, renglones if renglones is not None else [renglon()])
+    return Pedido(id_pedido, 1, renglones if renglones is not None else [renglon()], 5)
 
 
 # --- ingreso de datos -------------------------------------------------------
 
 def test_creacion_pedido_valido():
     r = renglon()
-    pedido = Pedido(1, 2, [r])
+    pedido = Pedido(1, 2, [r], 5)
 
     assert pedido.obtener_id_pedido() == 1
     assert pedido.obtener_id_proveedor() == 2
     assert pedido.obtener_renglones() == [r]
-    assert not hasattr(pedido, "plazo_entrega")
+    assert pedido.obtener_plazo_entrega() == 5
     assert pedido.obtener_estado() == "Solicitado"
     assert pedido.obtener_fecha_solicitud() == date.today()
     assert pedido.obtener_motivo_rechazo() is None
@@ -47,7 +49,7 @@ def test_creacion_pedido_valido():
 @pytest.mark.parametrize("id_pedido", [0, -1, "PED-1", None])
 def test_id_invalido(id_pedido):
     with pytest.raises(IdentificadorDePedidoInvalidoError):
-        Pedido(id_pedido, 1, [renglon()])
+        Pedido(id_pedido, 1, [renglon()], 5)
 
 
 def test_id_duplicado():
@@ -60,23 +62,23 @@ def test_id_duplicado():
 @pytest.mark.parametrize("proveedor", [None, 0, "P1"])
 def test_proveedor_no_indicado(proveedor):
     with pytest.raises(ProveedorNoIndicadoError):
-        Pedido(1, proveedor, [renglon()])
+        Pedido(1, proveedor, [renglon()], 5)
 
 
 @pytest.mark.parametrize("renglones", [None, "renglon", (1,), {}])
 def test_renglones_no_son_lista(renglones):
     with pytest.raises(RenglonesDelPedidoNoSonUnaListaError):
-        Pedido(1, 1, renglones)
+        Pedido(1, 1, renglones, 5)
 
 
 def test_pedido_sin_renglones():
     with pytest.raises(PedidoSinRenglonesError):
-        Pedido(1, 1, [])
+        Pedido(1, 1, [], 5)
 
 
 def test_elemento_no_es_renglon():
     with pytest.raises(ElementoNoEsUnRenglonDePedidoError):
-        Pedido(1, 1, [renglon(), "otro"])
+        Pedido(1, 1, [renglon(), "otro"], 5)
 
 
 def test_renglones_con_id_repetido():
@@ -85,16 +87,16 @@ def test_renglones_con_id_repetido():
     r2.id_renglon = 1
 
     with pytest.raises(IdentificadorDeRenglonDePedidoDuplicadoError):
-        Pedido(1, 1, [r1, r2])
+        Pedido(1, 1, [r1, r2], 5)
 
 
 def test_renglones_con_material_repetido_normalizado():
     with pytest.raises(MaterialRepetidoEnElPedidoError):
-        Pedido(1, 1, [renglon(1, "Aluminio"), renglon(2, "  aluminio ")])
+        Pedido(1, 1, [renglon(1, "Aluminio"), renglon(2, "  aluminio ")], 5)
 
 
 def test_crear_pedido_no_registra_ids_hasta_registrar_ids():
-    pedido = Pedido(1, 1, [renglon(1), renglon(2, "titanio")])
+    pedido = Pedido(1, 1, [renglon(1), renglon(2, "titanio")], 5)
     assert Pedido.obtener_lista_id() == []
 
     pedido.registrar_ids()
@@ -214,41 +216,76 @@ def test_rechazar_pedido_aceptado():
         pedido.rechazar("tarde")
 
 
-def test_vencimiento_a_los_30_dias():
+def test_fecha_limite_es_solicitud_mas_plazo():
     pedido = crear_pedido()
-    pedido.fecha_inicio_espera = date.today() - timedelta(days=30)
+
+    assert pedido.obtener_fecha_limite_entrega() == date.today() + timedelta(days=5)
+
+
+@pytest.mark.parametrize("estado_inicial", ["Solicitado", "Aceptado"])
+def test_vence_al_pasar_el_plazo(estado_inicial):
+    pedido = crear_pedido()
+    if estado_inicial == "Aceptado":
+        pedido.aceptar()
+    pedido.fecha_inicio_espera = date.today() - timedelta(days=6)
 
     pedido.actualizar_vencimiento()
 
     assert pedido.obtener_estado() == "Rechazado"
-    assert "30 dias" in pedido.obtener_motivo_rechazo()
+    assert "plazo de entrega de 5 días" in pedido.obtener_motivo_rechazo()
 
 
-def test_no_vence_a_los_29_dias():
+@pytest.mark.parametrize("estado_inicial", ["Solicitado", "Aceptado"])
+def test_no_vence_el_ultimo_dia_del_plazo(estado_inicial):
     pedido = crear_pedido()
-    pedido.fecha_inicio_espera = date.today() - timedelta(days=29)
+    if estado_inicial == "Aceptado":
+        pedido.aceptar()
+    pedido.fecha_inicio_espera = date.today() - timedelta(days=5)
 
     pedido.actualizar_vencimiento()
 
-    assert pedido.obtener_estado() == "Solicitado"
+    assert pedido.obtener_estado() == estado_inicial
 
 
 def test_aceptar_pedido_vencido():
     pedido = crear_pedido()
-    pedido.fecha_inicio_espera = date.today() - timedelta(days=31)
+    pedido.fecha_inicio_espera = date.today() - timedelta(days=6)
 
     with pytest.raises(EstadoDePedidoInvalidoError):
         pedido.aceptar()
 
 
-def test_pedido_aceptado_no_vence():
+def test_recibir_pedido_vencido_explica_el_motivo():
     pedido = crear_pedido()
     pedido.aceptar()
+    pedido.fecha_inicio_espera = date.today() - timedelta(days=6)
+
+    with pytest.raises(EstadoDePedidoInvalidoError, match="Venció el plazo de entrega"):
+        pedido.validar_recepcion()
+
+
+def test_pedido_en_proceso_no_vence():
+    pedido = crear_pedido(renglones=[renglon(1, "aluminio"), renglon(2, "titanio")])
+    pedido.aceptar()
+    pedido.obtener_renglones()[0].modificar_ingresado()
+    pedido.actualizar_estado_recepcion()
     pedido.fecha_inicio_espera = date.today() - timedelta(days=60)
 
     pedido.actualizar_vencimiento()
 
-    assert pedido.obtener_estado() == "Aceptado"
+    assert pedido.obtener_estado() == "En proceso"
+
+
+@pytest.mark.parametrize("plazo", [2.5, "5", None, True])
+def test_plazo_no_entero(plazo):
+    with pytest.raises(PlazoDeEntregaNoEnteroError):
+        Pedido(1, 1, [renglon()], plazo)
+
+
+@pytest.mark.parametrize("plazo", [0, -1])
+def test_plazo_no_positivo(plazo):
+    with pytest.raises(PlazoDeEntregaNoPositivoError):
+        Pedido(1, 1, [renglon()], plazo)
 
 
 def test_validar_recepcion_solo_aceptado_o_en_proceso():

@@ -65,3 +65,28 @@ def test_seleccionar_metodo_descarga_reintenta_hasta_opcion_valida(monkeypatch, 
 
     assert main["seleccionar_metodo_descarga"]() == "FEFO"
     assert capsys.readouterr().out.count("Opción inválida") == 2
+
+
+def test_seleccionar_metodo_descarga_permite_volver(monkeypatch):
+    simular_input(monkeypatch, "x", "0")
+
+    assert main["seleccionar_metodo_descarga"]() is None
+
+
+def test_mostrar_resumen_usa_la_linea_de_cada_tipo_de_renglon(capsys):
+    from renglon_pedido import Renglon_pedido
+    from renglon_retiro import RenglonRetiro
+
+    main["mostrar_resumen"]("RESUMEN DEL PEDIDO", [Renglon_pedido(1, "aluminio", 20), Renglon_pedido(2, "titanio", 8)])
+    salida_pedido = capsys.readouterr().out
+    main["mostrar_resumen"]("RESUMEN DEL RETIRO", [RenglonRetiro("aluminio", 5)])
+    salida_retiro = capsys.readouterr().out
+
+    assert "ID" in salida_pedido and "titanio" in salida_pedido
+    assert "ID" not in salida_retiro and "aluminio" in salida_retiro
+
+
+def test_mostrar_resumen_sin_renglones(capsys):
+    main["mostrar_resumen"]("RESUMEN DEL RETIRO", [])
+
+    assert "(sin renglones)" in capsys.readouterr().out

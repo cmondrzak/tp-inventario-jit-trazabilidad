@@ -86,6 +86,16 @@ class PuntoDeReposicionNoPositivoError(PuntoDeReposicionInvalidoError):
     pass
 
 
+class PlazoEntregaInvalidoError(ValorInvalidoError):
+    pass
+
+class PlazoDeEntregaNoEnteroError(PlazoEntregaInvalidoError):
+    pass
+
+class PlazoDeEntregaNoPositivoError(PlazoEntregaInvalidoError):
+    pass
+
+
 class DatoInvalidoError(ValorInvalidoError):
     """Un dato de contacto (mail o telefono) no es valido."""
     pass
@@ -104,6 +114,9 @@ class CantidadPedidaNoEnteraError(CantidadInvalidaError):
     pass
 
 class CantidadPedidaNoPositivaError(CantidadInvalidaError):
+    pass
+
+class CantidadRecibidaNoEnteraError(CantidadInvalidaError):
     pass
 
 class CantidadRecibidaNoPositivaError(CantidadInvalidaError):
@@ -126,6 +139,9 @@ class PrecioInvalidoError(ValorInvalidoError):
     pass
 
 class PrecioUnitarioNoPositivoError(PrecioInvalidoError):
+    pass
+
+class PrecioUnitarioNoFinitoError(PrecioInvalidoError):
     pass
 
 
@@ -235,6 +251,9 @@ class IdentificadorDeMovimientoDuplicadoError(IdentificadorDuplicadoError):
 
 
 class NombreDeMaterialDuplicadoError(ElementoDuplicadoError):
+    pass
+
+class NombreDeProveedorDuplicadoError(ElementoDuplicadoError):
     pass
 
 class MaterialRepetidoEnElPedidoError(ElementoDuplicadoError):

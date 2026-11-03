@@ -94,9 +94,15 @@ class Validaciones:
 
     @staticmethod
     def es_telefono_valido(telefono):
+        """Al menos 8 digitos; puede llevar espacios y guiones, y un unico '+' solo al principio."""
         if not isinstance(telefono, str):
             return False
-        solo_numeros = telefono.replace(" ", "").replace("-", "").replace("+", "")
-        return solo_numeros.isdigit() and len(solo_numeros) >= 8
+        telefono = telefono.strip()
+        if telefono.startswith("+"):
+            telefono = telefono[1:]
+        if not re.fullmatch(r"[0-9 \-]+", telefono):
+            return False
+        solo_numeros = telefono.replace(" ", "").replace("-", "")
+        return len(solo_numeros) >= 8
     
     

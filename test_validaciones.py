@@ -77,11 +77,12 @@ def test_es_mail_invalido(mail):
     assert Validaciones.es_mail_valido(mail) is False
 
 
-@pytest.mark.parametrize("telefono", ["12345678", "11 1234-5678", "+54 11 1234 5678"])
+@pytest.mark.parametrize("telefono", ["12345678", "11 1234-5678", "+54 11 1234 5678", " +5491112345678 "])
 def test_es_telefono_valido(telefono):
     assert Validaciones.es_telefono_valido(telefono) is True
 
 
-@pytest.mark.parametrize("telefono", ["1234567", "abc12345678", "", "11.1234.5678", 12345678, None])
+@pytest.mark.parametrize("telefono", ["1234567", "abc12345678", "", "11.1234.5678", 12345678, None,
+                                      "+1+2+3+4+5+6+7+8", "54+1112345678", "++5411123456", "+", "--------"])
 def test_es_telefono_invalido(telefono):
     assert Validaciones.es_telefono_valido(telefono) is False

@@ -80,3 +80,10 @@ def test_validar_cantidad_recibida():
     renglon.validar_cantidad_recibida(4)
     with pytest.raises(CantidadRecibidaDistintaDeLaPedidaError):
         renglon.validar_cantidad_recibida(3)
+
+
+def test_linea_resumen():
+    renglon = Renglon_pedido(7, "aluminio", 20)
+
+    assert renglon.linea_resumen() == f"{7:<6}{'aluminio':<34}{20:>14}"
+    assert Renglon_pedido.encabezado_resumen().split() == ["ID", "Material", "Cantidad"]

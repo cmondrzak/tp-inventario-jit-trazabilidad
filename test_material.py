@@ -21,6 +21,10 @@ def test_creacion_material_valida():
     assert material.obtener_punto_reposicion() == 10
 
 
+def test_unidad_se_guarda_sin_espacios_de_mas():
+    assert Material(1, "Aluminio", "  metros   cuadrados ", 10).obtener_unidad() == "metros cuadrados"
+
+
 @pytest.mark.parametrize("id_material", [0, -1, "AL-01", 1.5, None, True])
 def test_material_id_invalido(id_material):
     with pytest.raises(IdentificadorDeMaterialInvalidoError):

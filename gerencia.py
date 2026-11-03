@@ -9,7 +9,7 @@ from validaciones import Validaciones
 from remesa import Remesa
 from renglon_pedido import Renglon_pedido
 from renglon_retiro import RenglonRetiro
-from exceptions import ProveedorNoRegistradoError, MaterialNoRegistradoError, MaterialNoIndicadoError, NombreDeMaterialDuplicadoError, RenglonDePedidoPendienteNoEncontradoError, EntidadNoEncontradaError, EstadoInvalidoError
+from exceptions import ProveedorNoRegistradoError, MaterialNoRegistradoError, MaterialNoIndicadoError, NombreDeMaterialDuplicadoError, NombreDeProveedorDuplicadoError, PedidoDeOtroProveedorError, RenglonDePedidoPendienteNoEncontradoError, EntidadNoEncontradaError, EstadoInvalidoError
 class Gerencia():
     def __init__(self,deposito,pedidos,proveedores,movimientos_de_ingreso,movimientos_de_egreso):
         self.deposito=deposito
@@ -35,8 +35,17 @@ class Gerencia():
          d=Deposito(remesas,materiales)
          self.deposito.append(d)
 
-    def registrar_proveedor(self, id_proveedor, nombre, mail,telefono):
-            p = Proveedor(id_proveedor, nombre,mail = mail,telefono = telefono)
+    def validar_nombre_proveedor_nuevo(self, nombre):
+        if not isinstance(nombre, str):
+            return
+        buscado = Validaciones.normalizar_texto(nombre)
+        for proveedor in self.proveedores.values():
+            if Validaciones.normalizar_texto(proveedor.obtener_nombre()) == buscado:
+                raise NombreDeProveedorDuplicadoError(f"Ya hay un proveedor registrado con el nombre '{proveedor.obtener_nombre()}' (id {proveedor.obtener_idproveedor()}).")
+
+    def registrar_proveedor(self, id_proveedor, nombre, plazo_entrega, mail,telefono):
+            self.validar_nombre_proveedor_nuevo(nombre)
+            p = Proveedor(id_proveedor, nombre,plazo_entrega,mail = mail,telefono = telefono)
             self.proveedores[id_proveedor]=p
             Proveedor.registrar_id(id_proveedor)
 
@@ -59,13 +68,16 @@ class Gerencia():
         return total
 
     def crear_borrador_pedido(self,id_pedido,proveedor,renglones):
-        """Arma el pedido validado pero sin registrarlo: mientras es borrador se le pueden agregar y quitar renglones."""
+        """Arma el pedido validado pero sin registrarlo: mientras es borrador se le pueden agregar y quitar renglones.
+
+        El pedido toma como plazo de entrega el que tiene registrado su proveedor.
+        """
         self.validar_proveedor_registrado(proveedor)
         if isinstance(renglones, list):
             for renglon in renglones:
                 if isinstance(renglon, Renglon_pedido) and not self.material_registrado(renglon.obtener_material()):
                     raise MaterialNoRegistradoError(f"No se puede pedir '{renglon.obtener_material()}' porque ese material todavía no fue registrado en el depósito.")
-        return Pedido(id_pedido,proveedor,renglones)
+        return Pedido(id_pedido,proveedor,renglones,self.proveedores[proveedor].obtener_plazo_entrega())
 
     def agregar_renglon_a_pedido(self,pedido,id_renglon,material,cantidad):
         self.validar_material_en_deposito(material)
@@ -141,15 +153,19 @@ class Gerencia():
             raise ProveedorNoRegistradoError(f"No existe ningún proveedor registrado con el identificador {id_proveedor!r}.")
 
     def buscar_renglon_pendiente(self, id_proveedor, id_renglon_pedido):
-        """Devuelve (pedido, renglon) del renglon sin ingresar con ese id entre los pedidos pendientes del proveedor."""
+        """Devuelve (pedido, renglon) del renglon sin ingresar con ese id, verificando que el pedido sea del proveedor indicado."""
         self.validar_proveedor_registrado(id_proveedor)
         self.actualizar_estados_pedidos()
-        for pedido in self.proveedores[id_proveedor].obtener_pedidos_pendientes():
+        for pedido in self.pedidos.values():
             for renglon in pedido.obtener_renglones():
-                if renglon.obtener_id_renglon_pedido() == id_renglon_pedido and not renglon.obtener_ingresado():
+                if renglon.obtener_id_renglon_pedido() == id_renglon_pedido:
+                    if pedido.obtener_id_proveedor() != id_proveedor:
+                        raise PedidoDeOtroProveedorError(f"El renglón {id_renglon_pedido!r} pertenece al pedido {pedido.obtener_id_pedido()} del proveedor {pedido.obtener_id_proveedor()}, no del proveedor {id_proveedor}; la remesa no coincide con el pedido.")
+                    if renglon.obtener_ingresado():
+                        raise RenglonDePedidoPendienteNoEncontradoError(f"El renglón {id_renglon_pedido!r} del pedido {pedido.obtener_id_pedido()} ya fue recibido.")
                     pedido.validar_recepcion()
                     return pedido, renglon
-        raise RenglonDePedidoPendienteNoEncontradoError(f"El proveedor {id_proveedor!r} no tiene ningún pedido pendiente con el renglón {id_renglon_pedido!r} sin ingresar.")
+        raise RenglonDePedidoPendienteNoEncontradoError(f"No existe ningún renglón de pedido con el identificador {id_renglon_pedido!r}.")
 
     def almacenar_remesa(self,id_movimiento_ingreso, id_remesa, material, id_proveedor, id_renglon_pedido, cantidad_recibida, precio_unitario, fecha_recepcion, **datos_opcionales):
         Movimiento_ingreso.validar_id(id_movimiento_ingreso)
@@ -329,6 +345,8 @@ class Gerencia():
             "id_pedido": pedido.obtener_id_pedido(),
             "estado": pedido.obtener_estado(),
             "fecha_solicitud": pedido.obtener_fecha_solicitud(),
+            "plazo_entrega": pedido.obtener_plazo_entrega(),
+            "fecha_limite_entrega": pedido.obtener_fecha_limite_entrega(),
             "motivo_rechazo": pedido.obtener_motivo_rechazo()
         }
 
@@ -341,6 +359,10 @@ class Gerencia():
     @staticmethod
     def validar_nombre_proveedor(nombre):
         Proveedor.validar_nombre(nombre)
+
+    @staticmethod
+    def validar_plazo_entrega_proveedor(plazo_entrega):
+        Proveedor.validar_plazo_entrega(plazo_entrega)
 
     @staticmethod
     def validar_mail_proveedor(mail):

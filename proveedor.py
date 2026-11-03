@@ -1,6 +1,6 @@
 from validaciones import Validaciones
 
-from exceptions import IdentificadorDeProveedorInvalidoError, IdentificadorDeProveedorDuplicadoError, NombreDeProveedorVacioError, CorreoElectronicoInvalidoError, NumeroDeTelefonoInvalidoError, ObjetoNoEsUnPedidoError, PedidoDeOtroProveedorError
+from exceptions import IdentificadorDeProveedorInvalidoError, IdentificadorDeProveedorDuplicadoError, NombreDeProveedorVacioError, PlazoDeEntregaNoEnteroError, PlazoDeEntregaNoPositivoError, CorreoElectronicoInvalidoError, NumeroDeTelefonoInvalidoError, ObjetoNoEsUnPedidoError, PedidoDeOtroProveedorError
 
 from remesa import Remesa
 from pedido import Pedido
@@ -8,14 +8,16 @@ from pedido import Pedido
 
 class Proveedor:
     lista_id=[]
-    def __init__(self, id_proveedor, nombre, mail=None, telefono=None):
+    def __init__(self, id_proveedor, nombre, plazo_entrega, mail=None, telefono=None):
         Proveedor.validar_id(id_proveedor)
         Proveedor.validar_nombre(nombre)
+        Proveedor.validar_plazo_entrega(plazo_entrega)
         Proveedor.validar_mail(mail)
         Proveedor.validar_telefono(telefono)
 
         self.id_proveedor = id_proveedor
-        self.nombre = nombre
+        self.nombre = " ".join(nombre.split())
+        self.plazo_entrega = plazo_entrega
         self.mail=mail
         self.telefono=telefono
         self.pedidos_pendientes = []
@@ -33,6 +35,13 @@ class Proveedor:
             raise NombreDeProveedorVacioError(f"El nombre del proveedor es obligatorio y tiene que ser un texto; se recibió {nombre!r}.")
 
     @staticmethod
+    def validar_plazo_entrega(plazo_entrega):
+        if not Validaciones.es_numero_entero(plazo_entrega):
+            raise PlazoDeEntregaNoEnteroError(f"El plazo de entrega del proveedor es una cantidad de días y tiene que ser un número entero; se recibió {plazo_entrega!r}.")
+        if not Validaciones.es_positivo(plazo_entrega):
+            raise PlazoDeEntregaNoPositivoError(f"El plazo de entrega del proveedor debe ser de al menos un día; se recibió {plazo_entrega}.")
+
+    @staticmethod
     def validar_mail(mail):
         if mail is not None and not Validaciones.es_mail_valido(mail):
             raise CorreoElectronicoInvalidoError(f"La dirección de correo '{mail}' no es válida: tiene que tener la forma usuario@dominio.com y no puede llevar espacios.")
@@ -40,7 +49,7 @@ class Proveedor:
     @staticmethod
     def validar_telefono(telefono):
         if telefono is not None and not Validaciones.es_telefono_valido(telefono):
-            raise NumeroDeTelefonoInvalidoError(f"El teléfono '{telefono}' no es válido: tiene que tener al menos 8 dígitos y solo puede llevar números, espacios, guiones y '+'.")
+            raise NumeroDeTelefonoInvalidoError(f"El teléfono '{telefono}' no es válido: tiene que tener al menos 8 dígitos y solo puede llevar números, espacios, guiones y un '+' al principio.")
 
     @classmethod
     def registrar_id(cls, identificador):
@@ -55,7 +64,7 @@ class Proveedor:
         return cls.lista_id
 
     def __repr__(self):
-        return f'{self.id_proveedor},{self.nombre},{self.mail},{self.telefono},{self.pedidos_pendientes}'
+        return f'{self.id_proveedor},{self.nombre},{self.plazo_entrega},{self.mail},{self.telefono},{self.pedidos_pendientes}'
         
     def _validar_pedido_propio(self, pedido):
         if not isinstance(pedido, Pedido):
@@ -72,6 +81,9 @@ class Proveedor:
 
     def obtener_nombre(self):
         return self.nombre
+
+    def obtener_plazo_entrega(self):
+        return self.plazo_entrega
 
     def obtener_mail(self):
         return self.mail

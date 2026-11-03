@@ -24,3 +24,10 @@ class RenglonRetiro:
 
     def obtener_cantidad_solicitada(self):
         return self.cantidad_solicitada
+
+    @staticmethod
+    def encabezado_resumen():
+        return f"{'Material':<40}{'Cantidad':>14}"
+
+    def linea_resumen(self):
+        return f"{str(self.material)[:40]:<40}{self.cantidad_solicitada:>14}"

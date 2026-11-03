@@ -60,29 +60,19 @@ def mostrar_titulo(titulo):
 def pausar():
     input("\nPresioná Enter para volver al menú...")
 
-def mostrar_resumen_pedido(renglones):
-    mostrar_titulo("RESUMEN DEL PEDIDO")
+def mostrar_resumen(titulo, renglones):
+    """Muestra los renglones de un pedido o de un retiro: cada renglon sabe armar su propia linea."""
+    mostrar_titulo(titulo)
 
-    print(f"{'ID':<6}{'Material':<34}{'Cantidad':>14}")
+    if not renglones:
+        print("(sin renglones)")
+        return
+
+    print(renglones[0].encabezado_resumen())
     print("-" * 54)
 
     for renglon in renglones:
-        material = str(renglon.obtener_material())
-        print(
-            f"{renglon.obtener_id_renglon_pedido():<6}"
-            f"{material[:34]:<34}"
-            f"{renglon.obtener_cantidad():>14}"
-        )
-
-def mostrar_resumen_retiro(renglones):
-    mostrar_titulo("RESUMEN DEL RETIRO")
-
-    print(f"{'Material':<40}{'Cantidad':>14}")
-    print("-" * 54)
-
-    for renglon in renglones:
-        material = str(renglon.obtener_material())
-        print(f"{material[:40]:<40}{renglon.obtener_cantidad_solicitada():>14}")
+        print(renglon.linea_resumen())
 
 def mostrar_submenu_renglones(objeto):
     print(f"\n1. Agregar renglon")
@@ -114,13 +104,16 @@ def seleccionar_metodo_descarga():
     mostrar_titulo("MÉTODO DE DESCARGA")
 
     print("1. FEFO: retirar primero lo que vence antes")
+    print("0. Volver al menu principal")
 
     opcion = input("\nElegí una opción: ").strip()
 
-    while opcion != "1":
-        print("Opción inválida. Por ahora solo está disponible FEFO.")
+    while opcion not in ("0", "1"):
+        print("Opción inválida. Elegí 1 (FEFO) o 0 para volver.")
         opcion = input("Elegí una opción: ").strip()
 
+    if opcion == "0":
+        return None
     return "FEFO"
 
 ingresar = True
@@ -143,18 +136,27 @@ while ingresar:
             gestor.validar_id_proveedor_nuevo(id_proveedor)
             nombre_proveedor = input('Ingrese el nombre del nuevo proveedor: ')
             gestor.validar_nombre_proveedor(nombre_proveedor)
+            gestor.validar_nombre_proveedor_nuevo(nombre_proveedor)
+            plazo_de_entrega = int(input('Ingrese el plazo de entrega del proveedor (en dias): '))
+            gestor.validar_plazo_entrega_proveedor(plazo_de_entrega)
             mail_proveedor = input('Ingrese el mail del proveedor (vacio si no tiene): ').strip() or None
             gestor.validar_mail_proveedor(mail_proveedor)
             telefono_proveedor = input('Ingrese el telefono del proveedor (vacio si no tiene): ').strip() or None
             gestor.validar_telefono_proveedor(telefono_proveedor)
-            gestor.registrar_proveedor(id_proveedor,nombre_proveedor,mail_proveedor,telefono_proveedor)
+            gestor.registrar_proveedor(id_proveedor,nombre_proveedor,plazo_de_entrega,mail_proveedor,telefono_proveedor)
             print('Proveedor registrado correctamente.')
 
         except exceptions.IdentificadorDuplicadoError:
             print('Error: ya existe un proveedor con ese id.')
 
+        except exceptions.NombreDeProveedorDuplicadoError as e:
+            print(f'Error: {e}')
+
         except exceptions.NombreInvalidoError:
             print('Error: el nombre no puede estar vacio.')
+
+        except exceptions.PlazoEntregaInvalidoError as e:
+            print(f'Error: {e}')
 
         except exceptions.DatoInvalidoError as e:
             print(f'Error: {e}')
@@ -163,7 +165,7 @@ while ingresar:
             print('Error: el id debe ser mayor que cero.')
 
         except ValueError:
-            print('Error: el id debe ser un numero.')
+            print('Error: el id y el plazo de entrega deben ser numeros enteros.')
             
     elif opcion == '2':
         mostrar_titulo("REGISTRAR MATERIAL")
@@ -181,7 +183,7 @@ while ingresar:
             print('Material registrado correctamente.')
             
         except exceptions.IdentificadorDeMaterialInvalidoError:
-            print('Error: el id del material no puede estar vacio.')
+            print('Error: el id del material debe ser un numero entero positivo.')
 
         except exceptions.IdentificadorDuplicadoError:
             print('Error: ya existe un material con ese id.')
@@ -218,7 +220,7 @@ while ingresar:
 
             editando = True
             while editando:
-                mostrar_resumen_pedido(pedido.obtener_renglones())
+                mostrar_resumen("RESUMEN DEL PEDIDO", pedido.obtener_renglones())
                 accion = mostrar_submenu_renglones("pedido")
                 try:
                     if accion == '1':
@@ -325,7 +327,10 @@ while ingresar:
 
         except exceptions.RenglonDePedidoPendienteNoEncontradoError as error:
             print(f'Error: {error}')
-        
+
+        except exceptions.PedidoDeOtroProveedorError as error:
+            print(f'Error: {error}')
+
         except exceptions.IdentificadorInvalidoError:
             print('Error: el id debe ser mayor que cero.')
 
@@ -336,81 +341,83 @@ while ingresar:
 
     elif opcion == '5':
         mostrar_titulo("REGISTRAR RETIRO")
-        try:
-            metodo = seleccionar_metodo_descarga()
+        metodo = seleccionar_metodo_descarga()
+        if metodo is None:
+            print('Se volvio al menu sin registrar ningun retiro.')
+        else:
             print(f"\nMétodo seleccionado: {metodo}")
+            try:
+                id_movimiento = leer_id(
+                    "Ingrese el id del movimiento de egreso: "
+                )
+                gestor.validar_id_retiro_nuevo(id_movimiento)
 
-            id_movimiento = leer_id(
-                "Ingrese el id del movimiento de egreso: "
-            )
-            gestor.validar_id_retiro_nuevo(id_movimiento)
+                fecha = fecha_de_hoy()
+                print(f"Fecha del egreso: {fecha}")
 
-            fecha = fecha_de_hoy()
-            print(f"Fecha del egreso: {fecha}")
+                print('\nCargue el primer renglon del retiro.')
+                primer_renglon = gestor.crear_renglon_retiro(*leer_renglon_retiro(gestor, [], fecha))
+                retiro = gestor.crear_borrador_retiro(id_movimiento, fecha, [primer_renglon])
 
-            print('\nCargue el primer renglon del retiro.')
-            primer_renglon = gestor.crear_renglon_retiro(*leer_renglon_retiro(gestor, [], fecha))
-            retiro = gestor.crear_borrador_retiro(id_movimiento, fecha, [primer_renglon])
+                editando = True
+                while editando:
+                    mostrar_resumen("RESUMEN DEL RETIRO", retiro.obtener_renglones())
+                    accion = mostrar_submenu_renglones("retiro")
+                    try:
+                        if accion == '1':
+                            gestor.agregar_renglon_a_retiro(retiro, *leer_renglon_retiro(gestor, retiro.obtener_renglones(), fecha))
+                            print('Renglon agregado.')
+                        elif accion == '2':
+                            material = Validaciones.normalizar_texto(input('Ingrese el material del renglon a eliminar: '))
+                            gestor.eliminar_renglon_de_retiro(retiro, material)
+                            print('Renglon eliminado.')
+                        elif accion == '3':
+                            gestor.registrar_retiro(retiro)
+                            print('Egreso registrado correctamente.')
+                            editando = False
 
-            editando = True
-            while editando:
-                mostrar_resumen_retiro(retiro.obtener_renglones())
-                accion = mostrar_submenu_renglones("retiro")
-                try:
-                    if accion == '1':
-                        gestor.agregar_renglon_a_retiro(retiro, *leer_renglon_retiro(gestor, retiro.obtener_renglones(), fecha))
-                        print('Renglon agregado.')
-                    elif accion == '2':
-                        material = Validaciones.normalizar_texto(input('Ingrese el material del renglon a eliminar: '))
-                        gestor.eliminar_renglon_de_retiro(retiro, material)
-                        print('Renglon eliminado.')
-                    elif accion == '3':
-                        gestor.registrar_retiro(retiro)
-                        print('Egreso registrado correctamente.')
-                        editando = False
+                            materiales_a_reponer = gestor.obtener_materiales_a_reponer()
+                            if materiales_a_reponer:
+                                print("\nATENCION: materiales que requieren reposicion hoy:")
 
-                        materiales_a_reponer = gestor.obtener_materiales_a_reponer()
-                        if materiales_a_reponer:
-                            print("\nATENCION: materiales que requieren reposicion hoy:")
+                                for material in materiales_a_reponer:
+                                    print(
+                                        f"- {material['nombre']}: existencia disponible "
+                                        f"inferior a {material['punto_reposicion']} "
+                                        f"{material['unidad']}."
+                                    )
+                        elif accion == '4':
+                            print('Retiro cancelado; no se descontó stock ni se guardo nada.')
+                            editando = False
+                        else:
+                            print('Opcion invalida.')
 
-                            for material in materiales_a_reponer:
-                                print(
-                                    f"- {material['nombre']}: existencia disponible "
-                                    f"inferior a {material['punto_reposicion']} "
-                                    f"{material['unidad']}."
-                                )
-                    elif accion == '4':
-                        print('Retiro cancelado; no se descontó stock ni se guardo nada.')
-                        editando = False
-                    else:
-                        print('Opcion invalida.')
+                    except exceptions.InventarioError as e:
+                        print(f'Error: {e}')
 
-                except exceptions.InventarioError as e:
-                    print(f'Error: {e}')
+                    except ValueError:
+                        print('Error: la cantidad debe ser un numero.')
 
-                except ValueError:
-                    print('Error: la cantidad debe ser un numero.')
+            except exceptions.IdentificadorDuplicadoError:
+                print('Error: ya existe un movimiento con ese id.')
 
-        except exceptions.IdentificadorDuplicadoError:
-            print('Error: ya existe un movimiento con ese id.')
+            except exceptions.MaterialNoEncontradoError as e:
+                print(f'Error: {e}')
 
-        except exceptions.MaterialNoEncontradoError as e:
-            print(f'Error: {e}')
+            except exceptions.ExistenciaInsuficienteError as e:
+                print(f'Error: {e}')
 
-        except exceptions.ExistenciaInsuficienteError as e:
-            print(f'Error: {e}')
+            except exceptions.MaterialNoIndicadoError:
+                print('Error: el material no puede estar vacio.')
 
-        except exceptions.MaterialNoIndicadoError:
-            print('Error: el material no puede estar vacio.')
-
-        except exceptions.CantidadInvalidaError:
-            print('Error: la cantidad a retirar debe ser mayor que cero.')
+            except exceptions.CantidadInvalidaError:
+                print('Error: la cantidad a retirar debe ser mayor que cero.')
             
-        except exceptions.IdentificadorInvalidoError:
-            print('Error: el id debe ser mayor que cero.')
+            except exceptions.IdentificadorInvalidoError:
+                print('Error: el id debe ser mayor que cero.')
 
-        except ValueError:
-            print('Error: el id y la cantidad deben ser numeros.')
+            except ValueError:
+                print('Error: el id y la cantidad deben ser numeros.')
             
     elif opcion == '7' or opcion == '8':
         if opcion == '7':
@@ -423,7 +430,7 @@ while ingresar:
                 raise exceptions.MaterialInvalidoError
             if not gestor.material_registrado(material):
                 raise exceptions.MaterialNoEncontradoError
-            total = gestor.consultar_existencia(material, date.today(), incluir_vencidas=(opcion == '6'))
+            total = gestor.consultar_existencia(material, date.today(), incluir_vencidas=(opcion == '7'))
             if opcion == '7':
                 print(f'Existencia fisica de {material} al {fecha_de_hoy()}: {total}')
             else:
@@ -449,7 +456,7 @@ while ingresar:
             print(f'==== TRAZABILIDAD DEL INGRESO {id_movimiento} ====')
             print(f'Fecha del ingreso: {ingreso.obtener_fecha()}')
             print(f'Proveedor: {proveedor.obtener_idproveedor()} - {proveedor.obtener_nombre()} (mail: {proveedor.obtener_mail()}, telefono: {proveedor.obtener_telefono()})')
-            print(f'Pedido: {pedido.obtener_id_pedido()} (estado: {pedido.obtener_estado()})')
+            print(f'Pedido: {pedido.obtener_id_pedido()} (estado: {pedido.obtener_estado()}, plazo de entrega: {pedido.obtener_plazo_entrega()} dias)')
             print(f'Renglon del pedido: {remesa.obtener_id_renglon_pedido()}')
             print(f'Remesa: {remesa.obtener_id_remesa()} - material: {remesa.obtener_material()}')
             print(f'Cantidad recibida: {remesa.obtener_cantidad_recibida()}, saldo actual: {remesa.obtener_saldo()}')
@@ -652,7 +659,8 @@ while ingresar:
             print(f"Pedido: {datos['id_pedido']}")
             print(f"Estado: {datos['estado']}")
 
-            print(f"Fecha de solicitud: {datos['fecha_solicitud']}")
+            print(f"Fecha de solicitud: {datos['fecha_solicitud'].strftime('%d/%m/%Y')}")
+            print(f"Plazo de entrega: {datos['plazo_entrega']} dias (fecha limite: {datos['fecha_limite_entrega'].strftime('%d/%m/%Y')})")
 
             if datos["motivo_rechazo"] is not None:
                 print(f"Motivo: {datos['motivo_rechazo']}")

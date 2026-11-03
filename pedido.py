@@ -1,16 +1,18 @@
 from validaciones import Validaciones
-from exceptions import IdentificadorDePedidoInvalidoError, IdentificadorDePedidoDuplicadoError, ProveedorNoIndicadoError, RenglonesDelPedidoNoSonUnaListaError, PedidoSinRenglonesError, ElementoNoEsUnRenglonDePedidoError, MaterialRepetidoEnElPedidoError, IdentificadorDeRenglonDePedidoDuplicadoError, EstadoDePedidoInvalidoError, FormatoDeFechaInvalidoError, FechaDeRecepcionAnteriorAlPedidoError, RenglonDePedidoNoEncontradoError
+from exceptions import IdentificadorDePedidoInvalidoError, IdentificadorDePedidoDuplicadoError, ProveedorNoIndicadoError, PlazoDeEntregaNoEnteroError, PlazoDeEntregaNoPositivoError, RenglonesDelPedidoNoSonUnaListaError, PedidoSinRenglonesError, ElementoNoEsUnRenglonDePedidoError, MaterialRepetidoEnElPedidoError, IdentificadorDeRenglonDePedidoDuplicadoError, EstadoDePedidoInvalidoError, FormatoDeFechaInvalidoError, FechaDeRecepcionAnteriorAlPedidoError, RenglonDePedidoNoEncontradoError
 from renglon_pedido import Renglon_pedido
 from lista_enlazada import ListaEnlazada
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 class Pedido:
     lista_id=[]
-    def __init__(self, id_pedido, proveedor, renglones):
+    def __init__(self, id_pedido, proveedor, renglones, plazo_entrega):
         Pedido.validar_id(id_pedido)
 
         if not Validaciones.es_identificador_valido(proveedor):
             raise ProveedorNoIndicadoError("Todo pedido tiene que estar dirigido a un proveedor (RN29), pero no se indicó ninguno.")
+
+        Pedido.validar_plazo_entrega(plazo_entrega)
 
         if not isinstance(renglones, list):
             raise RenglonesDelPedidoNoSonUnaListaError(f"Los renglones del pedido tienen que venir en una lista, pero se recibió un objeto de tipo {type(renglones).__name__}.")
@@ -35,6 +37,7 @@ class Pedido:
         for renglon in renglones:
             self._renglones.agregar_final(renglon)
 
+        self.plazo_entrega = plazo_entrega
         self.estado = "Solicitado"
         self.fecha_solicitud = date.today()
         self.fecha_inicio_espera = self.fecha_solicitud
@@ -46,6 +49,13 @@ class Pedido:
             raise IdentificadorDePedidoInvalidoError(f"El identificador del pedido debe ser un número entero positivo; se recibió {id_pedido!r}.")
         if not Validaciones.validarid(Pedido.lista_id,id_pedido):
             raise IdentificadorDePedidoDuplicadoError(f"Ya existe un pedido con el identificador {id_pedido!r}.")
+
+    @staticmethod
+    def validar_plazo_entrega(plazo_entrega):
+        if not Validaciones.es_numero_entero(plazo_entrega):
+            raise PlazoDeEntregaNoEnteroError(f"El plazo de entrega del pedido es una cantidad de días y tiene que ser un número entero; se recibió {plazo_entrega!r}.")
+        if not Validaciones.es_positivo(plazo_entrega):
+            raise PlazoDeEntregaNoPositivoError(f"El plazo de entrega del pedido debe ser de al menos un día; se recibió {plazo_entrega}.")
 
     @staticmethod
     def validar_id_renglon_nuevo(renglones, id_renglon):
@@ -82,7 +92,7 @@ class Pedido:
         return self.id_pedido
     
     def __repr__(self):
-        return f'{self.id_pedido},{self.proveedor},{self.obtener_renglones()},{self.estado}'
+        return f'{self.id_pedido},{self.proveedor},{self.obtener_renglones()},{self.plazo_entrega},{self.estado}'
 
     @staticmethod
     def tiene_renglon_con_material(renglones, material):
@@ -130,15 +140,20 @@ class Pedido:
     def obtener_motivo_rechazo(self):
         return self.motivo_rechazo
 
-    def actualizar_vencimiento(self):
-        if self.estado=="Solicitado":
-            dias = (date.today()-self.fecha_inicio_espera).days
+    def obtener_plazo_entrega(self):
+        return self.plazo_entrega
 
-            if dias>=30:
-                self.estado = "Rechazado"
-                self.motivo_rechazo = (
-                    "Pasaron 30 dias sin aceptacion del proveedor."
-                )
+    def obtener_fecha_limite_entrega(self):
+        return self.fecha_inicio_espera + timedelta(days=self.plazo_entrega)
+
+    def actualizar_vencimiento(self):
+        """Un pedido solicitado o aceptado vence si pasa su fecha limite sin entregarse (entregar el ultimo dia todavia vale)."""
+        if self.estado in ["Solicitado","Aceptado"] and date.today() > self.obtener_fecha_limite_entrega():
+            self.estado = "Rechazado"
+            self.motivo_rechazo = (
+                f"Venció el plazo de entrega de {self.plazo_entrega} días "
+                f"(fecha límite: {self.obtener_fecha_limite_entrega().strftime('%d/%m/%Y')})."
+            )
 
     def aceptar(self):
         self.actualizar_vencimiento()
@@ -170,9 +185,10 @@ class Pedido:
         self.actualizar_vencimiento()
 
         if self.estado not in ["Aceptado","En proceso"]:
+            motivo = f" Motivo: {self.motivo_rechazo}" if self.motivo_rechazo else ""
             raise EstadoDePedidoInvalidoError(
-                f"No se pueden recibir materiales de un pedido "
-                f"en estado '{self.estado}'."
+                f"No se pueden recibir materiales del pedido {self.id_pedido} "
+                f"porque está en estado '{self.estado}'.{motivo}"
             )
 
     def validar_fecha_recepcion(self, fecha_recepcion):

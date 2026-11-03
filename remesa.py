@@ -1,6 +1,7 @@
-from exceptions import IdentificadorDeRemesaInvalidoError, IdentificadorDeRemesaDuplicadoError, MaterialNoIndicadoError, IdentificadorDeProveedorInvalidoError, RenglonDePedidoNoIndicadoError, CantidadRecibidaNoPositivaError, PrecioUnitarioNoPositivoError, CantidadAConsumirNoPositivaError, FormatoDeFechaInvalidoError, FechaDeRecepcionFuturaError, FechaDeVencimientoAnteriorALaRecepcionError, FechaDeVencimientoPasadaError, SaldoDeRemesaInsuficienteError
+from exceptions import IdentificadorDeRemesaInvalidoError, IdentificadorDeRemesaDuplicadoError, MaterialNoIndicadoError, IdentificadorDeProveedorInvalidoError, RenglonDePedidoNoIndicadoError, CantidadRecibidaNoEnteraError, CantidadRecibidaNoPositivaError, PrecioUnitarioNoPositivoError, PrecioUnitarioNoFinitoError, CantidadAConsumirNoPositivaError, FormatoDeFechaInvalidoError, FechaDeRecepcionFuturaError, FechaDeVencimientoAnteriorALaRecepcionError, FechaDeVencimientoPasadaError, SaldoDeRemesaInsuficienteError
 from validaciones import Validaciones
 from datetime import date, datetime
+import math
 
 class Remesa:
     lista_id=[]
@@ -47,6 +48,8 @@ class Remesa:
 
     @staticmethod
     def validar_cantidad_recibida(cantidad_recibida):
+        if not Validaciones.es_numero_entero(cantidad_recibida):
+            raise CantidadRecibidaNoEnteraError(f"La cantidad recibida tiene que ser un número entero, igual que la cantidad pedida; se recibió {cantidad_recibida!r}.")
         if not Validaciones.es_positivo(cantidad_recibida):
             raise CantidadRecibidaNoPositivaError(f"La cantidad recibida en una remesa debe ser mayor que cero (RN9); se recibió {cantidad_recibida!r}.")
 
@@ -54,6 +57,8 @@ class Remesa:
     def validar_precio_unitario(precio_unitario):
         if not Validaciones.es_positivo(precio_unitario):
             raise PrecioUnitarioNoPositivoError(f"El precio unitario informado por el proveedor debe ser mayor que cero; se recibió {precio_unitario!r}.")
+        if not math.isfinite(precio_unitario):
+            raise PrecioUnitarioNoFinitoError(f"El precio unitario informado por el proveedor tiene que ser un número finito; se recibió {precio_unitario!r}.")
 
     @staticmethod
     def validar_fecha_recepcion(fecha_recepcion):

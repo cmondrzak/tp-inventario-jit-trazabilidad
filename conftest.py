@@ -35,7 +35,7 @@ def gerencia():
     """Gerencia con un deposito, un proveedor (1) y dos materiales registrados."""
     g = Gerencia([], {}, {}, {}, {})
     g.crear_deposito({}, {})
-    g.registrar_proveedor(1, "Proveedor SA", "contacto@proveedor.com", "11 1234-5678")
+    g.registrar_proveedor(1, "Proveedor SA", 5, "contacto@proveedor.com", "11 1234-5678")
     g.registrar_material(1, "aluminio", "kg", 10)
     g.registrar_material(2, "titanio", "kg", 5)
     return g

@@ -35,6 +35,8 @@ from exceptions import (
     FechaDeRecepcionFuturaError,
     FechaDeVencimientoPasadaError,
     PrecioUnitarioNoPositivoError,
+    NombreDeProveedorDuplicadoError,
+    PedidoDeOtroProveedorError,
 )
 
 
@@ -62,12 +64,12 @@ def test_registrar_proveedor(gerencia):
 
 def test_registrar_proveedor_id_repetido(gerencia):
     with pytest.raises(IdentificadorDeProveedorDuplicadoError):
-        gerencia.registrar_proveedor(1, "Otro", None, None)
+        gerencia.registrar_proveedor(1, "Otro", 5, None, None)
 
 
 def test_registrar_proveedor_con_datos_invalidos_no_lo_guarda(gerencia):
     with pytest.raises(CorreoElectronicoInvalidoError):
-        gerencia.registrar_proveedor(2, "Otro", "mal-mail", None)
+        gerencia.registrar_proveedor(2, "Otro", 5, "mal-mail", None)
 
     assert 2 not in gerencia.obtener_proveedores()
     assert 2 not in Proveedor.obtener_lista_id()
@@ -128,7 +130,52 @@ def test_generar_pedido_id_repetido(gerencia_con_pedido_aceptado):
 def test_aceptar_y_consultar_pedido(gerencia_con_pedido_aceptado):
     estado = gerencia_con_pedido_aceptado.consultar_estado_pedido(1)
 
-    assert estado == {"id_pedido": 1, "estado": "Aceptado", "fecha_solicitud": date.today(), "motivo_rechazo": None}
+    assert estado == {
+        "id_pedido": 1,
+        "estado": "Aceptado",
+        "fecha_solicitud": date.today(),
+        "plazo_entrega": 5,
+        "fecha_limite_entrega": date.today() + timedelta(days=5),
+        "motivo_rechazo": None,
+    }
+
+
+def test_pedido_copia_el_plazo_del_proveedor(gerencia):
+    gerencia.registrar_proveedor(2, "Lento SRL", 20, None, None)
+
+    gerencia.registrar_pedido(gerencia.crear_borrador_pedido(1, 2, [Renglon_pedido(1, "aluminio", 1)]))
+
+    assert gerencia.consultar_estado_pedido(1)["plazo_entrega"] == 20
+
+
+def test_registrar_proveedor_nombre_repetido(gerencia):
+    with pytest.raises(NombreDeProveedorDuplicadoError):
+        gerencia.registrar_proveedor(2, "  proveedor   SA ", 3, None, None)
+    assert 2 not in gerencia.obtener_proveedores()
+
+
+def test_almacenar_remesa_de_renglon_de_otro_proveedor(gerencia_con_pedido_aceptado):
+    g = gerencia_con_pedido_aceptado
+    g.registrar_proveedor(2, "Otro SA", 5, None, None)
+
+    with pytest.raises(PedidoDeOtroProveedorError, match="pertenece al pedido 1 del proveedor 1"):
+        g.almacenar_remesa(1, 1, "aluminio", 2, 1, 20, 100, fecha())
+    assert g.obtener_deposito()[0].obtener_remesas() == {}
+
+
+def test_almacenar_remesa_de_renglon_inexistente(gerencia_con_pedido_aceptado):
+    with pytest.raises(RenglonDePedidoPendienteNoEncontradoError, match="No existe"):
+        gerencia_con_pedido_aceptado.almacenar_remesa(1, 1, "aluminio", 1, 99, 20, 100, fecha())
+
+
+def test_almacenar_remesa_de_pedido_vencido(gerencia_con_pedido_aceptado):
+    g = gerencia_con_pedido_aceptado
+    g.obtener_pedidos()[1].fecha_inicio_espera = date.today() - timedelta(days=6)
+
+    with pytest.raises(EstadoDePedidoInvalidoError, match="Venció el plazo"):
+        g.almacenar_remesa(1, 1, "aluminio", 1, 1, 20, 100, fecha())
+    assert g.consultar_estado_pedido(1)["estado"] == "Rechazado"
+    assert g.obtener_proveedores()[1].obtener_pedidos_pendientes() == []
 
 
 def test_rechazar_pedido_lo_saca_de_pendientes(gerencia):
