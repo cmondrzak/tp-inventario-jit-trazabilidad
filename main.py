@@ -30,16 +30,17 @@ def mostrar_menu():
     print("  3. Crear pedido")
     print("  4. Registrar ingreso de materiales")
     print("  5. Registrar retiro de materiales")
+    print("  6. Gestionar estado de un pedido")
+
 
     print("\n  CONSULTAS")
-    print("  6. Consultar existencia física")
-    print("  7. Consultar existencia disponible")
-    print("  8. Consultar trazabilidad de un ingreso")
-    print("  9. Consultar reposición de un material")
-    print("  10. Consultar materiales que requieren reposición")
-    print("  11. Consultar trazabilidad de un retiro")
-    print("  12. Consultar trazabilidad de una remesa")
-    print("  13. Gestionar estado de un pedido")
+    print("  7. Consultar existencia física")
+    print("  8. Consultar existencia disponible")
+    print("  9. Consultar trazabilidad de un ingreso")
+    print("  10. Consultar reposición de un material")
+    print("  11. Consultar materiales que requieren reposición")
+    print("  12. Consultar trazabilidad de un retiro")
+    print("  13. Consultar trazabilidad de una remesa")
 
 
     print("\n  14. Salir")
@@ -411,8 +412,8 @@ while ingresar:
         except ValueError:
             print('Error: el id y la cantidad deben ser numeros.')
             
-    elif opcion == '6' or opcion == '7':
-        if opcion == '6':
+    elif opcion == '7' or opcion == '8':
+        if opcion == '7':
             mostrar_titulo("EXISTENCIA FISICA")
         else:
             mostrar_titulo("EXISTENCIA DISPONIBLE")
@@ -423,7 +424,7 @@ while ingresar:
             if not gestor.material_registrado(material):
                 raise exceptions.MaterialNoEncontradoError
             total = gestor.consultar_existencia(material, date.today(), incluir_vencidas=(opcion == '6'))
-            if opcion == '6':
+            if opcion == '7':
                 print(f'Existencia fisica de {material} al {fecha_de_hoy()}: {total}')
             else:
                 print(f'Existencia disponible de {material} al {fecha_de_hoy()}: {total}')
@@ -434,7 +435,7 @@ while ingresar:
         except exceptions.MaterialNoEncontradoError:
             print('Error: el material no esta registrado.')
 
-    elif opcion == '8':
+    elif opcion == '9':
         mostrar_titulo("TRAZABILIDAD DE UN INGRESO")
         try:
             id_movimiento = leer_id('Ingrese el id del movimiento de ingreso: ')
@@ -478,7 +479,7 @@ while ingresar:
         except ValueError:
             print('Error: el id debe ser un numero.')
 
-    elif opcion == '9':
+    elif opcion == '10':
         mostrar_titulo("REPOSICION DE UN MATERIAL")
 
         try:
@@ -518,7 +519,7 @@ while ingresar:
         except exceptions.MaterialNoRegistradoError as e:
             print(f"Error: {e}")
 
-    elif opcion == '10':
+    elif opcion == '11':
         mostrar_titulo("MATERIALES QUE REQUIEREN REPOSICION")
 
         materiales = gestor.obtener_materiales_a_reponer()
@@ -545,7 +546,7 @@ while ingresar:
                 )
 
 
-    elif opcion == '11':
+    elif opcion == '12':
         mostrar_titulo("TRAZABILIDAD DE UN RETIRO")
 
         try:
@@ -588,7 +589,7 @@ while ingresar:
             print("Error: el id debe ser un numero.")
 
 
-    elif opcion == '12':
+    elif opcion == '13':
         mostrar_titulo("TRAZABILIDAD DE UNA REMESA")
 
         try:
@@ -641,7 +642,7 @@ while ingresar:
         except ValueError:
             print("Error: el id debe ser un numero.")
 
-    elif opcion == '13':
+    elif opcion == '6':
         mostrar_titulo("ESTADO DE UN PEDIDO")
 
         try:
