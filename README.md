@@ -1,484 +1,317 @@
-# Trabajo Práctico: Sistema de Inventario JIT con Trazabilidad
+# Sistema de Inventario JIT con Trazabilidad
 
-## Situación Hipotética
+Trabajo práctico de **Estructura de Datos y Programación — ITBA**.
 
-**AeroTech Components** fabrica componentes para la industria aeronáutica y abastece sus líneas de producción mediante un esquema de inventario Just-In-Time (JIT). Los materiales ingresan al depósito en remesas provenientes de distintos proveedores y, en muchos casos, poseen fecha de vencimiento.
+El proyecto implementa un sistema de consola para administrar el inventario de la empresa ficticia **AeroTech Components**. Permite registrar materiales y proveedores, gestionar pedidos, recibir remesas y retirar materiales siguiendo la política FEFO.
 
-Actualmente, los ingresos y retiros se registran en planillas independientes. Como consecuencia, resulta difícil conocer con precisión qué materiales continúan disponibles para producción, reconstruir el origen de un consumo específico o determinar si un lote vencido fue utilizado por error. Además, los responsables del depósito suelen detectar los faltantes cuando la producción ya se encuentra afectada.
+El sistema conserva información sobre el origen y consumo de las remesas para consultar su trazabilidad. También identifica materiales cuya existencia disponible está por debajo de su punto de reposición.
 
-La empresa solicita desarrollar un prototipo que permita administrar el inventario preservando la trazabilidad completa de cada movimiento. El sistema deberá registrar el ingreso de remesas, determinar qué existencias pueden utilizarse en una fecha determinada, retirar materiales respetando una política de consumo explícita y advertir cuándo un material requiere reposición.
+## Funcionalidades
 
-El sistema **no deberá decidir automáticamente qué comprar ni emitir pedidos a proveedores**. Su objetivo consiste en mantener información consistente sobre el inventario disponible y facilitar las decisiones posteriores de abastecimiento.
+- Registro de materiales y proveedores.
+- Creación de pedidos con uno o más renglones.
+- Cálculo de subtotales y del importe total de un pedido.
+- Gestión de aceptación, rechazo y recepción de pedidos.
+- Registro de remesas con o sin vencimiento.
+- Retiro de materiales mediante FEFO.
+- Consulta de existencias físicas y disponibles.
+- Trazabilidad por ingreso, retiro y remesa.
+- Consulta de materiales que requieren reposición.
+- Conservación de remesas agotadas.
+- Guardado y recuperación de datos mediante `pickle`.
 
-## Objetivo del sistema
+El sistema no decide automáticamente qué comprar ni genera pedidos de reposición por su cuenta.
 
-El prototipo deberá permitir:
+## Requisitos y ejecución
 
-- registrar materiales, proveedores y remesas;
-- consultar existencias físicas y existencias disponibles para una fecha determinada;
-- retirar materiales respetando una política explícita de consumo;
-- conservar la trazabilidad completa de los ingresos y retiros realizados;
-- reconstruir qué remesas participaron en un retiro y cómo fue consumida cada remesa a lo largo del tiempo;
-- detectar materiales cuya existencia disponible haya descendido por debajo de su punto de reposición;
-- confeccionar pedidos a proveedores y calcular su importe total.
+La aplicación utiliza Python 3 y módulos de su biblioteca estándar. Para ejecutar las pruebas se requiere adicionalmente `pytest`.
 
-### Alcance y vocabulario del dominio
+Clonar el repositorio:
 
-Los siguientes conceptos delimitan el problema que debe resolverse, pero **no implican necesariamente una clase por cada sustantivo**. Parte del trabajo consiste en decidir cómo representar este vocabulario mediante objetos y cómo distribuir adecuadamente sus responsabilidades.
-
-| Concepto          | Representa                                                          | Información asociada                                                                          | No implica                                |
-| ----------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | --------------------------------------------------- |
-| Material          | Un tipo de insumo utilizado por la empresa                          | Su identidad, nombre, unidad de medida y punto de reposición                               | Decidir desde qué remesas debe consumirse           |
-| Proveedor         | Una empresa que suministra materiales                               | Su identidad y plazo estimado de entrega                                                   | Administrar existencias o movimientos               |
-| Remesa            | Una partida específica recibida de un proveedor                     | Material contenido, cantidad recibida, saldo disponible, fechas de recepción y vencimiento | Elegir cuándo debe consumirse dentro del inventario |
-| Depósito          | El inventario administrado por el sistema                           | Registrar remesas, coordinar consultas y retiros, conservar la trazabilidad                | Decidir automáticamente qué materiales comprar      |
-| Movimiento        | Un hecho ocurrido sobre el inventario                               | Registrar un ingreso o un retiro con toda su información asociada                          | Modificar posteriormente el estado del inventario   |
-| Pedido            | Una solicitud dirigida a un proveedor                               | Agrupar materiales solicitados y calcular su importe total                                 | Incorporar existencias antes de recibirlas          |
-| Renglón de pedido | Una cantidad solicitada de un material junto con su precio acordado | Calcular su subtotal                                                                       | Modificar el inventario o seleccionar proveedores   |
-
-```mermaid
-flowchart LR
-    P[Proveedor] -->|provee| R[Remesa]
-    M[Material] -->|identifica| R
-    D[Depósito] -->|administra| R
-    D -->|registra| V[Movimiento]
-    V -->|refiere a| M
-    V -->|refiere a| R
-    PE[Pedido] -->|se dirige a| P
-    PE -->|contiene| RP[Renglones]
-    RP -->|solicitan| M
+```bash
+git clone https://github.com/cmondrzak/tp-inventario-jit-trazabilidad.git
+cd tp-inventario-jit-trazabilidad
 ```
 
-El mapa anterior resume únicamente las relaciones existentes entre los conceptos del dominio.
+Iniciar el programa:
 
-**No constituye un diagrama de clases UML ni prescribe asociaciones, jerarquías de herencia, navegabilidad, estructuras de datos o distribución de responsabilidades entre clases**. Estas decisiones forman parte del diseño orientado a objetos que deberá proponer la solución.
-
-### Flujo principal del retiro de materiales
-
-Cuando se solicita retirar una determinada cantidad de un material para una fecha de operación, el sistema deberá determinar primero qué remesas pueden utilizarse.
-
-Se consideran utilizables únicamente aquellas remesas que:
-
-- poseen saldo disponible;
-- no se encuentran vencidas en la fecha indicada.
-
-A continuación, dichas remesas deberán ordenarse según la política de consumo definida para el sistema. En esta primera versión, la política será **FEFO (First Expired, First Out)**.
-
-```mermaid
-flowchart TD
-    A[Solicitar retiro]
-    A --> B[Obtener remesas utilizables]
-    B --> C[Ordenarlas según la política FEFO]
-    C --> D{¿La existencia disponible alcanza?}
-    D -->|No| E[Rechazar la operación]
-    D -->|Sí| F[Distribuir el retiro]
-    F --> G[Actualizar saldos]
-    G --> H[Registrar movimientos]
-    H --> I[Verificar necesidad de reposición]
+```bash
+python main.py
 ```
 
-La distribución del retiro deberá respetar íntegramente la política de consumo establecida.
+En Windows también puede utilizarse:
 
-Si durante las validaciones se detecta cualquier incumplimiento de las reglas de negocio, **la operación deberá rechazarse sin producir modificaciones parciales sobre el inventario.**
+```bash
+py main.py
+```
 
-### Política FEFO
+## Menú de consola
 
-En esta primera versión del sistema, las remesas deberán consumirse siguiendo el criterio **First Expired, First Out (FEFO)**.
+| Opción | Operación |
+|---|---|
+| 1 | Registrar proveedor |
+| 2 | Registrar material |
+| 3 | Crear pedido |
+| 4 | Registrar ingreso de materiales |
+| 5 | Registrar retiro de materiales |
+| 6 | Consultar existencia física |
+| 7 | Consultar existencia disponible |
+| 8 | Consultar trazabilidad de un ingreso |
+| 9 | Consultar reposición de un material |
+| 10 | Consultar materiales que requieren reposición |
+| 11 | Consultar trazabilidad de un retiro |
+| 12 | Consultar trazabilidad de una remesa |
+| 13 | Gestionar el estado de un pedido |
+| 14 | Salir |
 
-Esta política establece que:
+Los identificadores deben ser enteros positivos. Las fechas se ingresan con el formato `dd/mm/aaaa`.
 
-- primero se consumen las remesas cuya fecha de vencimiento sea más próxima;
-- cuando varias remesas posean el mismo vencimiento, se priorizará aquella cuya fecha de recepción sea anterior;
-- si aún persistiera un empate, se utilizará el identificador de la remesa como último criterio de orden.
+## Flujo de uso
 
-Las remesas que **no poseen fecha de vencimiento** deberán consumirse después de todas aquellas que sí la poseen. Entre ellas también se utilizarán la fecha de recepción y el identificador para resolver eventuales empates.
+1. Registrar un proveedor.
+2. Registrar los materiales que se utilizarán.
+3. Crear un pedido dirigido al proveedor, indicando materiales, cantidades y precios.
+4. Aceptar el pedido desde la opción de gestión de estados.
+5. Registrar las remesas recibidas, vinculándolas con los renglones del pedido.
+6. Solicitar un retiro indicando su fecha, materiales y cantidades.
+7. Consultar existencias, trazabilidad y necesidad de reposición.
 
-La política FEFO determina únicamente el orden en que deben consumirse las remesas.
+Crear un pedido no aumenta el stock. Las existencias se incorporan cuando se registra una remesa.
 
-No decide si un retiro puede realizarse ni modifica las reglas de disponibilidad del inventario.
+En la implementación actual, cada entrega debe coincidir con el material y la cantidad de un renglón pendiente. Un pedido puede recibirse en etapas mediante la recepción de distintos renglones, pero no se contempla recibir parcialmente la cantidad de un mismo renglón.
 
-### Fuera de alcance
+## Conceptos del sistema
 
-El presente trabajo práctico **no contempla**:
+### Material
 
-- interfaz gráfica de usuario;
-- persistencia en archivos o bases de datos;
-- múltiples depósitos físicos;
-- reservas de stock;
-- devoluciones de materiales;
-- múltiples monedas, impuestos o descuentos;
-- integración con proveedores;
-- emisión automática de pedidos;
-- cálculo automático de cantidades de compra;
-- pronósticos de demanda;
-- auditoría de usuarios o permisos de acceso.
+Representa un tipo de insumo. Guarda su identificador, nombre, unidad de medida y punto de reposición.
 
-Asimismo, el sistema no deberá optimizar automáticamente el inventario ni reemplazar las decisiones de abastecimiento realizadas por los responsables de la empresa.
+La cantidad existente no se almacena en el material: se calcula a partir de los saldos de sus remesas.
 
-## Requerimientos Técnicos Obligatorios
+### Remesa
 
-El objetivo principal de este trabajo práctico consiste en aplicar los conceptos de **Programación Orientada a Objetos, Estructuras de Datos y Buenas Prácticas de Diseño** estudiados durante la materia.
+Representa una entrega concreta de un material, asociada a un proveedor y a un renglón de pedido.
 
-Las decisiones de diseño adoptadas deberán justificarse mediante una implementación consistente, mantenible y alineada con los principios vistos en clase. No existe una única solución correcta; sin embargo, las decisiones tomadas deberán respetar las reglas de negocio y los requerimientos técnicos establecidos en esta consigna.
+Conserva:
 
-### Diseño orientado a objetos
+- Cantidad originalmente recibida.
+- Saldo restante.
+- Fecha de recepción.
+- Fecha de vencimiento, cuando corresponde.
 
-La solución deberá modelar el dominio mediante objetos que representen adecuadamente los conceptos del problema y distribuyan sus responsabilidades de forma coherente.
+Una remesa es utilizable para una fecha cuando tiene saldo, ya fue recibida y no está vencida. En esta implementación, se considera vencida a partir del día posterior a su fecha de vencimiento.
 
-En particular, se espera que:
+### Existencia física y disponible
 
-- cada clase posea una responsabilidad claramente definida y relacionada con el dominio;
-- las responsabilidades se encuentren adecuadamente distribuidas entre los objetos, evitando concentrar la lógica del sistema en una única clase;
-- cada objeto sea responsable de mantener la consistencia de su propio estado;
-- el diseño favorezca un bajo acoplamiento y una alta cohesión entre las clases.
+- **Existencia física:** suma de los saldos, incluyendo material vencido.
+- **Existencia disponible:** suma de los saldos utilizables para la fecha considerada.
 
-La utilización de atributos públicos que permitan modificar directamente el estado interno de los objetos no forma parte del enfoque esperado para este trabajo práctico.
+Las consultas históricas del menú utilizan las cantidades recibidas y los retiros confirmados hasta la fecha consultada.
 
-### Encapsulamiento
+### Punto de reposición
 
-El estado interno de cada objeto deberá protegerse mediante una interfaz pública apropiada.
+Un material requiere reposición cuando su existencia disponible es estrictamente menor que su punto de reposición.
 
-Las validaciones necesarias para preservar la consistencia de cada objeto deberán realizarse dentro del propio objeto responsable de dicha información y no depender del código cliente.
+Si ambos valores son iguales, todavía no se indica necesidad de reposición.
 
-### Herencia y polimorfismo
+Las consultas de reposición del menú evalúan la situación de la fecha actual.
 
-La solución deberá incorporar mecanismos de reutilización propios de la Programación Orientada a Objetos.
+## Política FEFO
 
-Cuando existan comportamientos comunes entre diferentes objetos, deberá evaluarse la conveniencia de utilizar composición, herencia u otros mecanismos de diseño.
+FEFO significa **First Expired, First Out**: primero se consume lo que vence antes.
 
-Asimismo, deberá implementarse al menos un comportamiento polimórfico cuya utilización permita extender el sistema sin modificar el código cliente que hace uso de dicho comportamiento.
+El orden de consumo es:
 
-La presente consigna no prescribe una jerarquía de herencia determinada. La conveniencia y el alcance de su utilización forman parte de las decisiones de diseño que deberán adoptarse.
+1. Fecha de vencimiento más próxima.
+2. Fecha de recepción más antigua, si hay empate.
+3. Menor identificador de remesa, si continúa el empate.
 
-### Excepciones
+Las remesas sin vencimiento se ubican después de todas las que sí vencen.
 
-Las situaciones que representen violaciones a las reglas de negocio deberán informarse mediante excepciones apropiadas.
+### Implementación
 
-Cada excepción deberá representar una condición de error claramente identificable y permitir que el código cliente pueda actuar en consecuencia.
+`Remesa.clave_fefo()` construye una tupla con los criterios de orden:
 
-No se espera que el sistema continúe ejecutando operaciones inválidas ni que utilice valores especiales como mecanismo principal para indicar errores de negocio.
+```python
+(sin_vencimiento, vencimiento, recepcion, id_remesa)
+```
 
-### Estructuras de datos
+`Deposito.retirar_fefo()` utiliza esa clave para devolver una lista ordenada. Aunque su nombre contiene “retirar”, este método solamente ordena: no modifica saldos.
 
-Las estructuras de datos seleccionadas deberán ser consistentes con las operaciones que el sistema necesita realizar.
+`Movimiento_retiro._planificar_consumo()` verifica la disponibilidad y distribuye la cantidad solicitada entre las remesas ordenadas.
 
-Su elección deberá responder a necesidades concretas del problema y no a decisiones arbitrarias.
+### Recursividad
 
-### Modularización
+La función interna `armar_plan()` procesa la primera remesa disponible:
 
-La solución deberá organizarse en módulos de manera coherente.
+- Si su saldo alcanza, completa el faltante y termina.
+- Si no alcanza, utiliza ese saldo y se llama nuevamente con las remesas restantes y una cantidad menor por cubrir.
 
-Cada módulo deberá agrupar elementos relacionados y evitar dependencias innecesarias con otros módulos del sistema.
+El caso base ocurre cuando una remesa tiene saldo suficiente para cubrir el faltante.
 
-Se espera una separación clara entre los distintos componentes de la solución, favoreciendo la legibilidad, el mantenimiento y la evolución del código.
+La planificación devuelve pares:
 
-### Biblioteca estándar
+```python
+(remesa, cantidad_a_consumir)
+```
 
-La implementación deberá realizarse utilizando únicamente la biblioteca estándar de Python, salvo indicación expresa de la cátedra.
+Por ejemplo, para retirar 18 kg:
 
-No podrán utilizarse bibliotecas externas para resolver funcionalidades que forman parte de los objetivos de aprendizaje del trabajo práctico.
+```text
+Remesa 101: consumir 8 kg
+Remesa 102: consumir 10 kg
+```
 
-### Pruebas unitarias
+La planificación no descuenta existencias.
 
-El proyecto deberá incluir pruebas unitarias desarrolladas con **pytest**.
+### Confirmación del retiro
 
-Las pruebas deberán verificar tanto el comportamiento esperado del sistema como las principales situaciones de error contempladas por las reglas de negocio.
+Al confirmar, se recalculan los planes de todos los renglones antes de modificar los saldos. Si no alcanza el stock de algún material, se rechaza la confirmación antes de iniciar los descuentos.
 
-No se evaluará únicamente la cantidad de pruebas implementadas, sino también su capacidad para validar el correcto funcionamiento de los distintos componentes del sistema.
+Después se llama a `Remesa.consumir()` para cada cantidad, se archivan las remesas agotadas y se marca el retiro como realizado.
 
-### Evolución del diseño
+Esta organización está pensada para operaciones secuenciales; no implementa control de concurrencia ni transacciones de base de datos.
 
-A lo largo del semestre, la cátedra incorporará nuevos requerimientos funcionales sobre este mismo sistema.
+## Estados de los pedidos
 
-En consecuencia, el diseño inicial deberá favorecer la incorporación de nuevas funcionalidades procurando minimizar el impacto sobre el código existente.
+| Estado | Significado |
+|---|---|
+| Solicitado | El pedido fue creado y espera una decisión. |
+| Aceptado | El pedido fue aceptado y puede recibir entregas. |
+| En proceso | Se recibió al menos un renglón, pero quedan otros pendientes. |
+| Recibido | Se recibieron todos los renglones. |
+| Rechazado | Fue rechazado con un motivo o venció el período de espera. |
 
-No se espera que la solución anticipe todos los cambios posibles, pero sí que las decisiones de diseño adoptadas faciliten su evolución sin requerir modificaciones innecesarias en componentes ya implementados.
+Un pedido solicitado puede aceptarse o rechazarse. Si transcurren 30 días sin aceptación, la comprobación de vencimiento lo marca como rechazado.
 
-### Observaciones generales
+Esta comprobación se ejecuta durante el funcionamiento del programa; no existe un proceso en segundo plano mientras la aplicación está cerrada.
 
-La presente consigna describe qué comportamiento debe ofrecer el sistema, pero no prescribe cómo debe implementarse.
+Solo se permite editar pedidos solicitados y registrar entregas de pedidos aceptados o en proceso.
 
-En particular, la cátedra **no establece**:
+## Estructuras de datos
 
-- la cantidad de clases que deberá tener la solución;
-- la existencia de determinadas jerarquías de herencia;
-- las asociaciones entre objetos;
-- la navegabilidad entre clases;
-- las estructuras de datos que deban utilizarse para representar cada colección;
-- la distribución específica de responsabilidades entre las clases.
+### Diccionarios
 
-Estas decisiones forman parte del diseño orientado a objetos propuesto y constituyen un aspecto central de la evaluación del trabajo práctico.
+Se utilizan para organizar materiales, proveedores, pedidos, movimientos y remesas por identificador.
 
-## Reglas de Negocio
+El depósito mantiene dos diccionarios de remesas:
 
-Las siguientes reglas describen el comportamiento funcional esperado del sistema.
+- `remesas`: remesas con saldo.
+- `remesas_agotadas`: remesas cuyo saldo llegó a cero.
 
-Estas reglas **constituyen la especificación del dominio** y deberán cumplirse independientemente del diseño orientado a objetos adoptado.
+Las remesas agotadas permanecen registradas para conservar su trazabilidad.
 
-#### Materiales
+### Lista simplemente enlazada
 
-- RN1. Cada material deberá poseer un identificador único dentro del sistema.
+Se implementa en `lista_enlazada.py` y se utiliza en `Pedido` para almacenar sus renglones.
 
-- RN2. Cada material deberá registrar, como mínimo, su nombre, unidad de medida y punto de reposición.
+Cada nodo contiene un objeto `Renglon_pedido` y una referencia al siguiente nodo:
 
-- RN3. El punto de reposición deberá ser un valor mayor que cero.
+```text
+inicio → renglón 1 → renglón 2 → renglón 3 → None
+```
 
-#### Proveedores
+La estructura permite:
 
-- RN4. Cada proveedor deberá poseer un identificador único dentro del sistema.
+- Comprobar si está vacía.
+- Agregar datos al final.
+- Recorrer y obtener los datos.
+- Eliminar la primera coincidencia de un dato.
 
-- RN5. Cada proveedor deberá registrar, como mínimo, su nombre y plazo estimado de entrega.
+Se eligió esta colección porque los renglones tienen un tamaño variable y se recorren secuencialmente para consultar el pedido y calcular su total. No se requiere acceso por índice.
 
-#### Remesas
+En la implementación actual, agregar al final, recorrer y buscar para eliminar tienen costo O(n). La elección permite aplicar nodos y referencias; no se presenta como una mejora de rendimiento frente a las listas nativas de Python.
 
-- RN6. Cada remesa deberá poseer un identificador único dentro del sistema.
+`obtener_datos()` devuelve una lista común como resultado temporal de consulta. El almacenamiento interno continúa siendo enlazado.
 
-- RN7. Cada remesa corresponderá a un único material y a un único proveedor.
+### Tuplas
 
-- RN8. Toda remesa deberá registrar la cantidad recibida y su saldo disponible.
+Se utilizan para representar consumos planificados y confirmados mediante pares de remesa y cantidad.
 
-- RN9. La cantidad recibida deberá ser mayor que cero.
+## Organización del código
 
-- RN10. El saldo disponible nunca podrá ser negativo.
+| Archivo | Responsabilidad |
+|---|---|
+| `main.py` | Menú, entrada de datos y presentación de resultados. |
+| `gerencia.py` | Coordinación de operaciones y consultas. |
+| `deposito.py` | Administración de materiales y remesas, disponibilidad, reposición y orden FEFO. |
+| `material.py` | Datos del material y evaluación del punto de reposición. |
+| `proveedor.py` | Datos del proveedor y pedidos pendientes. |
+| `pedido.py` | Renglones, total, estados y reglas de recepción del pedido. |
+| `renglon_pedido.py` | Material, cantidad, precio y subtotal de una línea del pedido. |
+| `remesa.py` | Datos de una entrega, disponibilidad, consumo y clave FEFO. |
+| `movimiento_ingreso.py` | Registro de un ingreso vinculado con una remesa y un pedido. |
+| `movimiento_retiro.py` | Planificación y confirmación del consumo de materiales. |
+| `renglon_retiro.py` | Material y cantidad solicitada para retirar. |
+| `lista_enlazada.py` | Implementación de `Nodo` y `ListaEnlazada`. |
+| `validaciones.py` | Comprobaciones reutilizables de datos. |
+| `exceptions.py` | Excepciones del dominio. |
+| `archivero.py` | Guardado y recuperación mediante `pickle`. |
+| `test_*.py` | Pruebas automatizadas. |
 
-- RN11. El saldo disponible nunca podrá superar la cantidad originalmente recibida.
+## Trazabilidad
 
-- RN12. Al registrarse una remesa, su saldo disponible deberá coincidir con la cantidad recibida.
+Los ingresos conservan referencias a la remesa y al pedido correspondiente.
 
-- RN13. Una remesa podrá no poseer fecha de vencimiento.
+Los retiros confirmados conservan qué remesas participaron y cuánto se consumió de cada una.
 
-- RN14. Una remesa cuyo saldo disponible llegue a cero continuará formando parte del inventario registrado, aunque dejará de ser utilizable para futuros retiros.
+Las consultas permiten reconstruir:
 
-#### Disponibilidad
+- El origen de una remesa.
+- Las remesas utilizadas en un retiro.
+- Los retiros confirmados que consumieron una remesa.
+- El saldo actual y los datos originales de una remesa agotada.
 
-- RN15. La existencia física de un material corresponderá a la suma de las cantidades disponibles en todas sus remesas, independientemente de su fecha de vencimiento.
+## Persistencia
 
-- RN16. La existencia disponible para una fecha determinada corresponderá a la suma de los saldos disponibles de todas las remesas utilizables en dicha fecha.
+`Archivero` guarda el estado en `inventario.pickle`, ubicado junto a los archivos del proyecto.
 
-- RN17. Una remesa será considerada utilizable para una fecha determinada únicamente cuando:
+Se conservan los depósitos, pedidos, proveedores, movimientos y registros de identificadores. Los objetos se guardan juntos para preservar las referencias compartidas al recuperarlos.
 
-    - posea saldo disponible;
-    - no se encuentre vencida en dicha fecha.
+El guardado utiliza un archivo temporal que luego reemplaza al archivo principal.
 
-#### Retiros
+El repositorio incluye un archivo de datos, por lo que el programa puede iniciar con información previamente registrada. Para comenzar sin esos datos, se puede mover o renombrar `inventario.pickle` con la aplicación cerrada, conservándolo como respaldo.
 
-- RN18. Un retiro sólo podrá realizarse cuando la existencia disponible resulte suficiente para satisfacer completamente la cantidad solicitada.
+Los archivos generados por versiones anteriores pueden requerir adaptación si cambia la estructura de las clases. Solo deben cargarse archivos `pickle` de confianza.
 
-- RN19. Los retiros deberán consumir las remesas respetando la política FEFO definida para el sistema.
+## Pruebas
 
-- RN20. Un retiro podrá distribuir su consumo entre una o más remesas.
+Instalar `pytest`:
 
-- RN21. Cada retiro deberá actualizar el saldo disponible de todas las remesas efectivamente consumidas.
+```bash
+python -m pip install pytest
+```
 
-- RN22. Si un retiro no pudiera realizarse, el inventario deberá permanecer exactamente en el mismo estado en que se encontraba antes de iniciarse la operación.
+Ejecutar desde la carpeta del proyecto:
 
-#### Trazabilidad
+```bash
+python -m pytest
+```
 
-- RN23. El registro de una remesa deberá generar el correspondiente movimiento de ingreso.
+### Estado actual
 
-- RN24. Cada retiro deberá generar un movimiento por cada remesa efectivamente consumida.
+La suite contiene pruebas de versiones anteriores que todavía requieren actualización. Algunas importan la clase eliminada `Movimiento`, utilizan IDs de texto o llaman a constructores con parámetros que cambiaron.
 
-- RN25. El sistema deberá permitir identificar todas las remesas que participaron en un retiro determinado.
+Por lo tanto, no se presenta la suite completa como aprobada.
 
-- RN26. El sistema deberá permitir identificar todos los retiros en los que intervino una remesa determinada.
+Entre los escenarios que deben cubrirse se encuentran:
 
-#### Reposición
+- Rechazo de identificadores inválidos y duplicados.
+- Operaciones de la lista enlazada.
+- Transiciones de estado de pedidos.
+- Recepción de renglones y cálculo de totales.
+- Orden FEFO y sus desempates.
+- Exclusión de remesas vencidas, agotadas o aún no recibidas.
+- Rechazo de retiros insuficientes sin descuentos parciales.
+- Conservación de la trazabilidad.
+- Detección de necesidad de reposición.
 
-- RN27. Un material requerirá reposición cuando su existencia disponible resulte inferior a su punto de reposición.
+## Alcance y pendientes
 
-- RN28. La necesidad de reposición deberá determinarse utilizando la existencia disponible y no la existencia física.
+El proyecto es un prototipo educativo con interfaz de consola y un depósito operativo.
 
-#### Pedidos
+No incluye interfaz gráfica, integración real con proveedores, compras automáticas ni ejecución concurrente.
 
-- RN29. Un pedido corresponderá a un único proveedor.
+La planificación recursiva de retiros está orientada a volúmenes educativos: utiliza la pila de llamadas y crea porciones de la lista durante el recorrido.
 
-- RN30. Un pedido podrá contener uno o más renglones.
-
-- RN31. Cada renglón deberá indicar el material solicitado, la cantidad requerida y el precio unitario acordado.
-
-- RN32. El subtotal de cada renglón corresponderá al producto entre la cantidad solicitada y el precio unitario.
-
-- RN33. El importe total del pedido corresponderá a la suma de los subtotales de todos sus renglones.
-
-
-## Ejemplo de aceptación
-
-El siguiente ejemplo **no describe una implementación posible**, sino un escenario que permite verificar el cumplimiento de diversas reglas de negocio.
-
-Los nombres, cantidades y fechas utilizados tienen únicamente fines ilustrativos.
-
-#### Estado inicial
-
-El sistema registra el siguiente material:
-
-| Material       | Punto de reposición |
-| -------------- | ------------------: |
-| Aluminio AL-01 |               10 kg |
-
-Y las siguientes remesas:
-
-| Remesa | Cantidad recibida | Saldo disponible | Recepción  | Vencimiento     |
-| ------ | ----------------: | ---------------: | ---------- | --------------- |
-| R-101  |              8 kg |             8 kg | 02/03/2026 | 20/03/2026      |
-| R-102  |             12 kg |            12 kg | 04/03/2026 | 30/03/2026      |
-| R-103  |             15 kg |            15 kg | 05/03/2026 | Sin vencimiento |
-
-La existencia física del material es **35 kg**.
-
-Para una operación realizada el **10/03/2026**, todas las remesas resultan utilizables.
-
-La existencia disponible también es **35 kg**.
-
-#### Primer escenario
-
-Se solicita retirar **18 kg** del material **AL-01** con fecha **10/03/2026**.
-
-El retiro resulta válido porque la existencia disponible es suficiente.
-
-La política **FEFO** determina el siguiente consumo:
-
-| Remesa | Cantidad consumida | Saldo restante |
-| ------ | -----------------: | -------------: |
-| R-101  |               8 kg |           0 kg |
-| R-102  |              10 kg |           2 kg |
-| R-103  |               0 kg |          15 kg |
-
-La remesa **R-101** permanece registrada en el sistema para preservar la trazabilidad, aunque deja de ser utilizable para futuros retiros.
-
-La existencia física pasa a ser **17 kg** y la existencia disponible para esa fecha también resulta **17 kg**.
-
-Como la existencia disponible continúa siendo superior al punto de reposición, no corresponde realizar una reposición.
-
-Asimismo, el sistema registra:
-
-- un movimiento correspondiente al ingreso de cada remesa;
-- dos movimientos asociados al retiro realizado, uno por cada remesa efectivamente consumida.
-
-En consecuencia, el sistema permite conocer:
-
-- qué remesas participaron en el retiro;
-- todos los retiros en los que intervino cada remesa.
-
-#### Segundo escenario
-
-Supóngase ahora que el día **05/04/2026** se solicita retirar **5 kg** del mismo material.
-
-En esa fecha:
-
-- la remesa **R-101** no será considerada porque no posee saldo disponible;
-- la remesa **R-102** tampoco será considerada porque se encuentra vencida;
-- la remesa **R-103** continúa siendo utilizable.
-
-En consecuencia, la política **FEFO** determina que el retiro se realice íntegramente utilizando la remesa **R-103**.
-
-| Remesa | Cantidad consumida | Saldo restante |
-| ------ | -----------------: | -------------: |
-| R-103  |               5 kg |          10 kg |
-
-La existencia física del material pasa a ser **12 kg**, mientras que la existencia disponible para esa fecha resulta **10 kg**.
-
-#### Tercer escenario
-
-Si posteriormente se solicita retirar **20 kg** del mismo material con fecha **05/04/2026**, la operación deberá rechazarse.
-
-Aunque el inventario conserve existencia física del material, la existencia disponible para esa fecha no alcanza para satisfacer completamente la cantidad solicitada.
-
-El rechazo **no deberá modificar** el saldo de ninguna remesa ni registrar consumos parciales.
-
-### Pruebas mínimas esperadas
-
-Independientemente del diseño adoptado, la solución deberá ser capaz de resolver correctamente, como mínimo, los siguientes escenarios.
-
-Estos casos **no constituyen una lista exhaustiva**. La solución deberá incluir las pruebas unitarias adicionales que resulten necesarias para demostrar el correcto funcionamiento del sistema.
-
-#### Materiales y proveedores
-
-- Registrar materiales con identificadores únicos.
-- Impedir el registro de materiales con identificadores duplicados.
-- Registrar proveedores con identificadores únicos.
-- Impedir el registro de proveedores con identificadores duplicados.
-
-#### Registro de remesas
-
-- Registrar correctamente una remesa válida.
-- Verificar que el saldo inicial coincida con la cantidad recibida.
-- Impedir el registro de remesas con identificadores duplicados.
-- Impedir el registro de remesas con cantidades inválidas.
-- Registrar correctamente remesas con y sin fecha de vencimiento.
-
-#### Consulta de existencias
-
-- Calcular correctamente la existencia física de un material.
-- Calcular correctamente la existencia disponible para distintas fechas.
-- Verificar que las remesas vencidas no integren la existencia disponible.
-- Verificar que las remesas agotadas no integren la existencia disponible.
-
-#### Retiros
-
-- Realizar un retiro utilizando una única remesa.
-- Realizar un retiro distribuyendo el consumo entre varias remesas.
-- Verificar que el consumo respete la política FEFO.
-- Impedir retiros cuya cantidad supere la existencia disponible.
-- Verificar que un retiro rechazado no produzca modificaciones sobre el inventario.
-- Verificar la actualización correcta de los saldos de las remesas consumidas.
-
-#### Trazabilidad
-
-- Verificar que el ingreso de una remesa genere el movimiento correspondiente.
-- Verificar que un retiro registre todos los movimientos necesarios para reflejar su distribución entre remesas.
-- Recuperar las remesas que participaron en un retiro determinado.
-- Recuperar todos los retiros en los que intervino una remesa determinada.
-
-#### Reposición
-
-- Detectar correctamente cuándo un material requiere reposición.
-- Verificar que la reposición se determine utilizando la existencia disponible y no la existencia física.
-
-#### Pedidos
-
-- Crear pedidos dirigidos a un proveedor.
-- Incorporar uno o más renglones a un pedido.
-- Calcular correctamente el subtotal de cada renglón.
-- Calcular correctamente el importe total del pedido.
-
-#### Excepciones
-
-- Verificar que las operaciones inválidas produzcan las excepciones correspondientes.
-- Verificar que las excepciones no alteren la consistencia del inventario.
-
-## Decisiones de diseño que deberán resolverse
-
-La presente consigna define el comportamiento esperado del sistema, pero deliberadamente deja abiertas diversas decisiones de diseño.
-
-No existe una única solución correcta. Entre otras, la solución deberá resolver cuestiones como las siguientes:
-
-- ¿Qué clases resultan necesarias para representar adecuadamente los conceptos del dominio?
-- ¿Cómo distribuir las responsabilidades entre dichas clases procurando mantener un bajo acoplamiento y una alta cohesión?
-- ¿Qué relaciones existirán entre los distintos objetos y cómo se establecerá su colaboración?
-- ¿Qué estructuras de datos resultan más apropiadas para administrar las distintas colecciones del sistema?
-- ¿Cómo representar la política de consumo FEFO de manera que permita incorporar nuevas políticas en futuras versiones del sistema?
-- ¿Cómo modelar los distintos tipos de movimientos registrados por el inventario?
-- ¿Qué validaciones corresponden a cada objeto para preservar la consistencia de su propio estado?
-- ¿Qué situaciones deberán representarse mediante excepciones específicas?
-- ¿Qué información deberá exponerse públicamente y cuál deberá permanecer encapsulada?
-- ¿Cómo organizar la solución en módulos de manera que facilite su mantenimiento y evolución?
-- ¿Qué aspectos del diseño podrán evolucionar durante el semestre con el menor impacto posible sobre el código existente?
-
-Las respuestas a estas preguntas forman parte de la solución propuesta y constituyen un aspecto central de la evaluación del trabajo práctico.
-
-### Evolución durante el semestre
-
-El presente trabajo práctico constituye la primera etapa de un proyecto que evolucionará a lo largo del semestre.
-
-En instancias posteriores, la cátedra incorporará nuevos requerimientos funcionales que ampliarán el comportamiento del sistema y requerirán extender el diseño desarrollado en esta primera versión.
-
-Los nuevos requerimientos serán compatibles con las reglas de negocio definidas en esta consigna, aunque podrán introducir nuevos conceptos, comportamientos o restricciones propios de la evolución del sistema.
-
-No se espera que la solución anticipe todas las modificaciones futuras. Sin embargo, el diseño propuesto deberá favorecer la incorporación de nuevas funcionalidades procurando minimizar el impacto sobre el código existente.
-
-## Notas
-
-- Se prohíbe `pandas` y cualquier librería que resuelva inventarios o trazabilidad; el objetivo es trabajar con listas, diccionarios y algoritmos propios.
-- Antes de codificar, presenten un diagrama de responsabilidades y relaciones. El mapa del enunciado no es un diagrama de clases para copiar.
-- Deberán justificar las decisiones tomadas y demostrar las reglas mediante pruebas automatizadas.
-- Se permite la biblioteca estándar de Python, en particular `datetime` y `decimal`, cuando la representación elegida lo justifique.
+Quedan pendientes la actualización integral de las pruebas y la revisión del cumplimiento completo de la consigna. La implementación actual agrupa los consumos de varias remesas dentro de un mismo objeto de retiro; debe revisarse su correspondencia con el requisito de registrar un movimiento por cada remesa consumida.
