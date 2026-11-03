@@ -62,35 +62,16 @@ def pausar():
 def mostrar_resumen_pedido(renglones):
     mostrar_titulo("RESUMEN DEL PEDIDO")
 
-    print(
-        f"{'ID':<6}"
-        f"{'Material':<22}"
-        f"{'Cantidad':>10}"
-        f"{'Precio unit.':>14}"
-        f"{'Subtotal':>14}"
-    )
-    print("-" * 66)
-
-    total = 0
+    print(f"{'ID':<6}{'Material':<34}{'Cantidad':>14}")
+    print("-" * 54)
 
     for renglon in renglones:
         material = str(renglon.obtener_material())
-        cantidad = renglon.obtener_cantidad()
-        precio = renglon.obtener_precio_unitario()
-        subtotal = renglon.subtotal_renglon()
-
         print(
             f"{renglon.obtener_id_renglon_pedido():<6}"
-            f"{material[:22]:<22}"
-            f"{cantidad:>10}"
-            f"{precio:>14.2f}"
-            f"{subtotal:>14.2f}"
+            f"{material[:34]:<34}"
+            f"{renglon.obtener_cantidad():>14}"
         )
-
-        total += subtotal
-
-    print("-" * 66)
-    print(f"{'TOTAL:':<52}{total:>14.2f}")
 
 def mostrar_resumen_retiro(renglones):
     mostrar_titulo("RESUMEN DEL RETIRO")
@@ -118,9 +99,7 @@ def leer_renglon_pedido(gestor, renglones):
     gestor.validar_material_renglon_pedido(renglones, material)
     cantidad = int(input('Ingrese la cantidad: '))
     gestor.validar_cantidad_pedida(cantidad)
-    precio_unitario = float(input('Ingrese el precio unitario: '))
-    gestor.validar_precio_unitario(precio_unitario)
-    return id_renglon, material, cantidad, precio_unitario
+    return id_renglon, material, cantidad
 
 def leer_renglon_retiro(gestor, renglones, fecha):
     """Pide los datos de un renglon de retiro validando cada uno apenas se ingresa."""
@@ -163,32 +142,27 @@ while ingresar:
             gestor.validar_id_proveedor_nuevo(id_proveedor)
             nombre_proveedor = input('Ingrese el nombre del nuevo proveedor: ')
             gestor.validar_nombre_proveedor(nombre_proveedor)
-            plazo_de_entrega = int(input('Ingrese el plazo de entrega de este proveedor: '))
-            gestor.validar_plazo_entrega_proveedor(plazo_de_entrega)
             mail_proveedor = input('Ingrese el mail del proveedor (vacio si no tiene): ').strip() or None
             gestor.validar_mail_proveedor(mail_proveedor)
             telefono_proveedor = input('Ingrese el telefono del proveedor (vacio si no tiene): ').strip() or None
             gestor.validar_telefono_proveedor(telefono_proveedor)
-            gestor.registrar_proveedor(id_proveedor,nombre_proveedor,plazo_de_entrega,mail_proveedor,telefono_proveedor)
+            gestor.registrar_proveedor(id_proveedor,nombre_proveedor,mail_proveedor,telefono_proveedor)
             print('Proveedor registrado correctamente.')
-            
+
         except exceptions.IdentificadorDuplicadoError:
             print('Error: ya existe un proveedor con ese id.')
-            
+
         except exceptions.NombreInvalidoError:
             print('Error: el nombre no puede estar vacio.')
-            
-        except exceptions.PlazoEntregaInvalidoError:
-            print('Error: el plazo de entrega debe ser mayor que cero.')
-            
+
         except exceptions.DatoInvalidoError as e:
             print(f'Error: {e}')
-            
+
         except exceptions.IdentificadorInvalidoError:
             print('Error: el id debe ser mayor que cero.')
 
         except ValueError:
-            print('Error: el id y el plazo de entrega deben ser numeros.')
+            print('Error: el id debe ser un numero.')
             
     elif opcion == '2':
         mostrar_titulo("REGISTRAR MATERIAL")
@@ -236,12 +210,10 @@ while ingresar:
             gestor.validar_id_pedido_nuevo(id_pedido)
             id_proveedor = leer_id('Ingrese el id del proveedor: ')
             gestor.validar_proveedor_registrado(id_proveedor)
-            plazo_de_entrega = int(input('Ingrese el plazo de entrega del pedido: '))
-            gestor.validar_plazo_entrega_pedido(plazo_de_entrega)
 
             print('\nCargue el primer renglon del pedido.')
             primer_renglon = gestor.crear_renglon_pedido(*leer_renglon_pedido(gestor, []))
-            pedido = gestor.crear_borrador_pedido(id_pedido,id_proveedor,[primer_renglon],plazo_de_entrega)
+            pedido = gestor.crear_borrador_pedido(id_pedido,id_proveedor,[primer_renglon])
 
             editando = True
             while editando:
@@ -272,7 +244,7 @@ while ingresar:
                     print(f'Error: {e}')
 
                 except ValueError:
-                    print('Error: el id, la cantidad y el precio deben ser numeros.')
+                    print('Error: el id y la cantidad deben ser numeros.')
 
         except exceptions.ProveedorNoEncontradoError:
             print('Error: no existe un proveedor con ese id.')
@@ -288,18 +260,12 @@ while ingresar:
 
         except exceptions.CantidadInvalidaError:
             print('Error: la cantidad debe ser mayor que cero.')
-            
-        except exceptions.PrecioInvalidoError:
-            print('Error: el precio unitario debe ser mayor que cero.')
-            
-        except exceptions.PlazoEntregaInvalidoError:
-            print('Error: el plazo de entrega debe ser mayor que cero.')
-            
+
         except exceptions.IdentificadorInvalidoError:
             print('Error: el id debe ser mayor que cero.')
 
         except ValueError:
-            print('Error: los ids, el plazo, la cantidad y el precio deben ser numeros.')
+            print('Error: los ids y la cantidad deben ser numeros.')
             
     elif opcion == '4':
         mostrar_titulo("REGISTRAR INGRESO")
@@ -318,29 +284,35 @@ while ingresar:
             cantidad_recibida = int(input('Ingrese la cantidad recibida: '))
             gestor.validar_cantidad_recibida(cantidad_recibida)
             renglon.validar_cantidad_recibida(cantidad_recibida)
+            precio_unitario = float(input('Ingrese el precio unitario informado por el proveedor: '))
+            gestor.validar_precio_unitario(precio_unitario)
             fecha_recepcion = fecha_de_hoy()
             print(f'Fecha de recepcion: {fecha_recepcion}')
             fecha_vencimiento = input('Ingrese la fecha de vencimiento (dd/mm/aaaa, vacio si no tiene): ').strip()
             gestor.validar_fecha_vencimiento(fecha_vencimiento or None, fecha_recepcion)
 
             if fecha_vencimiento == '':
-                gestor.almacenar_remesa(id_movimiento,id_remesa,material,id_proveedor,id_renglon,cantidad_recibida,fecha_recepcion)
+                gestor.almacenar_remesa(id_movimiento,id_remesa,material,id_proveedor,id_renglon,cantidad_recibida,precio_unitario,fecha_recepcion)
             else:
-                gestor.almacenar_remesa(id_movimiento,id_remesa,material,id_proveedor,id_renglon,cantidad_recibida,fecha_recepcion,fecha_vencimiento=fecha_vencimiento)
+                gestor.almacenar_remesa(id_movimiento,id_remesa,material,id_proveedor,id_renglon,cantidad_recibida,precio_unitario,fecha_recepcion,fecha_vencimiento=fecha_vencimiento)
             print('Ingreso registrado correctamente.')
-            
+            print(f'Costo total de la remesa: {gestor.obtener_deposito_principal().obtener_remesa(id_remesa).costo_total():.2f}')
+
         except exceptions.IdentificadorDuplicadoError:
             print('Error: ya existe una remesa o movimiento con ese id.')
-            
+
         except exceptions.MaterialNoEncontradoError:
             print('Error: el material no esta registrado (registrelo primero con la opcion 2).')
-            
+
         except exceptions.ProveedorNoEncontradoError:
             print('Error: no existe un proveedor con ese id.')
-            
+
         except exceptions.CantidadInvalidaError as error:
             print(f'Error: {error}')
-            
+
+        except exceptions.PrecioInvalidoError as error:
+            print(f'Error: {error}')
+
         except exceptions.FechaInvalidaError as error:
             print(f'Error: {error}')
 
@@ -359,8 +331,8 @@ while ingresar:
         except exceptions.EstadoDePedidoInvalidoError as e:
             print(f"Error: {e}")
         except ValueError:
-            print('Error: los ids y la cantidad deben ser numeros.')
-            
+            print('Error: los ids, la cantidad y el precio deben ser numeros.')
+
     elif opcion == '5':
         mostrar_titulo("REGISTRAR RETIRO")
         try:
@@ -476,10 +448,11 @@ while ingresar:
             print(f'==== TRAZABILIDAD DEL INGRESO {id_movimiento} ====')
             print(f'Fecha del ingreso: {ingreso.obtener_fecha()}')
             print(f'Proveedor: {proveedor.obtener_idproveedor()} - {proveedor.obtener_nombre()} (mail: {proveedor.obtener_mail()}, telefono: {proveedor.obtener_telefono()})')
-            print(f'Pedido: {pedido.obtener_id_pedido()} (estado: {pedido.obtener_estado()}, plazo de entrega: {pedido.obtener_plazo_entrega()})')
+            print(f'Pedido: {pedido.obtener_id_pedido()} (estado: {pedido.obtener_estado()})')
             print(f'Renglon del pedido: {remesa.obtener_id_renglon_pedido()}')
             print(f'Remesa: {remesa.obtener_id_remesa()} - material: {remesa.obtener_material()}')
             print(f'Cantidad recibida: {remesa.obtener_cantidad_recibida()}, saldo actual: {remesa.obtener_saldo()}')
+            print(f'Precio unitario: {remesa.obtener_precio_unitario():.2f}, costo total: {remesa.costo_total():.2f}')
             print(f'Fecha de vencimiento: {vencimiento if vencimiento is not None else "sin vencimiento"}')
             print('Retiros que usaron esta remesa:')
             hubo_retiros = False
@@ -626,6 +599,8 @@ while ingresar:
             print(f"Material: {datos['material']}")
             print(f"Proveedor: {datos['id_proveedor']}")
             print(f"Cantidad recibida: {datos['cantidad_recibida']}")
+            print(f"Precio unitario: {datos['precio_unitario']:.2f}")
+            print(f"Costo total: {datos['costo_total']:.2f}")
             print(f"Saldo actual: {datos['saldo_actual']}")
 
             vencimiento = datos["fecha_vencimiento"]

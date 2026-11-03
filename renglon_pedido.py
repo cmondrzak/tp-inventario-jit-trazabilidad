@@ -1,17 +1,15 @@
 from validaciones import Validaciones
-from exceptions import IdentificadorDeRenglonDePedidoInvalidoError, IdentificadorDeRenglonDePedidoDuplicadoError, MaterialNoIndicadoError, CantidadPedidaNoEnteraError, CantidadPedidaNoPositivaError, PrecioUnitarioNoPositivoError, MaterialRecibidoDistintoDelPedidoError, CantidadRecibidaDistintaDeLaPedidaError
+from exceptions import IdentificadorDeRenglonDePedidoInvalidoError, IdentificadorDeRenglonDePedidoDuplicadoError, MaterialNoIndicadoError, CantidadPedidaNoEnteraError, CantidadPedidaNoPositivaError, MaterialRecibidoDistintoDelPedidoError, CantidadRecibidaDistintaDeLaPedidaError
 
 class Renglon_pedido:
     lista_id=[]
-    def __init__(self,id_renglon ,material, cantidad, precio_unitario):
+    def __init__(self,id_renglon ,material, cantidad):
         Renglon_pedido.validar_id(id_renglon)
         Renglon_pedido.validar_material(material)
         Renglon_pedido.validar_cantidad(cantidad)
-        Renglon_pedido.validar_precio_unitario(precio_unitario)
 
         self.id_renglon=id_renglon
         self.material = material
-        self.precio_unitario = precio_unitario
         self.cantidad = cantidad
         self.ingresado = False
 
@@ -33,11 +31,6 @@ class Renglon_pedido:
             raise CantidadPedidaNoEnteraError(f"La cantidad pedida tiene que ser un número entero; se recibió {cantidad!r}.")
         if not Validaciones.es_positivo(cantidad):
             raise CantidadPedidaNoPositivaError(f"La cantidad pedida debe ser mayor que cero; se recibió {cantidad}.")
-
-    @staticmethod
-    def validar_precio_unitario(precio_unitario):
-        if not Validaciones.es_positivo(precio_unitario):
-            raise PrecioUnitarioNoPositivoError(f"El precio unitario acordado debe ser mayor que cero; se recibió {precio_unitario!r}.")
 
     def validar_material_recibido(self, material):
         if Validaciones.normalizar_texto(material) != Validaciones.normalizar_texto(self.material):
@@ -65,9 +58,6 @@ class Renglon_pedido:
     def obtener_ingresado(self):
         return self.ingresado
 
-    def subtotal_renglon(self):
-        return self.cantidad * self.precio_unitario
-    
     def obtener_id_renglon_pedido(self):
         return self.id_renglon
     
@@ -76,8 +66,5 @@ class Renglon_pedido:
     
     def obtener_cantidad(self):
         return self.cantidad
-
-    def obtener_precio_unitario(self):
-        return self.precio_unitario
 
     

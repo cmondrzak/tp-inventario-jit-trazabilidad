@@ -1,6 +1,6 @@
 from validaciones import Validaciones
 
-from exceptions import IdentificadorDeProveedorInvalidoError, IdentificadorDeProveedorDuplicadoError, NombreDeProveedorVacioError, PlazoDeEntregaNoPositivoError, CorreoElectronicoInvalidoError, NumeroDeTelefonoInvalidoError, ObjetoNoEsUnPedidoError, PedidoDeOtroProveedorError
+from exceptions import IdentificadorDeProveedorInvalidoError, IdentificadorDeProveedorDuplicadoError, NombreDeProveedorVacioError, CorreoElectronicoInvalidoError, NumeroDeTelefonoInvalidoError, ObjetoNoEsUnPedidoError, PedidoDeOtroProveedorError
 
 from remesa import Remesa
 from pedido import Pedido
@@ -8,16 +8,14 @@ from pedido import Pedido
 
 class Proveedor:
     lista_id=[]
-    def __init__(self, id_proveedor, nombre, plazo_entrega, mail=None, telefono=None):
+    def __init__(self, id_proveedor, nombre, mail=None, telefono=None):
         Proveedor.validar_id(id_proveedor)
         Proveedor.validar_nombre(nombre)
-        Proveedor.validar_plazo_entrega(plazo_entrega)
         Proveedor.validar_mail(mail)
         Proveedor.validar_telefono(telefono)
 
         self.id_proveedor = id_proveedor
         self.nombre = nombre
-        self.plazo_entrega = plazo_entrega
         self.mail=mail
         self.telefono=telefono
         self.pedidos_pendientes = []
@@ -33,11 +31,6 @@ class Proveedor:
     def validar_nombre(nombre):
         if not Validaciones.es_texto_no_vacio(nombre):
             raise NombreDeProveedorVacioError(f"El nombre del proveedor es obligatorio y tiene que ser un texto; se recibió {nombre!r}.")
-
-    @staticmethod
-    def validar_plazo_entrega(plazo_entrega):
-        if not Validaciones.es_positivo(plazo_entrega):
-            raise PlazoDeEntregaNoPositivoError(f"El plazo de entrega del proveedor debe ser de al menos un día; se recibió {plazo_entrega!r}.")
 
     @staticmethod
     def validar_mail(mail):
@@ -62,7 +55,7 @@ class Proveedor:
         return cls.lista_id
 
     def __repr__(self):
-        return f'{self.id_proveedor},{self.nombre},{self.plazo_entrega},{self.mail},{self.telefono},{self.pedidos_pendientes}'
+        return f'{self.id_proveedor},{self.nombre},{self.mail},{self.telefono},{self.pedidos_pendientes}'
         
     def _validar_pedido_propio(self, pedido):
         if not isinstance(pedido, Pedido):
@@ -80,9 +73,6 @@ class Proveedor:
     def obtener_nombre(self):
         return self.nombre
 
-    def obtener_plazo_entrega(self):
-        return self.plazo_entrega
-
     def obtener_mail(self):
         return self.mail
 
@@ -93,8 +83,8 @@ class Proveedor:
         return self.pedidos_pendientes.copy()
 
     @staticmethod
-    def generar_remesa(id_remesa, material, id_proveedor, renglon_pedido, cantidad_recibida, fecha_recepcion, **datos_opcionales):
-        r = Remesa(id_remesa, material, id_proveedor, renglon_pedido, cantidad_recibida, fecha_recepcion, **datos_opcionales)
+    def generar_remesa(id_remesa, material, id_proveedor, renglon_pedido, cantidad_recibida, precio_unitario, fecha_recepcion, **datos_opcionales):
+        r = Remesa(id_remesa, material, id_proveedor, renglon_pedido, cantidad_recibida, precio_unitario, fecha_recepcion, **datos_opcionales)
         return r
     
     def eliminar_pedido_pendiente(self,id_pedido_pendiente):

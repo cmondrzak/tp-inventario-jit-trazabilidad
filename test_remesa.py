@@ -11,6 +11,7 @@ from exceptions import (
     IdentificadorDeProveedorInvalidoError,
     RenglonDePedidoNoIndicadoError,
     CantidadRecibidaNoPositivaError,
+    PrecioUnitarioNoPositivoError,
     CantidadAConsumirNoPositivaError,
     FormatoDeFechaInvalidoError,
     FechaDeRecepcionFuturaError,
@@ -27,6 +28,7 @@ def crear_remesa(**cambios):
         id_proveedor=1,
         id_renglon_pedido=1,
         cantidad_recibida=10,
+        precio_unitario=50,
         fecha_recepcion=fecha(-5),
     )
     datos.update(cambios)
@@ -44,10 +46,31 @@ def test_creacion_remesa_valida():
     assert remesa.obtener_id_renglon_pedido() == 1
     assert remesa.obtener_cantidad_recibida() == 10
     assert remesa.obtener_saldo() == 10
+    assert remesa.obtener_precio_unitario() == 50
+    assert remesa.costo_total() == 500
     assert remesa.obtener_fecha_recepcion() == fecha(-5)
     assert remesa.obtener_fecha_vencimiento() == fecha(30)
     assert remesa.obtener_dato("lote") == "L-998"
     assert remesa.obtener_dato("nro_guia") is None
+
+
+@pytest.mark.parametrize("precio", [0, -1, "50", None])
+def test_precio_unitario_invalido(precio):
+    with pytest.raises(PrecioUnitarioNoPositivoError):
+        crear_remesa(precio_unitario=precio)
+
+
+def test_precio_unitario_decimal_y_costo_total():
+    remesa = crear_remesa(cantidad_recibida=4, precio_unitario=12.5)
+
+    assert remesa.costo_total() == 50
+
+
+def test_costo_total_no_cambia_al_consumir():
+    remesa = crear_remesa(cantidad_recibida=10, precio_unitario=3)
+    remesa.consumir(4)
+
+    assert remesa.costo_total() == 30
 
 
 @pytest.mark.parametrize("id_remesa", [0, -1, "R-1", None])

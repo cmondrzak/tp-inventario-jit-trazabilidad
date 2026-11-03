@@ -34,11 +34,12 @@ from exceptions import (
     FechaDeRecepcionAnteriorAlPedidoError,
     FechaDeRecepcionFuturaError,
     FechaDeVencimientoPasadaError,
+    PrecioUnitarioNoPositivoError,
 )
 
 
 def ingresar(g, id_mov, id_remesa, material, id_renglon, cantidad, **opcionales):
-    g.almacenar_remesa(id_mov, id_remesa, material, 1, id_renglon, cantidad, fecha(), **opcionales)
+    g.almacenar_remesa(id_mov, id_remesa, material, 1, id_renglon, cantidad, 100, fecha(), **opcionales)
 
 
 # --- registros --------------------------------------------------------------
@@ -61,12 +62,12 @@ def test_registrar_proveedor(gerencia):
 
 def test_registrar_proveedor_id_repetido(gerencia):
     with pytest.raises(IdentificadorDeProveedorDuplicadoError):
-        gerencia.registrar_proveedor(1, "Otro", 3, None, None)
+        gerencia.registrar_proveedor(1, "Otro", None, None)
 
 
 def test_registrar_proveedor_con_datos_invalidos_no_lo_guarda(gerencia):
     with pytest.raises(CorreoElectronicoInvalidoError):
-        gerencia.registrar_proveedor(2, "Otro", 3, "mal-mail", None)
+        gerencia.registrar_proveedor(2, "Otro", "mal-mail", None)
 
     assert 2 not in gerencia.obtener_proveedores()
     assert 2 not in Proveedor.obtener_lista_id()
@@ -97,9 +98,9 @@ def test_registrar_material_nombre_invalido(gerencia):
 # --- pedidos ----------------------------------------------------------------
 
 def test_generar_pedido(gerencia):
-    renglones = [Renglon_pedido(1, "aluminio", 20, 100)]
+    renglones = [Renglon_pedido(1, "aluminio", 20)]
 
-    gerencia.registrar_pedido(gerencia.crear_borrador_pedido(1, 1, renglones, 5))
+    gerencia.registrar_pedido(gerencia.crear_borrador_pedido(1, 1, renglones))
 
     pedido = gerencia.obtener_pedidos()[1]
     assert pedido.obtener_estado() == "Solicitado"
@@ -110,18 +111,18 @@ def test_generar_pedido(gerencia):
 
 def test_generar_pedido_proveedor_inexistente(gerencia):
     with pytest.raises(ProveedorNoRegistradoError):
-        gerencia.registrar_pedido(gerencia.crear_borrador_pedido(1, 99, [Renglon_pedido(1, "aluminio", 1, 1)], 5))
+        gerencia.registrar_pedido(gerencia.crear_borrador_pedido(1, 99, [Renglon_pedido(1, "aluminio", 1)]))
 
 
 def test_generar_pedido_material_no_registrado(gerencia):
     with pytest.raises(MaterialNoRegistradoError):
-        gerencia.registrar_pedido(gerencia.crear_borrador_pedido(1, 1, [Renglon_pedido(1, "cobre", 1, 1)], 5))
+        gerencia.registrar_pedido(gerencia.crear_borrador_pedido(1, 1, [Renglon_pedido(1, "cobre", 1)]))
     assert gerencia.obtener_pedidos() == {}
 
 
 def test_generar_pedido_id_repetido(gerencia_con_pedido_aceptado):
     with pytest.raises(IdentificadorDePedidoDuplicadoError):
-        gerencia_con_pedido_aceptado.registrar_pedido(gerencia_con_pedido_aceptado.crear_borrador_pedido(1, 1, [Renglon_pedido(3, "aluminio", 1, 1)], 5))
+        gerencia_con_pedido_aceptado.registrar_pedido(gerencia_con_pedido_aceptado.crear_borrador_pedido(1, 1, [Renglon_pedido(3, "aluminio", 1)]))
 
 
 def test_aceptar_y_consultar_pedido(gerencia_con_pedido_aceptado):
@@ -131,7 +132,7 @@ def test_aceptar_y_consultar_pedido(gerencia_con_pedido_aceptado):
 
 
 def test_rechazar_pedido_lo_saca_de_pendientes(gerencia):
-    gerencia.registrar_pedido(gerencia.crear_borrador_pedido(1, 1, [Renglon_pedido(1, "aluminio", 1, 1)], 5))
+    gerencia.registrar_pedido(gerencia.crear_borrador_pedido(1, 1, [Renglon_pedido(1, "aluminio", 1)]))
 
     gerencia.rechazar_pedido(1, "precio")
 
@@ -176,7 +177,7 @@ def test_almacenar_todas_las_remesas_completa_el_pedido(gerencia_con_pedido_acep
 
 
 def test_almacenar_remesa_de_pedido_no_aceptado(gerencia):
-    gerencia.registrar_pedido(gerencia.crear_borrador_pedido(1, 1, [Renglon_pedido(1, "aluminio", 20, 100)], 5))
+    gerencia.registrar_pedido(gerencia.crear_borrador_pedido(1, 1, [Renglon_pedido(1, "aluminio", 20)]))
 
     with pytest.raises(EstadoDePedidoInvalidoError):
         ingresar(gerencia, 1, 1, "aluminio", 1, 20)
@@ -213,23 +214,46 @@ def test_almacenar_remesa_renglon_ya_ingresado(gerencia_con_pedido_aceptado):
 
 def test_almacenar_remesa_proveedor_inexistente(gerencia_con_pedido_aceptado):
     with pytest.raises(ProveedorNoRegistradoError):
-        gerencia_con_pedido_aceptado.almacenar_remesa(1, 1, "aluminio", 99, 1, 20, fecha())
+        gerencia_con_pedido_aceptado.almacenar_remesa(1, 1, "aluminio", 99, 1, 20, 100, fecha())
 
 
 def test_almacenar_remesa_fecha_anterior_al_pedido(gerencia_con_pedido_aceptado):
     with pytest.raises(FechaDeRecepcionAnteriorAlPedidoError):
-        gerencia_con_pedido_aceptado.almacenar_remesa(1, 1, "aluminio", 1, 1, 20, fecha(-1))
+        gerencia_con_pedido_aceptado.almacenar_remesa(1, 1, "aluminio", 1, 1, 20, 100, fecha(-1))
 
 
 def test_almacenar_remesa_fecha_futura_no_deja_nada_a_medias(gerencia_con_pedido_aceptado):
     g = gerencia_con_pedido_aceptado
 
     with pytest.raises(FechaDeRecepcionFuturaError):
-        g.almacenar_remesa(1, 1, "aluminio", 1, 1, 20, fecha(1))
+        g.almacenar_remesa(1, 1, "aluminio", 1, 1, 20, 100, fecha(1))
 
     assert g.obtener_movimientos_de_ingreso() == {}
     assert g.obtener_deposito()[0].obtener_remesas() == {}
     assert g.obtener_pedidos()[1].obtener_renglones()[0].obtener_ingresado() is False
+
+
+@pytest.mark.parametrize("precio", [0, -10, "100"])
+def test_almacenar_remesa_precio_invalido_no_deja_nada_a_medias(gerencia_con_pedido_aceptado, precio):
+    g = gerencia_con_pedido_aceptado
+
+    with pytest.raises(PrecioUnitarioNoPositivoError):
+        g.almacenar_remesa(1, 1, "aluminio", 1, 1, 20, precio, fecha())
+
+    assert g.obtener_deposito()[0].obtener_remesas() == {}
+    assert Remesa.obtener_lista_id() == []
+    assert Movimiento_ingreso.obtener_lista_id() == []
+    assert g.obtener_pedidos()[1].obtener_renglones()[0].obtener_ingresado() is False
+
+
+def test_almacenar_remesa_guarda_el_precio_informado(gerencia_con_pedido_aceptado):
+    g = gerencia_con_pedido_aceptado
+
+    g.almacenar_remesa(1, 1, "aluminio", 1, 1, 20, 12.5, fecha())
+
+    traza = g.consultar_trazabilidad_remesa(1)
+    assert traza["precio_unitario"] == 12.5
+    assert traza["costo_total"] == 250
 
 
 def test_almacenar_remesa_vencida_no_deja_nada_a_medias(gerencia_con_pedido_aceptado):
@@ -237,7 +261,7 @@ def test_almacenar_remesa_vencida_no_deja_nada_a_medias(gerencia_con_pedido_acep
     g.obtener_pedidos()[1].fecha_solicitud = date.today() - timedelta(days=10)
 
     with pytest.raises(FechaDeVencimientoPasadaError):
-        g.almacenar_remesa(1, 1, "aluminio", 1, 1, 20, fecha(-5), fecha_vencimiento=fecha(-2))
+        g.almacenar_remesa(1, 1, "aluminio", 1, 1, 20, 100, fecha(-5), fecha_vencimiento=fecha(-2))
 
     assert g.obtener_deposito()[0].obtener_remesas() == {}
     assert Remesa.obtener_lista_id() == []

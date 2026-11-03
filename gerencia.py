@@ -35,8 +35,8 @@ class Gerencia():
          d=Deposito(remesas,materiales)
          self.deposito.append(d)
 
-    def registrar_proveedor(self, id_proveedor, nombre, plazo_entrega , mail,telefono):
-            p = Proveedor(id_proveedor, nombre,plazo_entrega,mail = mail,telefono = telefono)
+    def registrar_proveedor(self, id_proveedor, nombre, mail,telefono):
+            p = Proveedor(id_proveedor, nombre,mail = mail,telefono = telefono)
             self.proveedores[id_proveedor]=p
             Proveedor.registrar_id(id_proveedor)
 
@@ -58,18 +58,18 @@ class Gerencia():
                     total += cantidad
         return total
 
-    def crear_borrador_pedido(self,id_pedido,proveedor,renglones,plazo_entrega):
+    def crear_borrador_pedido(self,id_pedido,proveedor,renglones):
         """Arma el pedido validado pero sin registrarlo: mientras es borrador se le pueden agregar y quitar renglones."""
         self.validar_proveedor_registrado(proveedor)
         if isinstance(renglones, list):
             for renglon in renglones:
                 if isinstance(renglon, Renglon_pedido) and not self.material_registrado(renglon.obtener_material()):
                     raise MaterialNoRegistradoError(f"No se puede pedir '{renglon.obtener_material()}' porque ese material todavía no fue registrado en el depósito.")
-        return Pedido(id_pedido,proveedor,renglones,plazo_entrega)
+        return Pedido(id_pedido,proveedor,renglones)
 
-    def agregar_renglon_a_pedido(self,pedido,id_renglon,material,cantidad,precio_unitario):
+    def agregar_renglon_a_pedido(self,pedido,id_renglon,material,cantidad):
         self.validar_material_en_deposito(material)
-        pedido.generar_renglon(id_renglon,material,cantidad,precio_unitario)
+        pedido.generar_renglon(id_renglon,material,cantidad)
 
     @staticmethod
     def eliminar_renglon_de_pedido(pedido,id_renglon):
@@ -151,7 +151,7 @@ class Gerencia():
                     return pedido, renglon
         raise RenglonDePedidoPendienteNoEncontradoError(f"El proveedor {id_proveedor!r} no tiene ningún pedido pendiente con el renglón {id_renglon_pedido!r} sin ingresar.")
 
-    def almacenar_remesa(self,id_movimiento_ingreso, id_remesa, material, id_proveedor, id_renglon_pedido, cantidad_recibida, fecha_recepcion, **datos_opcionales):
+    def almacenar_remesa(self,id_movimiento_ingreso, id_remesa, material, id_proveedor, id_renglon_pedido, cantidad_recibida, precio_unitario, fecha_recepcion, **datos_opcionales):
         Movimiento_ingreso.validar_id(id_movimiento_ingreso)
         Remesa.validar_id(id_remesa)
         Remesa.validar_material(material)
@@ -161,10 +161,11 @@ class Gerencia():
         pedido, renglon = self.buscar_renglon_pendiente(id_proveedor, id_renglon_pedido)
         renglon.validar_material_recibido(material)
         renglon.validar_cantidad_recibida(cantidad_recibida)
+        Remesa.validar_precio_unitario(precio_unitario)
         pedido.validar_fecha_recepcion(fecha_recepcion)
         Remesa.validar_vencimiento_no_pasado(datos_opcionales.get("fecha_vencimiento"))
 
-        r = Proveedor.generar_remesa(id_remesa, material, id_proveedor, id_renglon_pedido, cantidad_recibida, fecha_recepcion, **datos_opcionales)
+        r = Proveedor.generar_remesa(id_remesa, material, id_proveedor, id_renglon_pedido, cantidad_recibida, precio_unitario, fecha_recepcion, **datos_opcionales)
         m = Movimiento_ingreso(id_movimiento_ingreso, fecha_recepcion, id_remesa, pedido.obtener_id_pedido())
         self.deposito[0].almacenar_remesa(r)
         self.movimientos_de_ingreso[id_movimiento_ingreso] = m
@@ -273,6 +274,8 @@ class Gerencia():
             "material": remesa.obtener_material(),
             "id_proveedor": remesa.obtener_id_proveedor(),
             "cantidad_recibida": remesa.obtener_cantidad_recibida(),
+            "precio_unitario": remesa.obtener_precio_unitario(),
+            "costo_total": remesa.costo_total(),
             "saldo_actual": remesa.obtener_saldo(),
             "fecha_vencimiento": remesa.obtener_fecha_vencimiento(),
             "ingreso": {
@@ -340,10 +343,6 @@ class Gerencia():
         Proveedor.validar_nombre(nombre)
 
     @staticmethod
-    def validar_plazo_entrega_proveedor(plazo_entrega):
-        Proveedor.validar_plazo_entrega(plazo_entrega)
-
-    @staticmethod
     def validar_mail_proveedor(mail):
         Proveedor.validar_mail(mail)
 
@@ -372,10 +371,6 @@ class Gerencia():
         Pedido.validar_id(id_pedido)
 
     @staticmethod
-    def validar_plazo_entrega_pedido(plazo_entrega):
-        Pedido.validar_plazo_entrega(plazo_entrega)
-
-    @staticmethod
     def validar_id_renglon_pedido_nuevo(renglones, id_renglon):
         Renglon_pedido.validar_id(id_renglon)
         Pedido.validar_id_renglon_nuevo(renglones, id_renglon)
@@ -390,12 +385,8 @@ class Gerencia():
         Renglon_pedido.validar_cantidad(cantidad)
 
     @staticmethod
-    def validar_precio_unitario(precio_unitario):
-        Renglon_pedido.validar_precio_unitario(precio_unitario)
-
-    @staticmethod
-    def crear_renglon_pedido(id_renglon, material, cantidad, precio_unitario):
-        return Renglon_pedido(id_renglon, material, cantidad, precio_unitario)
+    def crear_renglon_pedido(id_renglon, material, cantidad):
+        return Renglon_pedido(id_renglon, material, cantidad)
 
     def validar_material_en_deposito(self, material):
         self.deposito[0].validar_material_registrado(material)
@@ -415,6 +406,10 @@ class Gerencia():
     @staticmethod
     def validar_cantidad_recibida(cantidad_recibida):
         Remesa.validar_cantidad_recibida(cantidad_recibida)
+
+    @staticmethod
+    def validar_precio_unitario(precio_unitario):
+        Remesa.validar_precio_unitario(precio_unitario)
 
     @staticmethod
     def validar_fecha_vencimiento(fecha_vencimiento, fecha_recepcion):

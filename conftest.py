@@ -35,7 +35,7 @@ def gerencia():
     """Gerencia con un deposito, un proveedor (1) y dos materiales registrados."""
     g = Gerencia([], {}, {}, {}, {})
     g.crear_deposito({}, {})
-    g.registrar_proveedor(1, "Proveedor SA", 5, "contacto@proveedor.com", "11 1234-5678")
+    g.registrar_proveedor(1, "Proveedor SA", "contacto@proveedor.com", "11 1234-5678")
     g.registrar_material(1, "aluminio", "kg", 10)
     g.registrar_material(2, "titanio", "kg", 5)
     return g
@@ -44,7 +44,7 @@ def gerencia():
 @pytest.fixture
 def gerencia_con_pedido_aceptado(gerencia):
     """Agrega el pedido 1 (renglon 1: aluminio x 20, renglon 2: titanio x 8) ya aceptado."""
-    renglones = [Renglon_pedido(1, "aluminio", 20, 100), Renglon_pedido(2, "titanio", 8, 300)]
-    gerencia.registrar_pedido(gerencia.crear_borrador_pedido(1, 1, renglones, 5))
+    renglones = [Renglon_pedido(1, "aluminio", 20), Renglon_pedido(2, "titanio", 8)]
+    gerencia.registrar_pedido(gerencia.crear_borrador_pedido(1, 1, renglones))
     gerencia.aceptar_pedido(1)
     return gerencia

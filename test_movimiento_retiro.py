@@ -30,9 +30,9 @@ def deposito():
     d = Deposito({}, {})
     d.modificar_materiales(Material(1, "aluminio", "kg", 10), 1)
     d.modificar_materiales(Material(2, "titanio", "kg", 5), 2)
-    d.almacenar_remesa(Remesa(1, "aluminio", 1, 1, 5, fecha(-5), fecha_vencimiento=fecha(3)))
-    d.almacenar_remesa(Remesa(2, "aluminio", 1, 2, 10, fecha(-5), fecha_vencimiento=fecha(30)))
-    d.almacenar_remesa(Remesa(3, "titanio", 1, 3, 8, fecha(-5)))
+    d.almacenar_remesa(Remesa(1, "aluminio", 1, 1, 5, 100, fecha(-5), fecha_vencimiento=fecha(3)))
+    d.almacenar_remesa(Remesa(2, "aluminio", 1, 2, 10, 100, fecha(-5), fecha_vencimiento=fecha(30)))
+    d.almacenar_remesa(Remesa(3, "titanio", 1, 3, 8, 100, fecha(-5)))
     return d
 
 
@@ -111,7 +111,7 @@ def test_existencia_insuficiente(deposito):
 
 
 def test_no_usa_remesas_vencidas_a_la_fecha_del_retiro(deposito):
-    deposito.almacenar_remesa(Remesa(4, "aluminio", 1, 4, 50, fecha(-10), fecha_vencimiento=fecha(-1)))
+    deposito.almacenar_remesa(Remesa(4, "aluminio", 1, 4, 50, 100, fecha(-10), fecha_vencimiento=fecha(-1)))
 
     with pytest.raises(ExistenciaDisponibleInsuficienteParaElRetiroError):
         crear_retiro(deposito, [RenglonRetiro("aluminio", 16)])

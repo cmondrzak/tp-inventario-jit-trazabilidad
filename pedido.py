@@ -1,18 +1,16 @@
 from validaciones import Validaciones
-from exceptions import IdentificadorDePedidoInvalidoError, IdentificadorDePedidoDuplicadoError, ProveedorNoIndicadoError, PlazoDeEntregaNoPositivoError, RenglonesDelPedidoNoSonUnaListaError, PedidoSinRenglonesError, ElementoNoEsUnRenglonDePedidoError, MaterialRepetidoEnElPedidoError, IdentificadorDeRenglonDePedidoDuplicadoError, EstadoDePedidoInvalidoError, FormatoDeFechaInvalidoError, FechaDeRecepcionAnteriorAlPedidoError, RenglonDePedidoNoEncontradoError
+from exceptions import IdentificadorDePedidoInvalidoError, IdentificadorDePedidoDuplicadoError, ProveedorNoIndicadoError, RenglonesDelPedidoNoSonUnaListaError, PedidoSinRenglonesError, ElementoNoEsUnRenglonDePedidoError, MaterialRepetidoEnElPedidoError, IdentificadorDeRenglonDePedidoDuplicadoError, EstadoDePedidoInvalidoError, FormatoDeFechaInvalidoError, FechaDeRecepcionAnteriorAlPedidoError, RenglonDePedidoNoEncontradoError
 from renglon_pedido import Renglon_pedido
 from lista_enlazada import ListaEnlazada
 from datetime import date, datetime
 
 class Pedido:
     lista_id=[]
-    def __init__(self, id_pedido, proveedor, renglones,plazo_entrega):
+    def __init__(self, id_pedido, proveedor, renglones):
         Pedido.validar_id(id_pedido)
 
         if not Validaciones.es_identificador_valido(proveedor):
             raise ProveedorNoIndicadoError("Todo pedido tiene que estar dirigido a un proveedor (RN29), pero no se indicó ninguno.")
-
-        Pedido.validar_plazo_entrega(plazo_entrega)
 
         if not isinstance(renglones, list):
             raise RenglonesDelPedidoNoSonUnaListaError(f"Los renglones del pedido tienen que venir en una lista, pero se recibió un objeto de tipo {type(renglones).__name__}.")
@@ -37,7 +35,6 @@ class Pedido:
         for renglon in renglones:
             self._renglones.agregar_final(renglon)
 
-        self.plazo_entrega=plazo_entrega
         self.estado = "Solicitado"
         self.fecha_solicitud = date.today()
         self.fecha_inicio_espera = self.fecha_solicitud
@@ -49,11 +46,6 @@ class Pedido:
             raise IdentificadorDePedidoInvalidoError(f"El identificador del pedido debe ser un número entero positivo; se recibió {id_pedido!r}.")
         if not Validaciones.validarid(Pedido.lista_id,id_pedido):
             raise IdentificadorDePedidoDuplicadoError(f"Ya existe un pedido con el identificador {id_pedido!r}.")
-
-    @staticmethod
-    def validar_plazo_entrega(plazo_entrega):
-        if not Validaciones.es_positivo(plazo_entrega):
-            raise PlazoDeEntregaNoPositivoError(f"El plazo de entrega del pedido debe ser de al menos un día; se recibió {plazo_entrega!r}.")
 
     @staticmethod
     def validar_id_renglon_nuevo(renglones, id_renglon):
@@ -90,7 +82,7 @@ class Pedido:
         return self.id_pedido
     
     def __repr__(self):
-        return f'{self.id_pedido},{self.proveedor},{self.obtener_renglones()},{self.plazo_entrega},{self.estado}'
+        return f'{self.id_pedido},{self.proveedor},{self.obtener_renglones()},{self.estado}'
 
     @staticmethod
     def tiene_renglon_con_material(renglones, material):
@@ -102,21 +94,14 @@ class Pedido:
                 return True
         return False
 
-    def generar_renglon(self,id_renglon,material,cantidad,precio_unitario):
+    def generar_renglon(self,id_renglon,material,cantidad):
         self.validar_edicion()
         Pedido.validar_id_renglon_nuevo(self.obtener_renglones(), id_renglon)
         if Pedido.tiene_renglon_con_material(self.obtener_renglones(), material):
             raise MaterialRepetidoEnElPedidoError(f"El pedido {self.id_pedido!r} ya tiene un renglón para '{material}'; no se puede agregar un segundo renglón del mismo material.")
-        renglon = Renglon_pedido(id_renglon,material,cantidad,precio_unitario)
+        renglon = Renglon_pedido(id_renglon,material,cantidad)
         self._renglones.agregar_final(renglon)
 
-    def subtotal(self):
-        sub_total=0
-
-        for renglon in self.obtener_renglones():
-            sub_total+=renglon.subtotal_renglon()
-        return sub_total
-    
     def eliminar_renglon_pedido(self,id_renglon):
         self.validar_edicion()
         renglones = self.obtener_renglones()
@@ -138,9 +123,6 @@ class Pedido:
 
     def obtener_id_proveedor(self):
         return self.proveedor
-
-    def obtener_plazo_entrega(self):
-        return self.plazo_entrega
 
     def obtener_fecha_solicitud(self):
         return self.fecha_solicitud

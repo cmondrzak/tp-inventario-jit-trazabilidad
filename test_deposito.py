@@ -16,7 +16,7 @@ from exceptions import (
 
 
 def remesa(id_remesa, cantidad=10, material="aluminio", **datos):
-    return Remesa(id_remesa, material, 1, 1, cantidad, datos.pop("fecha_recepcion", fecha(-5)), **datos)
+    return Remesa(id_remesa, material, 1, 1, cantidad, 100, datos.pop("fecha_recepcion", fecha(-5)), **datos)
 
 
 @pytest.fixture

@@ -86,13 +86,6 @@ class PuntoDeReposicionNoPositivoError(PuntoDeReposicionInvalidoError):
     pass
 
 
-class PlazoEntregaInvalidoError(ValorInvalidoError):
-    pass
-
-class PlazoDeEntregaNoPositivoError(PlazoEntregaInvalidoError):
-    pass
-
-
 class DatoInvalidoError(ValorInvalidoError):
     """Un dato de contacto (mail o telefono) no es valido."""
     pass

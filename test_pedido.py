@@ -10,7 +10,6 @@ from exceptions import (
     IdentificadorDePedidoDuplicadoError,
     IdentificadorDeRenglonDePedidoDuplicadoError,
     ProveedorNoIndicadoError,
-    PlazoDeEntregaNoPositivoError,
     RenglonesDelPedidoNoSonUnaListaError,
     PedidoSinRenglonesError,
     ElementoNoEsUnRenglonDePedidoError,
@@ -22,24 +21,24 @@ from exceptions import (
 )
 
 
-def renglon(id_renglon=1, material="aluminio", cantidad=10, precio=100):
-    return Renglon_pedido(id_renglon, material, cantidad, precio)
+def renglon(id_renglon=1, material="aluminio", cantidad=10):
+    return Renglon_pedido(id_renglon, material, cantidad)
 
 
 def crear_pedido(id_pedido=1, renglones=None):
-    return Pedido(id_pedido, 1, renglones if renglones is not None else [renglon()], 5)
+    return Pedido(id_pedido, 1, renglones if renglones is not None else [renglon()])
 
 
 # --- ingreso de datos -------------------------------------------------------
 
 def test_creacion_pedido_valido():
     r = renglon()
-    pedido = Pedido(1, 2, [r], 5)
+    pedido = Pedido(1, 2, [r])
 
     assert pedido.obtener_id_pedido() == 1
     assert pedido.obtener_id_proveedor() == 2
     assert pedido.obtener_renglones() == [r]
-    assert pedido.plazo_entrega == 5
+    assert not hasattr(pedido, "plazo_entrega")
     assert pedido.obtener_estado() == "Solicitado"
     assert pedido.obtener_fecha_solicitud() == date.today()
     assert pedido.obtener_motivo_rechazo() is None
@@ -48,7 +47,7 @@ def test_creacion_pedido_valido():
 @pytest.mark.parametrize("id_pedido", [0, -1, "PED-1", None])
 def test_id_invalido(id_pedido):
     with pytest.raises(IdentificadorDePedidoInvalidoError):
-        Pedido(id_pedido, 1, [renglon()], 5)
+        Pedido(id_pedido, 1, [renglon()])
 
 
 def test_id_duplicado():
@@ -61,29 +60,23 @@ def test_id_duplicado():
 @pytest.mark.parametrize("proveedor", [None, 0, "P1"])
 def test_proveedor_no_indicado(proveedor):
     with pytest.raises(ProveedorNoIndicadoError):
-        Pedido(1, proveedor, [renglon()], 5)
-
-
-@pytest.mark.parametrize("plazo", [0, -1, "5", None])
-def test_plazo_invalido(plazo):
-    with pytest.raises(PlazoDeEntregaNoPositivoError):
-        Pedido(1, 1, [renglon()], plazo)
+        Pedido(1, proveedor, [renglon()])
 
 
 @pytest.mark.parametrize("renglones", [None, "renglon", (1,), {}])
 def test_renglones_no_son_lista(renglones):
     with pytest.raises(RenglonesDelPedidoNoSonUnaListaError):
-        Pedido(1, 1, renglones, 5)
+        Pedido(1, 1, renglones)
 
 
 def test_pedido_sin_renglones():
     with pytest.raises(PedidoSinRenglonesError):
-        Pedido(1, 1, [], 5)
+        Pedido(1, 1, [])
 
 
 def test_elemento_no_es_renglon():
     with pytest.raises(ElementoNoEsUnRenglonDePedidoError):
-        Pedido(1, 1, [renglon(), "otro"], 5)
+        Pedido(1, 1, [renglon(), "otro"])
 
 
 def test_renglones_con_id_repetido():
@@ -92,16 +85,16 @@ def test_renglones_con_id_repetido():
     r2.id_renglon = 1
 
     with pytest.raises(IdentificadorDeRenglonDePedidoDuplicadoError):
-        Pedido(1, 1, [r1, r2], 5)
+        Pedido(1, 1, [r1, r2])
 
 
 def test_renglones_con_material_repetido_normalizado():
     with pytest.raises(MaterialRepetidoEnElPedidoError):
-        Pedido(1, 1, [renglon(1, "Aluminio"), renglon(2, "  aluminio ")], 5)
+        Pedido(1, 1, [renglon(1, "Aluminio"), renglon(2, "  aluminio ")])
 
 
 def test_crear_pedido_no_registra_ids_hasta_registrar_ids():
-    pedido = Pedido(1, 1, [renglon(1), renglon(2, "titanio")], 5)
+    pedido = Pedido(1, 1, [renglon(1), renglon(2, "titanio")])
     assert Pedido.obtener_lista_id() == []
 
     pedido.registrar_ids()
@@ -115,7 +108,7 @@ def test_crear_pedido_no_registra_ids_hasta_registrar_ids():
 def test_generar_renglon_agrega_al_final():
     pedido = crear_pedido()
 
-    pedido.generar_renglon(2, "titanio", 5, 50)
+    pedido.generar_renglon(2, "titanio", 5)
 
     renglones = pedido.obtener_renglones()
     assert [r.obtener_id_renglon_pedido() for r in renglones] == [1, 2]
@@ -129,14 +122,14 @@ def test_generar_renglon_material_repetido():
     pedido = crear_pedido()
 
     with pytest.raises(MaterialRepetidoEnElPedidoError):
-        pedido.generar_renglon(2, " ALUMINIO", 5, 50)
+        pedido.generar_renglon(2, " ALUMINIO", 5)
 
 
 def test_generar_renglon_con_id_ya_usado_en_el_pedido():
     pedido = crear_pedido()
 
     with pytest.raises(IdentificadorDeRenglonDePedidoDuplicadoError):
-        pedido.generar_renglon(1, "titanio", 5, 50)
+        pedido.generar_renglon(1, "titanio", 5)
 
 
 def test_generar_renglon_en_pedido_aceptado():
@@ -144,13 +137,7 @@ def test_generar_renglon_en_pedido_aceptado():
     pedido.aceptar()
 
     with pytest.raises(EstadoDePedidoInvalidoError):
-        pedido.generar_renglon(2, "titanio", 5, 50)
-
-
-def test_subtotal():
-    pedido = crear_pedido(renglones=[renglon(1, "aluminio", 10, 100), renglon(2, "titanio", 5, 50)])
-
-    assert pedido.subtotal() == 1250
+        pedido.generar_renglon(2, "titanio", 5)
 
 
 def test_eliminar_renglon_pedido():

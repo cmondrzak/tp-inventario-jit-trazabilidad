@@ -1,10 +1,10 @@
-from exceptions import IdentificadorDeRemesaInvalidoError, IdentificadorDeRemesaDuplicadoError, MaterialNoIndicadoError, IdentificadorDeProveedorInvalidoError, RenglonDePedidoNoIndicadoError, CantidadRecibidaNoPositivaError, CantidadAConsumirNoPositivaError, FormatoDeFechaInvalidoError, FechaDeRecepcionFuturaError, FechaDeVencimientoAnteriorALaRecepcionError, FechaDeVencimientoPasadaError, SaldoDeRemesaInsuficienteError
+from exceptions import IdentificadorDeRemesaInvalidoError, IdentificadorDeRemesaDuplicadoError, MaterialNoIndicadoError, IdentificadorDeProveedorInvalidoError, RenglonDePedidoNoIndicadoError, CantidadRecibidaNoPositivaError, PrecioUnitarioNoPositivoError, CantidadAConsumirNoPositivaError, FormatoDeFechaInvalidoError, FechaDeRecepcionFuturaError, FechaDeVencimientoAnteriorALaRecepcionError, FechaDeVencimientoPasadaError, SaldoDeRemesaInsuficienteError
 from validaciones import Validaciones
 from datetime import date, datetime
 
 class Remesa:
     lista_id=[]
-    def __init__(self, id_remesa, material, id_proveedor, id_renglon_pedido, cantidad_recibida,fecha_recepcion, **datos_opcionales):
+    def __init__(self, id_remesa, material, id_proveedor, id_renglon_pedido, cantidad_recibida, precio_unitario, fecha_recepcion, **datos_opcionales):
         Remesa.validar_id(id_remesa)
         Remesa.validar_material(material)
 
@@ -15,6 +15,7 @@ class Remesa:
             raise RenglonDePedidoNoIndicadoError(f"Para conservar la trazabilidad, la remesa tiene que indicar de qué renglón de pedido proviene; se recibió {id_renglon_pedido!r}.")
 
         Remesa.validar_cantidad_recibida(cantidad_recibida)
+        Remesa.validar_precio_unitario(precio_unitario)
 
         fecha_vencimiento = datos_opcionales.get("fecha_vencimiento")
         Remesa.validar_fecha_recepcion(fecha_recepcion)
@@ -25,6 +26,7 @@ class Remesa:
         self.id_proveedor = id_proveedor
         self.cantidad_recibida = cantidad_recibida
         self.saldo_disponible = cantidad_recibida
+        self.precio_unitario = precio_unitario
         self.fecha_recepcion = fecha_recepcion
         self.fecha_vencimiento = fecha_vencimiento
         self.datos_opcionales = dict(datos_opcionales)
@@ -47,6 +49,11 @@ class Remesa:
     def validar_cantidad_recibida(cantidad_recibida):
         if not Validaciones.es_positivo(cantidad_recibida):
             raise CantidadRecibidaNoPositivaError(f"La cantidad recibida en una remesa debe ser mayor que cero (RN9); se recibió {cantidad_recibida!r}.")
+
+    @staticmethod
+    def validar_precio_unitario(precio_unitario):
+        if not Validaciones.es_positivo(precio_unitario):
+            raise PrecioUnitarioNoPositivoError(f"El precio unitario informado por el proveedor debe ser mayor que cero; se recibió {precio_unitario!r}.")
 
     @staticmethod
     def validar_fecha_recepcion(fecha_recepcion):
@@ -120,6 +127,12 @@ class Remesa:
 
     def obtener_cantidad_recibida(self):
         return self.cantidad_recibida
+
+    def obtener_precio_unitario(self):
+        return self.precio_unitario
+
+    def costo_total(self):
+        return self.cantidad_recibida * self.precio_unitario
     
     @staticmethod
     def _verificar_que_la_fecha_de_consulta_sea_valida(fecha):
