@@ -49,6 +49,10 @@ class Validaciones:
         return True
         
     @staticmethod
+    def es_texto_no_vacio(valor):
+        return isinstance(valor, str) and len(valor.strip()) > 0
+
+    @staticmethod
     def normalizar_texto(texto):
         return " ".join(texto.split()).lower()
 
@@ -60,13 +64,6 @@ class Validaciones:
             return True
 
     @staticmethod
-    def validar_no_duplicado(identificador, coleccion):
-        if identificador in coleccion:
-            return False
-        else:
-            return True
-    @staticmethod
-
     def es_fecha(texto):
         if not isinstance(texto, str):
             return False
@@ -84,7 +81,6 @@ class Validaciones:
     def es_mail_valido(mail):
         if not isinstance(mail, str):
             return False
-        # Un mail no puede tener espacios en ningun lugar
         for caracter in mail:
             if caracter.isspace():
                 return False
@@ -93,7 +89,6 @@ class Validaciones:
         usuario, dominio = mail.split('@')
         if usuario == '' or dominio == '' or '.' not in dominio or dominio.startswith('.') or dominio.endswith('.'):
             return False
-        # Ninguna parte del dominio puede estar vacia: rechaza "a@b..com"
         for parte in dominio.split('.'):
             if parte == '':
                 return False

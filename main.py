@@ -1,6 +1,13 @@
 from gerencia import Gerencia
 from datetime import date, datetime
 from renglon_pedido import Renglon_pedido
+from renglon_retiro import RenglonRetiro
+from proveedor import Proveedor
+from material import Material
+from pedido import Pedido
+from remesa import Remesa
+from movimiento_ingreso import Movimiento_ingreso
+from movimiento_retiro import Movimiento_retiro
 import exceptions
 from archivero import Archivero
 from validaciones import Validaciones
@@ -121,12 +128,15 @@ while ingresar:
         mostrar_titulo("REGISTRAR PROVEEDOR")
         try:
             id_proveedor = leer_id('Ingrese el id del nuevo proveedor: ')
+            Proveedor.validar_id(id_proveedor)
             nombre_proveedor = input('Ingrese el nombre del nuevo proveedor: ')
+            Proveedor.validar_nombre(nombre_proveedor)
             plazo_de_entrega = int(input('Ingrese el plazo de entrega de este proveedor: '))
+            Proveedor.validar_plazo_entrega(plazo_de_entrega)
             mail_proveedor = input('Ingrese el mail del proveedor (vacio si no tiene): ').strip() or None
-            if mail_proveedor is not None and not Validaciones.es_mail_valido(mail_proveedor):
-                raise exceptions.CorreoElectronicoInvalidoError(f"La dirección de correo '{mail_proveedor}' no es válida: tiene que tener la forma usuario@dominio.com y no puede llevar espacios.")
+            Proveedor.validar_mail(mail_proveedor)
             telefono_proveedor = input('Ingrese el telefono del proveedor (vacio si no tiene): ').strip() or None
+            Proveedor.validar_telefono(telefono_proveedor)
             gestor.registrar_proveedor(id_proveedor,nombre_proveedor,plazo_de_entrega,mail_proveedor,telefono_proveedor)
             print('Proveedor registrado correctamente.')
             
@@ -152,9 +162,14 @@ while ingresar:
         mostrar_titulo("REGISTRAR MATERIAL")
         try:
             id_material = leer_id('Ingrese el id del nuevo material: ')
+            Material.validar_id(id_material)
             nombre_material = Validaciones.normalizar_texto(input('Ingrese el nombre del nuevo material: '))
+            Material.validar_nombre(nombre_material)
+            gestor.validar_nombre_material_nuevo(nombre_material)
             unidad_medida = input('Ingrese la unidad de medida del material: ')
+            Material.validar_unidad(unidad_medida)
             punto_reposicion = int(input('Ingrese el punto de reposicion del material: '))
+            Material.validar_punto_reposicion(punto_reposicion)
             gestor.registrar_material(id_material,nombre_material,unidad_medida,punto_reposicion)
             print('Material registrado correctamente.')
             
@@ -186,29 +201,30 @@ while ingresar:
         mostrar_titulo("CREAR PEDIDO")
         try:
             id_pedido = leer_id('Ingrese el id del pedido: ')
+            Pedido.validar_id(id_pedido)
             id_proveedor = leer_id('Ingrese el id del proveedor: ')
-            
-            if id_proveedor not in gestor.obtener_proveedores():
-                raise exceptions.ProveedorNoEncontradoError
-            
+            gestor.validar_proveedor_registrado(id_proveedor)
             plazo_de_entrega = int(input('Ingrese el plazo de entrega del pedido: '))
+            Pedido.validar_plazo_entrega(plazo_de_entrega)
+
             renglones = []
-            try:
-                agregar = True
-                while agregar:
-                    id_renglon = leer_id('Ingrese el id del renglon: ')
-                    material = Validaciones.normalizar_texto(input('Ingrese el material del renglon: '))
-                    if not gestor.material_registrado(material):
-                        raise exceptions.MaterialNoEncontradoError
-                    cantidad = int(input('Ingrese la cantidad: '))
-                    precio_unitario = float(input('Ingrese el precio unitario: '))
-                    renglones.append(Renglon_pedido(id_renglon,material,cantidad,precio_unitario))
-                    agregar = input('Desea agregar otro renglon? (s/n): ').lower() == 's'
-                    mostrar_resumen_pedido(renglones)
-                gestor.generar_pedido(id_pedido,id_proveedor,renglones,plazo_de_entrega)
-            except Exception:
-                gestor.liberar_ids_renglones(renglones)
-                raise
+            agregar = True
+            while agregar:
+                id_renglon = leer_id('Ingrese el id del renglon: ')
+                Renglon_pedido.validar_id(id_renglon)
+                Pedido.validar_id_renglon_nuevo(renglones, id_renglon)
+                material = Validaciones.normalizar_texto(input('Ingrese el material del renglon: '))
+                Renglon_pedido.validar_material(material)
+                gestor.deposito[0].validar_material_registrado(material)
+                Pedido.validar_material_renglon_nuevo(renglones, material)
+                cantidad = int(input('Ingrese la cantidad: '))
+                Renglon_pedido.validar_cantidad(cantidad)
+                precio_unitario = float(input('Ingrese el precio unitario: '))
+                Renglon_pedido.validar_precio_unitario(precio_unitario)
+                renglones.append(Renglon_pedido(id_renglon,material,cantidad,precio_unitario))
+                agregar = input('Desea agregar otro renglon? (s/n): ').lower() == 's'
+                mostrar_resumen_pedido(renglones)
+            gestor.generar_pedido(id_pedido,id_proveedor,renglones,plazo_de_entrega)
             print('Pedido generado correctamente.')
             
         except exceptions.ProveedorNoEncontradoError:
@@ -248,14 +264,26 @@ while ingresar:
         mostrar_titulo("REGISTRAR INGRESO")
         try:
             id_movimiento = leer_id('Ingrese el id del movimiento de ingreso: ')
+            Movimiento_ingreso.validar_id(id_movimiento)
             id_remesa = leer_id('Ingrese el id de la remesa: ')
+            Remesa.validar_id(id_remesa)
             material = Validaciones.normalizar_texto(input('Ingrese el material recibido: '))
+            Remesa.validar_material(material)
+            gestor.deposito[0].validar_material_registrado(material)
             id_proveedor = leer_id('Ingrese el id del proveedor: ')
+            gestor.validar_proveedor_registrado(id_proveedor)
             id_renglon = leer_id('Ingrese el id del renglon del pedido: ')
+            pedido, renglon = gestor.buscar_renglon_pendiente(id_proveedor, id_renglon)
+            renglon.validar_material_recibido(material)
             cantidad_recibida = int(input('Ingrese la cantidad recibida: '))
+            Remesa.validar_cantidad_recibida(cantidad_recibida)
+            renglon.validar_cantidad_recibida(cantidad_recibida)
             fecha_recepcion = input('Ingrese la fecha de recepcion (dd/mm/aaaa): ')
+            Remesa.validar_fecha_recepcion(fecha_recepcion)
+            pedido.validar_fecha_recepcion(fecha_recepcion)
             fecha_vencimiento = input('Ingrese la fecha de vencimiento (dd/mm/aaaa, vacio si no tiene): ')
-            
+            Remesa.validar_fecha_vencimiento(fecha_vencimiento.strip() or None, fecha_recepcion)
+
             if fecha_vencimiento.strip() == '':
                 gestor.almacenar_remesa(id_movimiento,id_remesa,material,id_proveedor,id_renglon,cantidad_recibida,fecha_recepcion)
             else:
@@ -271,8 +299,8 @@ while ingresar:
         except exceptions.ProveedorNoEncontradoError:
             print('Error: no existe un proveedor con ese id.')
             
-        except exceptions.CantidadInvalidaError:
-            print('Error: la cantidad recibida debe ser mayor que cero.')
+        except exceptions.CantidadInvalidaError as error:
+            print(f'Error: {error}')
             
         except exceptions.FechaInvalidaError as error:
             print(f'Error: {error}')
@@ -303,28 +331,34 @@ while ingresar:
             id_movimiento = leer_id(
                 "Ingrese el id del movimiento de egreso: "
             )
+            Movimiento_retiro.validar_id(id_movimiento)
 
             fecha = input(
                 "Ingrese la fecha del egreso (dd/mm/aaaa): "
             )
+            Movimiento_retiro.validar_fecha(fecha)
 
             deposito = gestor.deposito[0]
 
-            gestor.generar_retiro(
+            renglones = []
+            agregar = True
+            while agregar:
+                material = Validaciones.normalizar_texto(input('Ingrese el material a retirar: '))
+                RenglonRetiro.validar_material(material)
+                deposito.validar_material_registrado(material)
+                Movimiento_retiro.validar_material_renglon_nuevo(renglones, material)
+                cantidad = int(input('Ingrese la cantidad a retirar: '))
+                RenglonRetiro.validar_cantidad(cantidad)
+                deposito.validar_existencia_para_retiro(material, cantidad, fecha)
+                renglones.append(RenglonRetiro(material,cantidad))
+                agregar = input('Desea agregar otro renglon? (s/n): ').lower() == 's'
+
+            retiro = gestor.generar_retiro(
                 id_movimiento,
                 fecha,
-                deposito
+                deposito,
+                renglones
             )
-
-            retiro = gestor.obtener_movimientos_de_egreso()[id_movimiento]
-
-            agregar = True
-            
-            while agregar:
-                material = input('Ingrese el material a retirar: ')
-                cantidad = int(input('Ingrese la cantidad a retirar: '))
-                retiro.agregar_renglon(material,cantidad)
-                agregar = input('Desea agregar otro renglon? (s/n): ').lower() == 's'
             gestor.realizar_retiro(retiro)
             print('Egreso registrado correctamente.')
 
@@ -342,10 +376,13 @@ while ingresar:
             
         except exceptions.IdentificadorDuplicadoError:
             print('Error: ya existe un movimiento con ese id.')
-            
-        except exceptions.FechaInvalidaError:
-            print('Error: fecha invalida (formato dd/mm/aaaa).')
-            
+
+        except exceptions.FechaInvalidaError as e:
+            print(f'Error: {e}')
+
+        except exceptions.MaterialNoEncontradoError as e:
+            print(f'Error: {e}')
+
         except exceptions.RetiroYaRealizadoError:
             print('Error: el retiro ya fue realizado.')
 
@@ -360,6 +397,9 @@ while ingresar:
 
         except exceptions.MaterialNoIndicadoError:
             print('Error: el material no puede estar vacio.')
+
+        except exceptions.RetiroSinRenglonesError:
+            print('Error: el retiro tiene que tener al menos un renglon.')
 
         except exceptions.CantidadInvalidaError:
             print('Error: la cantidad a retirar debe ser mayor que cero.')
@@ -683,6 +723,5 @@ while ingresar:
 
     if ingresar:
         pausar()
-        
 
 

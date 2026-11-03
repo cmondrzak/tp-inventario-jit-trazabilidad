@@ -9,41 +9,99 @@ from exceptions import CantidadARetirarNoPositivaError
 from exceptions import ExistenciaDisponibleInsuficienteParaElRetiroError
 from exceptions import RetiroYaRealizadoError
 from exceptions import EstadoInvalidoError
+from exceptions import RetiroSinRenglonesError
+from exceptions import RenglonesDelRetiroNoSonUnaListaError
+from exceptions import ElementoNoEsUnRenglonDeRetiroError
+from exceptions import FechaDeRetiroFuturaError
+from exceptions import MaterialNoRegistradoError
+from exceptions import MaterialNoIndicadoError
+from datetime import date, datetime
 from deposito import Deposito
 from remesa import Remesa
 
 
 class Movimiento_retiro:
     lista_id=[]
-    def __init__(self, id_movimiento, fecha, renglones_retiro,remesas_modificadas,materiales_modificados,deposito,metodo_descarga,estado="no retirado"):
+    def __init__(self, id_movimiento, fecha, renglones_retiro, deposito, metodo_descarga, estado="no retirado"):
+        Movimiento_retiro.validar_id(id_movimiento)
+        Movimiento_retiro.validar_fecha(fecha)
+
+        if not isinstance(renglones_retiro, list):
+            raise RenglonesDelRetiroNoSonUnaListaError(f"Los renglones del retiro tienen que venir en una lista, pero se recibió un objeto de tipo {type(renglones_retiro).__name__}.")
+
+        if len(renglones_retiro) == 0:
+            raise RetiroSinRenglonesError("Un retiro tiene que incluir al menos un renglón, pero la lista recibida está vacía.")
+
+        for renglon in renglones_retiro:
+            if not isinstance(renglon, RenglonRetiro):
+                raise ElementoNoEsUnRenglonDeRetiroError(f"Todos los elementos de la lista tienen que ser renglones de retiro, pero se encontró un objeto de tipo {type(renglon).__name__}.")
+
+        renglones_revisados = []
+        materiales = []
+        for renglon in renglones_retiro:
+            Movimiento_retiro.validar_material_renglon_nuevo(renglones_revisados, renglon.obtener_material())
+            renglones_revisados.append(renglon)
+            materiales.append(Validaciones.normalizar_texto(renglon.obtener_material()))
+
+        self.fecha = fecha
+        self.deposito = deposito
+        self.metodo_descarga = metodo_descarga
+
+        remesas_modificadas = []
+        for renglon in renglones_retiro:
+            plan = self._planificar_consumo(
+                Validaciones.normalizar_texto(renglon.obtener_material()),
+                renglon.obtener_cantidad_solicitada()
+            )
+            for consumo in plan:
+                remesas_modificadas.append(consumo)
+
+        self.id_movimiento = id_movimiento
+        self.renglones_retiro = list(renglones_retiro)
+        self.remesas_modificadas = remesas_modificadas
+        self.materiales_modificados = materiales
+        self.estado = estado
+
+    @staticmethod
+    def validar_id(id_movimiento):
         if not Validaciones.es_identificador_valido(id_movimiento):
             raise IdentificadorDeMovimientoInvalidoError(f"El identificador del movimiento debe ser un número entero positivo; se recibió {id_movimiento!r}.")
-
         if not Validaciones.validarid(Movimiento_retiro.lista_id,id_movimiento):
             raise IdentificadorDeMovimientoDuplicadoError(f"Ya existe un movimiento de retiro con el identificador {id_movimiento!r}.")
 
+    @staticmethod
+    def validar_fecha(fecha):
         if not Validaciones.es_fecha(fecha):
             raise FormatoDeFechaInvalidoError(f"La fecha del retiro debe escribirse como dd/mm/aaaa y ser una fecha real; se recibió {fecha!r}.")
+        if datetime.strptime(fecha.strip(), "%d/%m/%Y").date() > date.today():
+            raise FechaDeRetiroFuturaError(f"La fecha del retiro {fecha} es posterior a hoy; no se puede retirar material en una fecha que todavía no llegó.")
 
-        self.id_movimiento = id_movimiento                  
-        self.fecha = fecha
-        self.renglones_retiro = renglones_retiro
-        self.remesas_modificadas=remesas_modificadas
-        self.materiales_modificados=materiales_modificados
-        self.deposito=deposito
-        self.metodo_descarga=metodo_descarga
-        self.estado=estado
-        Movimiento_retiro.lista_id.append(self.id_movimiento)
+    @staticmethod
+    def validar_material_renglon_nuevo(renglones, material):
+        buscado = Validaciones.normalizar_texto(material)
+        for renglon in renglones:
+            if Validaciones.normalizar_texto(renglon.obtener_material()) == buscado:
+                raise MaterialRepetidoEnElRetiroError(f"El material '{buscado}' ya está en otro renglón; cada material se retira en un único renglón.")
 
     def eliminar_renglon(self,material):
         if self.estado!="no retirado":
             raise RetiroYaRealizadoError("No se pueden quitar renglones de un retiro que ya fue realizado.")
 
+        if not Validaciones.es_texto_no_vacio(material):
+            raise MaterialNoIndicadoError(f"Hay que indicar como texto el material del renglón a quitar; se recibió {material!r}.")
+
+        material = Validaciones.normalizar_texto(material)
+
         for renglon in self.renglones_retiro:
-            if renglon.obtener_material()==material:
+            if Validaciones.normalizar_texto(renglon.obtener_material())==material:
+                if len(self.renglones_retiro)==1:
+                    raise RetiroSinRenglonesError(
+                        "No se puede eliminar el unico renglon del retiro."
+                    )
+
                 remesas_restantes=[]
                 for tup in self.remesas_modificadas:
-                    if tup[0].obtener_material()!=material:
+                    if Validaciones.normalizar_texto(tup[0].obtener_material())!=material:
                         remesas_restantes.append(tup)
 
                 if material in self.materiales_modificados:
@@ -62,22 +120,15 @@ class Movimiento_retiro:
                 f"La cantidad a retirar debe ser mayor que cero; se pidió {cantidad!r}."
             )
 
+        self.deposito.validar_material_registrado(material)
+        self.deposito.validar_existencia_para_retiro(material, cantidad, self.fecha)
+
         disponibles = self.deposito.remesas_por_material(
             material,
             self.fecha
         )
 
-        total = 0
-        for remesa in disponibles:
-            total += remesa.obtener_saldo()
-
-        if total < cantidad:
-            raise ExistenciaDisponibleInsuficienteParaElRetiroError(
-                f"Se quieren retirar {cantidad} de '{material}', pero la existencia disponible al {self.fecha} es {total}."
-            )
-
         ordenadas = self.metodo_descarga(disponibles)
-        #probablemente aca podria implementarse recursividad sin grandes complicaciones (linea 81 a 98)
         plan = []
         faltante = cantidad
         def armar_plan(ordenadas,plan, faltante):
@@ -130,6 +181,10 @@ class Movimiento_retiro:
         self.estado = "retirado"
 
     @classmethod
+    def registrar_id(cls, identificador):
+        cls.lista_id.append(identificador)
+
+    @classmethod
     def guardar_lista_id(cls,lista_id):
         cls.lista_id = lista_id
         
@@ -174,13 +229,6 @@ class Movimiento_retiro:
 
     def obtener_id_movimiento(self):
         return self.id_movimiento
-                    
-            
-                    
 
 
-            
-    
-
-        
         

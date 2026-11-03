@@ -20,16 +20,11 @@ class InventarioError(Exception):
     pass
 
 
-# ---------------------------------------------------------------------------
-# Valores invalidos
-# ---------------------------------------------------------------------------
-
 class ValorInvalidoError(InventarioError):
     """Un dato tiene un valor que no cumple las reglas del sistema."""
     pass
 
 
-# Identificadores
 class IdentificadorInvalidoError(ValorInvalidoError):
     """Un identificador no es un entero positivo."""
     pass
@@ -53,8 +48,10 @@ class IdentificadorDeRemesaInvalidoError(IdentificadorInvalidoError):
 class IdentificadorDeMovimientoInvalidoError(IdentificadorInvalidoError):
     pass
 
+class IdentificadorDeRenglonDePedidoInvalidoError(IdentificadorInvalidoError):
+    pass
 
-# Nombres
+
 class NombreInvalidoError(ValorInvalidoError):
     pass
 
@@ -65,7 +62,6 @@ class NombreDeProveedorVacioError(NombreInvalidoError):
     pass
 
 
-# Material
 class MaterialInvalidoError(ValorInvalidoError):
     pass
 
@@ -90,7 +86,6 @@ class PuntoDeReposicionNoPositivoError(PuntoDeReposicionInvalidoError):
     pass
 
 
-# Proveedor
 class PlazoEntregaInvalidoError(ValorInvalidoError):
     pass
 
@@ -109,7 +104,6 @@ class NumeroDeTelefonoInvalidoError(DatoInvalidoError):
     pass
 
 
-# Cantidades
 class CantidadInvalidaError(ValorInvalidoError):
     pass
 
@@ -122,6 +116,9 @@ class CantidadPedidaNoPositivaError(CantidadInvalidaError):
 class CantidadRecibidaNoPositivaError(CantidadInvalidaError):
     pass
 
+class CantidadRecibidaDistintaDeLaPedidaError(CantidadInvalidaError):
+    pass
+
 class CantidadAConsumirNoPositivaError(CantidadInvalidaError):
     pass
 
@@ -132,7 +129,6 @@ class ExistenciaDisponibleInvalidaError(CantidadInvalidaError):
     pass
 
 
-# Precios
 class PrecioInvalidoError(ValorInvalidoError):
     pass
 
@@ -140,7 +136,6 @@ class PrecioUnitarioNoPositivoError(PrecioInvalidoError):
     pass
 
 
-# Fechas
 class FechaInvalidaError(ValorInvalidoError):
     pass
 
@@ -156,18 +151,19 @@ class FechaDeVencimientoAnteriorALaRecepcionError(FechaInvalidaError):
 class FechaDeConsultaFuturaError(FechaInvalidaError):
     pass
 
+class FechaDeRecepcionAnteriorAlPedidoError(FechaInvalidaError):
+    pass
 
-# Estados
+class FechaDeRetiroFuturaError(FechaInvalidaError):
+    pass
+
+
 class EstadoInvalidoError(ValorInvalidoError):
     pass
 
 class EstadoDePedidoInvalidoError(EstadoInvalidoError):
     pass
 
-
-# ---------------------------------------------------------------------------
-# Datos obligatorios que faltan
-# ---------------------------------------------------------------------------
 
 class DatoObligatorioFaltanteError(InventarioError):
     pass
@@ -181,6 +177,9 @@ class ProveedorNoIndicadoError(DatoObligatorioFaltanteError):
 class PedidoSinRenglonesError(DatoObligatorioFaltanteError):
     pass
 
+class RetiroSinRenglonesError(DatoObligatorioFaltanteError):
+    pass
+
 class RenglonDePedidoNoIndicadoError(DatoObligatorioFaltanteError):
     pass
 
@@ -190,10 +189,6 @@ class RemesaNoIndicadaEnElIngresoError(DatoObligatorioFaltanteError):
 class PedidoNoIndicadoEnElIngresoError(DatoObligatorioFaltanteError):
     pass
 
-
-# ---------------------------------------------------------------------------
-# Objetos de una clase distinta a la esperada
-# ---------------------------------------------------------------------------
 
 class TipoDeObjetoIncorrectoError(InventarioError):
     pass
@@ -210,10 +205,15 @@ class RenglonesDelPedidoNoSonUnaListaError(TipoDeObjetoIncorrectoError):
 class ElementoNoEsUnRenglonDePedidoError(TipoDeObjetoIncorrectoError):
     pass
 
+class RenglonesDelRetiroNoSonUnaListaError(TipoDeObjetoIncorrectoError):
+    pass
 
-# ---------------------------------------------------------------------------
-# Elementos duplicados
-# ---------------------------------------------------------------------------
+class ElementoNoEsUnRenglonDeRetiroError(TipoDeObjetoIncorrectoError):
+    pass
+
+class ObjetoNoEsUnPedidoError(TipoDeObjetoIncorrectoError):
+    pass
+
 
 class ElementoDuplicadoError(InventarioError):
     pass
@@ -251,10 +251,6 @@ class MaterialRepetidoEnElRetiroError(ElementoDuplicadoError):
     pass
 
 
-# ---------------------------------------------------------------------------
-# Elementos que no estan registrados
-# ---------------------------------------------------------------------------
-
 class EntidadNoEncontradaError(InventarioError):
     pass
 
@@ -274,10 +270,6 @@ class RenglonDePedidoPendienteNoEncontradoError(EntidadNoEncontradaError):
     pass
 
 
-# ---------------------------------------------------------------------------
-# Operaciones que no se pueden realizar
-# ---------------------------------------------------------------------------
-
 class OperacionInvalidaError(InventarioError):
     pass
 
@@ -293,4 +285,7 @@ class SaldoDeRemesaInsuficienteError(ExistenciaInsuficienteError):
 
 
 class RetiroYaRealizadoError(OperacionInvalidaError):
+    pass
+
+class PedidoDeOtroProveedorError(OperacionInvalidaError):
     pass

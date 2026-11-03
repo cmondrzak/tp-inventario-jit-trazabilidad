@@ -1,24 +1,18 @@
 from validaciones import Validaciones
-from exceptions import IdentificadorDePedidoInvalidoError, IdentificadorDePedidoDuplicadoError, ProveedorNoIndicadoError, PlazoDeEntregaNoPositivoError, RenglonesDelPedidoNoSonUnaListaError, PedidoSinRenglonesError, ElementoNoEsUnRenglonDePedidoError, MaterialRepetidoEnElPedidoError, EstadoDePedidoInvalidoError
+from exceptions import IdentificadorDePedidoInvalidoError, IdentificadorDePedidoDuplicadoError, ProveedorNoIndicadoError, PlazoDeEntregaNoPositivoError, RenglonesDelPedidoNoSonUnaListaError, PedidoSinRenglonesError, ElementoNoEsUnRenglonDePedidoError, MaterialRepetidoEnElPedidoError, IdentificadorDeRenglonDePedidoDuplicadoError, EstadoDePedidoInvalidoError, FormatoDeFechaInvalidoError, FechaDeRecepcionAnteriorAlPedidoError
 from renglon_pedido import Renglon_pedido
 from lista_enlazada import ListaEnlazada
-from datetime import date
+from datetime import date, datetime
 
 class Pedido:
     lista_id=[]
     def __init__(self, id_pedido, proveedor, renglones,plazo_entrega):
-
-        if not Validaciones.es_identificador_valido(id_pedido):
-            raise IdentificadorDePedidoInvalidoError(f"El identificador del pedido debe ser un número entero positivo; se recibió {id_pedido!r}.")
-
-        if not Validaciones.validarid(Pedido.lista_id,id_pedido):
-            raise IdentificadorDePedidoDuplicadoError(f"Ya existe un pedido con el identificador {id_pedido!r}.")
+        Pedido.validar_id(id_pedido)
 
         if not Validaciones.es_identificador_valido(proveedor):
             raise ProveedorNoIndicadoError("Todo pedido tiene que estar dirigido a un proveedor (RN29), pero no se indicó ninguno.")
 
-        if not Validaciones.es_positivo(plazo_entrega):
-            raise PlazoDeEntregaNoPositivoError(f"El plazo de entrega del pedido debe ser de al menos un día; se recibió {plazo_entrega!r}.")
+        Pedido.validar_plazo_entrega(plazo_entrega)
 
         if not isinstance(renglones, list):
             raise RenglonesDelPedidoNoSonUnaListaError(f"Los renglones del pedido tienen que venir en una lista, pero se recibió un objeto de tipo {type(renglones).__name__}.")
@@ -32,8 +26,8 @@ class Pedido:
 
         renglones_revisados = []
         for renglon in renglones:
-            if Pedido.tiene_renglon_con_material(renglones_revisados, renglon.obtener_material()):
-                raise MaterialRepetidoEnElPedidoError(f"El material '{renglon.obtener_material()}' aparece en más de un renglón; cada material se pide en un único renglón.")
+            Pedido.validar_id_renglon_nuevo(renglones_revisados, renglon.obtener_id_renglon_pedido())
+            Pedido.validar_material_renglon_nuevo(renglones_revisados, renglon.obtener_material())
             renglones_revisados.append(renglon)
 
         self.id_pedido = id_pedido
@@ -48,7 +42,38 @@ class Pedido:
         self.fecha_solicitud = date.today()
         self.fecha_inicio_espera = self.fecha_solicitud
         self.motivo_rechazo = None
-        Pedido.lista_id.append(self.id_pedido)
+
+    @staticmethod
+    def validar_id(id_pedido):
+        if not Validaciones.es_identificador_valido(id_pedido):
+            raise IdentificadorDePedidoInvalidoError(f"El identificador del pedido debe ser un número entero positivo; se recibió {id_pedido!r}.")
+        if not Validaciones.validarid(Pedido.lista_id,id_pedido):
+            raise IdentificadorDePedidoDuplicadoError(f"Ya existe un pedido con el identificador {id_pedido!r}.")
+
+    @staticmethod
+    def validar_plazo_entrega(plazo_entrega):
+        if not Validaciones.es_positivo(plazo_entrega):
+            raise PlazoDeEntregaNoPositivoError(f"El plazo de entrega del pedido debe ser de al menos un día; se recibió {plazo_entrega!r}.")
+
+    @staticmethod
+    def validar_id_renglon_nuevo(renglones, id_renglon):
+        for renglon in renglones:
+            if renglon.obtener_id_renglon_pedido() == id_renglon:
+                raise IdentificadorDeRenglonDePedidoDuplicadoError(f"El identificador de renglón {id_renglon!r} ya se usó en otro renglón de este pedido.")
+
+    @staticmethod
+    def validar_material_renglon_nuevo(renglones, material):
+        if Pedido.tiene_renglon_con_material(renglones, material):
+            raise MaterialRepetidoEnElPedidoError(f"El material '{material}' ya está en otro renglón; cada material se pide en un único renglón.")
+
+    @classmethod
+    def registrar_id(cls, identificador):
+        cls.lista_id.append(identificador)
+
+    def registrar_ids(self):
+        Pedido.registrar_id(self.id_pedido)
+        for renglon in self.obtener_renglones():
+            Renglon_pedido.registrar_id(renglon.obtener_id_renglon_pedido())
 
     @classmethod
     def guardar_lista_id(cls,lista_id):
@@ -83,6 +108,7 @@ class Pedido:
             raise MaterialRepetidoEnElPedidoError(f"El pedido {self.id_pedido!r} ya tiene un renglón para '{material}'; no se puede agregar un segundo renglón del mismo material.")
         renglon = Renglon_pedido(id_renglon,material,cantidad,precio_unitario)
         self._renglones.agregar_final(renglon)
+        Renglon_pedido.registrar_id(id_renglon)
 
     def subtotal(self):
         sub_total=0
@@ -162,6 +188,17 @@ class Pedido:
             raise EstadoDePedidoInvalidoError(
                 f"No se pueden recibir materiales de un pedido "
                 f"en estado '{self.estado}'."
+            )
+
+    def validar_fecha_recepcion(self, fecha_recepcion):
+        if not Validaciones.es_fecha(fecha_recepcion):
+            raise FormatoDeFechaInvalidoError(f"La fecha de recepción debe escribirse como dd/mm/aaaa y ser una fecha real; se recibió {fecha_recepcion!r}.")
+
+        recepcion = datetime.strptime(fecha_recepcion.strip(), "%d/%m/%Y").date()
+        if recepcion < self.fecha_solicitud:
+            raise FechaDeRecepcionAnteriorAlPedidoError(
+                f"La remesa se habría recibido el {fecha_recepcion}, antes de que se hiciera el pedido "
+                f"{self.id_pedido} ({self.fecha_solicitud.strftime('%d/%m/%Y')})."
             )
 
     def actualizar_estado_recepcion(self):

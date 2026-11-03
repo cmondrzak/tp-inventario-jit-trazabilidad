@@ -4,11 +4,7 @@ import validaciones
 class Movimiento_ingreso:
     lista_id=[]
     def __init__(self, id_movimiento, fecha, remesa,pedido):
-        if not Validaciones.es_identificador_valido(id_movimiento):
-            raise IdentificadorDeMovimientoInvalidoError(f"El identificador del movimiento debe ser un número entero positivo; se recibió {id_movimiento!r}.")
-
-        if not Validaciones.validarid(Movimiento_ingreso.lista_id,id_movimiento):
-            raise IdentificadorDeMovimientoDuplicadoError(f"Ya se registró un movimiento de ingreso con el identificador {id_movimiento!r}.")
+        Movimiento_ingreso.validar_id(id_movimiento)
 
         if not Validaciones.es_fecha(fecha):
             raise FormatoDeFechaInvalidoError(f"La fecha del movimiento debe escribirse como dd/mm/aaaa y ser una fecha real; se recibió {fecha!r}.")
@@ -21,9 +17,19 @@ class Movimiento_ingreso:
 
         self.id_movimiento = id_movimiento
         self.fecha = fecha
-        self.remesa = remesa    
+        self.remesa = remesa
         self.pedido=pedido
-        Movimiento_ingreso.lista_id.append(self.id_movimiento)
+
+    @staticmethod
+    def validar_id(id_movimiento):
+        if not Validaciones.es_identificador_valido(id_movimiento):
+            raise IdentificadorDeMovimientoInvalidoError(f"El identificador del movimiento debe ser un número entero positivo; se recibió {id_movimiento!r}.")
+        if not Validaciones.validarid(Movimiento_ingreso.lista_id,id_movimiento):
+            raise IdentificadorDeMovimientoDuplicadoError(f"Ya se registró un movimiento de ingreso con el identificador {id_movimiento!r}.")
+
+    @classmethod
+    def registrar_id(cls, identificador):
+        cls.lista_id.append(identificador)
 
     @classmethod
     def guardar_lista_id(cls,lista_id):

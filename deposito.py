@@ -8,10 +8,7 @@ from remesa import Remesa
 
 from validaciones import Validaciones
 
-from exceptions import ObjetoNoEsUnaRemesaError, ObjetoNoEsUnMaterialError, IdentificadorDeRemesaDuplicadoError, IdentificadorDeMaterialDuplicadoError, IdentificadorDeMaterialNoCoincideConLaClaveError
-
-
-
+from exceptions import ObjetoNoEsUnaRemesaError, ObjetoNoEsUnMaterialError, IdentificadorDeRemesaDuplicadoError, IdentificadorDeMaterialDuplicadoError, IdentificadorDeMaterialNoCoincideConLaClaveError, MaterialNoRegistradoError, ExistenciaDisponibleInsuficienteParaElRetiroError
 
 
 class Deposito:
@@ -20,20 +17,18 @@ class Deposito:
         self.materiales = materiales
         self.remesas_agotadas = {}
     
-    # def retirar(retiro, metodo_descarga):
-    #     metodo_descarga(retiro)
 
     def almacenar_remesa(self,remesa):
         if not isinstance(remesa, Remesa):
             raise ObjetoNoEsUnaRemesaError(f"El depósito solo puede almacenar remesas, pero recibió un objeto de tipo {type(remesa).__name__}.")
         clave = str(remesa.obtener_id_remesa())
-        # La clave es str(id): 1 y "1" chocarian y se perderia una remesa
         if clave in self.remesas or clave in self.remesas_agotadas:
             raise IdentificadorDeRemesaDuplicadoError(f"El depósito ya tiene almacenada una remesa con el identificador {clave!r}; guardar otra con el mismo identificador haría perder la anterior.")
         if remesa.obtener_saldo()==0:
             self.remesas_agotadas[clave] = remesa
         else:
             self.remesas[clave] = remesa
+        Remesa.registrar_id(remesa.obtener_id_remesa())
 
     def modificar_materiales(self,material,id_material):
         if not isinstance(material, Material):
@@ -43,7 +38,7 @@ class Deposito:
         if id_material in self.materiales:
             raise IdentificadorDeMaterialDuplicadoError(f"El depósito ya tiene registrado un material con el identificador {id_material!r}.")
         self.materiales[id_material]=material
-        return
+        Material.registrar_id(id_material)
     def obtener_remesas(self):
         return self.remesas.copy()
     def obtener_remesas_agotadas(self):
@@ -93,6 +88,26 @@ class Deposito:
     
     def obtener_materiales(self):
         return self.materiales.copy()
+
+    def material_registrado(self, nombre):
+        nombre = Validaciones.normalizar_texto(nombre)
+        for material in self.materiales.values():
+            if Validaciones.normalizar_texto(material.obtener_nombre()) == nombre:
+                return True
+        return False
+
+    def validar_material_registrado(self, nombre):
+        if not self.material_registrado(nombre):
+            raise MaterialNoRegistradoError(f"El material '{nombre}' no está registrado en el depósito.")
+
+    def validar_existencia_para_retiro(self, material, cantidad, fecha):
+        total = 0
+        for remesa in self.remesas_por_material(material, fecha):
+            total += remesa.obtener_saldo()
+        if total < cantidad:
+            raise ExistenciaDisponibleInsuficienteParaElRetiroError(
+                f"Se quieren retirar {cantidad} de '{material}', pero la existencia disponible al {fecha} es {total}."
+            )
     
     def remesas_por_material(self, material, fecha):
         disponibles = []
