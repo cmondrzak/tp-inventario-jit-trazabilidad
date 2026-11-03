@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Inventario Aerotech</title>
+  <meta name="description" content="Inventario JIT y trazabilidad de Aerotech Components">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="estilos.css">
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+
+  <div class="carga" id="carga" role="status" aria-live="polite">
+    <div class="carga__marca">Aerotech Components</div>
+    <p class="carga__texto" id="carga-texto">Preparando el sistema de inventario…</p>
+    <div class="carga__barra" aria-hidden="true"><span></span></div>
+  </div>
+
+  <div class="app" id="app" hidden>
+    <nav class="riel" aria-label="Secciones">
+      <a class="riel__marca" href="#panel">
+        <span class="riel__nombre">Aerotech</span>
+        <span class="riel__bajada">Inventario JIT y trazabilidad</span>
+      </a>
+      <ul class="riel__lista">
+        <li><a href="#panel">Estado del depósito</a></li>
+        <li><a href="#proveedores">Proveedores</a></li>
+        <li><a href="#materiales">Materiales</a></li>
+        <li><a href="#pedidos">Pedidos</a></li>
+        <li><a href="#ingresos">Ingresos</a></li>
+        <li><a href="#retiros">Retiros</a></li>
+        <li><a href="#consultas">Consultas</a></li>
+      </ul>
+      <div class="riel__pie">
+        <p>Hoy es <strong id="hoy"></strong></p>
+        <button type="button" class="boton boton--discreto" data-accion="reiniciar">Borrar todos los datos</button>
+      </div>
+    </nav>
+
+    <main class="contenido">
+
+      <!-- ESTADO DEL DEPOSITO -->
+      <section class="seccion" id="panel" data-seccion>
+        <header class="seccion__cabecera">
+          <h1>Estado del depósito</h1>
+          <p>Existencia de cada material frente a su punto de reposición, y los pedidos que todavía esperan entrega.</p>
+        </header>
+        <div id="panel-existencias"></div>
+        <div class="dos-columnas">
+          <div>
+            <h2>Pedidos abiertos</h2>
+            <div id="panel-pedidos"></div>
+          </div>
+          <div>
+            <h2>En preparación</h2>
+            <div id="panel-borradores"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PROVEEDORES -->
+      <section class="seccion" id="proveedores" data-seccion hidden>
+        <header class="seccion__cabecera">
+          <h1>Proveedores</h1>
+          <p>El plazo de entrega de cada proveedor se copia a sus pedidos: si pasa sin que llegue la mercadería, el pedido vence.</p>
+        </header>
+        <div class="formulario-y-lista">
+          <form class="formulario" data-operacion="registrar_proveedor" data-campos="id nombre plazo mail telefono">
+            <h2>Registrar proveedor</h2>
+            <label>Id del proveedor<input name="id" inputmode="numeric" data-siguiente="Proveedor" required></label>
+            <label>Nombre<input name="nombre" required></label>
+            <label>Plazo de entrega, en días<input name="plazo" inputmode="numeric" required></label>
+            <label>Mail <span class="opcional">opcional</span><input name="mail" type="text" inputmode="email"></label>
+            <label>Teléfono <span class="opcional">opcional</span><input name="telefono" inputmode="tel"></label>
+            <button class="boton">Registrar proveedor</button>
+            <p class="mensaje" data-mensaje aria-live="polite"></p>
+          </form>
+          <div id="lista-proveedores"></div>
+        </div>
+      </section>
+
+      <!-- MATERIALES -->
+      <section class="seccion" id="materiales" data-seccion hidden>
+        <header class="seccion__cabecera">
+          <h1>Materiales</h1>
+          <p>Cuando la existencia disponible queda por debajo del punto de reposición, el material aparece como pendiente de reponer.</p>
+        </header>
+        <div class="formulario-y-lista">
+          <form class="formulario" data-operacion="registrar_material" data-campos="id nombre unidad punto">
+            <h2>Registrar material</h2>
+            <label>Id del material<input name="id" inputmode="numeric" data-siguiente="Material" required></label>
+            <label>Nombre<input name="nombre" required></label>
+            <label>Unidad de medida<input name="unidad" placeholder="kg, litros, unidades" required></label>
+            <label>Punto de reposición<input name="punto" inputmode="numeric" required></label>
+            <button class="boton">Registrar material</button>
+            <p class="mensaje" data-mensaje aria-live="polite"></p>
+          </form>
+          <div id="lista-materiales"></div>
+        </div>
+      </section>
+
+      <!-- PEDIDOS -->
+      <section class="seccion" id="pedidos" data-seccion hidden>
+        <header class="seccion__cabecera">
+          <h1>Pedidos</h1>
+          <p>Mientras el pedido está en preparación se le pueden agregar y quitar renglones. Una vez confirmado queda solicitado al proveedor.</p>
+        </header>
+        <div class="formulario-y-lista">
+          <div>
+            <form class="formulario" id="form-nuevo-pedido" data-operacion="iniciar_pedido" data-campos="id proveedor renglon material cantidad">
+              <h2>Nuevo pedido</h2>
+              <label>Id del pedido<input name="id" inputmode="numeric" data-siguiente="Pedido" required></label>
+              <label>Proveedor<select name="proveedor" data-opciones="proveedores" required></select></label>
+              <fieldset>
+                <legend>Primer renglón</legend>
+                <label>Id del renglón<input name="renglon" inputmode="numeric" data-siguiente="Renglon_pedido" required></label>
+                <label>Material<input name="material" list="lista-nombres-materiales" required></label>
+                <label>Cantidad<input name="cantidad" inputmode="numeric" required></label>
+              </fieldset>
+              <button class="boton">Empezar pedido</button>
+              <p class="mensaje" data-mensaje aria-live="polite"></p>
+            </form>
+            <div id="borrador-pedido"></div>
+          </div>
+          <div id="lista-pedidos"></div>
+        </div>
+      </section>
+
+      <!-- INGRESOS -->
+      <section class="seccion" id="ingresos" data-seccion hidden>
+        <header class="seccion__cabecera">
+          <h1>Ingresos</h1>
+          <p>Cargá los datos del remito. El sistema los compara con el renglón del pedido: proveedor, material y cantidad tienen que coincidir.</p>
+        </header>
+        <div class="formulario-y-lista">
+          <form class="formulario" id="form-ingreso" data-operacion="registrar_ingreso" data-campos="id remesa material proveedor renglon cantidad precio vencimiento">
+            <h2>Registrar ingreso</h2>
+            <label>Id del ingreso<input name="id" inputmode="numeric" data-siguiente="Movimiento_ingreso" required></label>
+            <label>Id de la remesa<input name="remesa" inputmode="numeric" data-siguiente="Remesa" required></label>
+            <label>Proveedor<select name="proveedor" data-opciones="proveedores" required></select></label>
+            <label>Id del renglón del pedido<input name="renglon" inputmode="numeric" required></label>
+            <label>Material recibido<input name="material" list="lista-nombres-materiales" required></label>
+            <label>Cantidad recibida<input name="cantidad" inputmode="numeric" required></label>
+            <label>Precio unitario informado por el proveedor<input name="precio" inputmode="decimal" required></label>
+            <label>Vencimiento <span class="opcional">opcional</span><input name="vencimiento" type="date" data-desde-hoy></label>
+            <p class="nota">Fecha de recepción: hoy, <span data-hoy></span>.</p>
+            <button class="boton">Registrar ingreso</button>
+            <p class="mensaje" data-mensaje aria-live="polite"></p>
+          </form>
+          <div>
+            <h2>Renglones esperando entrega</h2>
+            <div id="lista-a-recibir"></div>
+            <h2>Remesas en el depósito</h2>
+            <div id="lista-remesas"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- RETIROS -->
+      <section class="seccion" id="retiros" data-seccion hidden>
+        <header class="seccion__cabecera">
+          <h1>Retiros</h1>
+          <p>El stock se descuenta recién al confirmar. Antes podés ver de qué remesas va a salir cada material.</p>
+        </header>
+        <div class="formulario-y-lista">
+          <div>
+            <form class="formulario" id="form-nuevo-retiro" data-operacion="iniciar_retiro" data-campos="id material cantidad">
+              <h2>Nuevo retiro</h2>
+              <label>Método de descarga
+                <select name="metodo">
+                  <option value="FEFO">FEFO: primero lo que vence antes</option>
+                </select>
+              </label>
+              <label>Id del retiro<input name="id" inputmode="numeric" data-siguiente="Movimiento_retiro" required></label>
+              <fieldset>
+                <legend>Primer renglón</legend>
+                <label>Material<input name="material" list="lista-nombres-materiales" required></label>
+                <label>Cantidad a retirar<input name="cantidad" inputmode="numeric" required></label>
+              </fieldset>
+              <p class="nota">Fecha del retiro: hoy, <span data-hoy></span>.</p>
+              <button class="boton">Empezar retiro</button>
+              <p class="mensaje" data-mensaje aria-live="polite"></p>
+            </form>
+            <div id="borrador-retiro"></div>
+          </div>
+          <div id="lista-retiros"></div>
+        </div>
+      </section>
+
+      <!-- CONSULTAS -->
+      <section class="seccion" id="consultas" data-seccion hidden>
+        <header class="seccion__cabecera">
+          <h1>Consultas</h1>
+          <p>La trazabilidad sigue el recorrido completo de la mercadería: del proveedor al pedido, del pedido a la remesa y de la remesa a cada retiro.</p>
+        </header>
+
+        <div class="tres-consultas">
+          <form class="formulario formulario--compacto" data-consulta="consultar_existencia" data-campos="material">
+            <h2>Existencia de un material</h2>
+            <label>Material<input name="material" list="lista-nombres-materiales" required></label>
+            <button class="boton">Consultar existencia</button>
+            <div class="resultado" data-resultado aria-live="polite"></div>
+          </form>
+          <form class="formulario formulario--compacto" data-consulta="consultar_reposicion" data-campos="material">
+            <h2>Reposición de un material</h2>
+            <label>Material<input name="material" list="lista-nombres-materiales" required></label>
+            <button class="boton">Consultar reposición</button>
+            <div class="resultado" data-resultado aria-live="polite"></div>
+          </form>
+          <form class="formulario formulario--compacto" id="form-trazabilidad" data-trazabilidad data-campos="tipo id">
+            <h2>Trazabilidad</h2>
+            <label>Buscar por
+              <select name="tipo">
+                <option value="trazabilidad_remesa">Remesa</option>
+                <option value="trazabilidad_ingreso">Ingreso</option>
+                <option value="trazabilidad_retiro">Retiro</option>
+              </select>
+            </label>
+            <label>Id<input name="id" inputmode="numeric" required></label>
+            <button class="boton">Ver trazabilidad</button>
+            <p class="mensaje" data-mensaje aria-live="polite"></p>
+          </form>
+        </div>
+
+        <div id="resultado-trazabilidad" aria-live="polite"></div>
+      </section>
+
+    </main>
+  </div>
+
+  <datalist id="lista-nombres-materiales"></datalist>
+  <div class="aviso" id="aviso" role="status" aria-live="polite"></div>
+
+</body>
+</html>
