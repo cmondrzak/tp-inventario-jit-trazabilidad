@@ -40,9 +40,10 @@ def mostrar_menu():
     print("  10. Consultar materiales que requieren reposición")
     print("  11. Consultar trazabilidad de un retiro")
     print("  12. Consultar trazabilidad de una remesa")
+    print("  13. Gestionar estado de un pedido")
 
 
-    print("\n  13. Salir")
+    print("\n  14. Salir")
     print()
     print("=" * ancho)
 
@@ -108,8 +109,13 @@ ingresar = True
 while ingresar:
     gestor = Gerencia([],{},{},{},{})
     Archivero.desarchivar(gestor)
+
     if not gestor.deposito:
         gestor.crear_deposito({},{})
+
+    gestor.actualizar_estados_pedidos()
+    Archivero.archivar(gestor)
+
     opcion = mostrar_menu()
     if opcion == '1':
         mostrar_titulo("REGISTRAR PROVEEDOR")
@@ -283,6 +289,8 @@ while ingresar:
         except exceptions.IdentificadorInvalidoError:
             print('Error: el id debe ser mayor que cero.')
 
+        except exceptions.EstadoDePedidoInvalidoError as e:
+            print(f"Error: {e}")
         except ValueError:
             print('Error: los ids y la cantidad deben ser numeros.')
             
@@ -424,7 +432,7 @@ while ingresar:
             print(f'==== TRAZABILIDAD DEL INGRESO {id_movimiento} ====')
             print(f'Fecha del ingreso: {ingreso.fecha}')
             print(f'Proveedor: {proveedor.id_proveedor} - {proveedor.nombre} (mail: {proveedor.mail}, telefono: {proveedor.telefono})')
-            print(f'Pedido: {pedido.obtener_id_pedido()} (estado: {pedido.estado}, plazo de entrega: {pedido.plazo_entrega})')
+            print(f'Pedido: {pedido.obtener_id_pedido()} (estado: {pedido.obtener_estado()}, plazo de entrega: {pedido.plazo_entrega})')
             print(f'Renglon del pedido: {remesa.obtener_id_renglon_pedido()}')
             print(f'Remesa: {remesa.obtener_id_remesa()} - material: {remesa.obtener_material()}')
             print(f'Cantidad recibida: {remesa.obtener_cantidad_recibida()}, saldo actual: {remesa.obtener_saldo()}')
@@ -615,15 +623,64 @@ while ingresar:
             print("Error: el id debe ser un numero.")
 
     elif opcion == '13':
+        mostrar_titulo("ESTADO DE UN PEDIDO")
+
+        try:
+            id_pedido = leer_id("Ingrese el id del pedido: ")
+            datos = gestor.consultar_estado_pedido(id_pedido)
+
+            print(f"Pedido: {datos['id_pedido']}")
+            print(f"Estado: {datos['estado']}")
+
+            if datos["fecha_solicitud"] is None:
+                print("Fecha de solicitud: no registrada en el sistema anterior")
+            else:
+                print(f"Fecha de solicitud: {datos['fecha_solicitud']}")
+
+            if datos["motivo_rechazo"] is not None:
+                print(f"Motivo: {datos['motivo_rechazo']}")
+
+            if datos["estado"]=="Solicitado":
+                print("\n1. Registrar aceptacion")
+                print("2. Registrar rechazo")
+                print("3. Volver")
+
+                accion = input("Seleccione una opcion: ").strip()
+
+                if accion=="1":
+                    gestor.aceptar_pedido(id_pedido)
+                    print("Pedido aceptado.")
+
+                elif accion=="2":
+                    motivo = input("Ingrese el motivo del rechazo: ")
+                    gestor.rechazar_pedido(id_pedido,motivo)
+                    print("Pedido rechazado.")
+
+                elif accion!="3":
+                    print("Opcion invalida.")
+
+        except exceptions.EntidadNoEncontradaError as e:
+            print(f"Error: {e}")
+
+        except exceptions.EstadoDePedidoInvalidoError as e:
+            print(f"Error: {e}")
+
+        except exceptions.IdentificadorInvalidoError:
+            print("Error: el id debe ser mayor que cero.")
+
+        except ValueError:
+            print("Error: el id debe ser un numero.")
+
+    elif opcion == '14':
         ingresar = False
         print(f'{"Muchas gracias, regrese mas tarde por mas trabajo!!!":^30}')
         
     else:
-        print('Opcion invalida, ingrese un numero del 1 al 13.')
+        print('Opcion invalida, ingrese un numero del 1 al 14.')
 
-    if opcion in ('1','2','3','4','5'):
-        Archivero.archivar(gestor)
-    
+    gestor.actualizar_estados_pedidos()
+    Archivero.archivar(gestor)
+
     if ingresar:
         pausar()
         

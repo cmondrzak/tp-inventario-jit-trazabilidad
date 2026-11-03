@@ -66,3 +66,6 @@ class Proveedor:
         for pedido_pendiente in self.pedidos_pendientes:    
             if id_pedido_pendiente == pedido_pendiente.obtener_id_pedido():
                 self.pedidos_pendientes.remove(pedido_pendiente)
+
+    def guardar_pedidos_pendientes(self,pedidos):#Los pedidos pendientes son los que tienen estado: solicitado, aceptado o en proceso
+        self.pedidos_pendientes = pedidos.copy()
